@@ -129,7 +129,13 @@ export const DATA = {
       description:
         "OAU Homes is a Next.js platform that connects OAU students directly with verified housing agents to reduce inflated accommodation prices. The platform offers a clean, responsive interface with search and filtering tools, plus verified agent profiles for transparency. I built the frontend in Next.js and Tailwind CSS, collaborated with a backend developer within the same repo, and personally handled the UI design from scratch. I also created clear listing layouts and optimized the experience for mobile users.",
       technologies: ["Next.js", "Typescript", "TailwindCSS", "React"],
-      links: [],
+      links: [
+        {
+          type: "Source - web",
+          href: "https://www.oauhomes.org/",
+          icon: <Icons.globe className="size-3" />,
+        },
+      ],
       image: "/oauhomes.png",
       video: "",
     },
@@ -148,7 +154,7 @@ export const DATA = {
           icon: <Icons.globe className="size-3" />,
         },
         {
-          type: "Source - Frontend",
+          type: "GitHub",
           href: "https://github.com/blackingg/shelf",
           icon: <Icons.github className="size-3" />,
         },
@@ -171,7 +177,7 @@ export const DATA = {
           icon: <Icons.globe className="size-3" />,
         },
         {
-          type: "Source ",
+          type: "GitHub",
           href: "https://github.com/blackingg/NotDog",
           icon: <Icons.github className="size-3" />,
         },
@@ -200,7 +206,7 @@ export const DATA = {
           icon: <Icons.globe className="size-3" />,
         },
         {
-          type: "Source - web",
+          type: "GitHub",
           href: "https://github.com/blackingg/resturant_webapp",
           icon: <Icons.github className="size-3" />,
         },
@@ -223,7 +229,7 @@ export const DATA = {
           icon: <Icons.globe className="size-3" />,
         },
         {
-          type: "Source",
+          type: "GitHub",
           href: "https://github.com/blackingg/artistPorflio",
           icon: <Icons.github className="size-3" />,
         },
@@ -246,7 +252,7 @@ export const DATA = {
           icon: <Icons.globe className="size-3" />,
         },
         {
-          type: "Source",
+          type: "GitHub",
           href: "https://github.com/blackingg/pokedex",
           icon: <Icons.github className="size-3" />,
         },
