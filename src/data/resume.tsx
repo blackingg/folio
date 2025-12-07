@@ -168,7 +168,7 @@ export const DATA = {
       dates: "Dec 2025",
       active: true,
       description:
-        "NOTDOG is a playful, experimental web project that explores creative interactions with blockchain-inspired concepts without being an actual cryptocurrency. The site showcases a unique, interactive experience featuring dynamic visuals, collectible-themed elements, and whimsical animations. It’s designed as a front-end-focused project highlighting responsive design, smooth animations, and engaging UI interactions.",
+        "NOTDOG is a playful Solana-themed memecoin project built as a fun, interactive web experience. The site blends meme culture with blockchain-inspired visuals, featuring smooth animations, dynamic UI elements, and collectible-style graphics. Designed as a frontend-focused project, it highlights responsive design, fluid interactions, and a colorful, engaging interface that brings the memecoin aesthetic to life.",
       technologies: ["React", "TailwindCSS", "Framer Motion"],
       links: [
         {
