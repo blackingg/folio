@@ -140,29 +140,6 @@ export const DATA = {
       video: "",
     },
     {
-      title: "Doggearth",
-      href: "https://t.me/doggearth_bot",
-      dates: "Sept 2025",
-      active: true,
-      description:
-        "Doggverse is a Telegram Mini App for buying virtual land across three metaverse islands with a 3D viewer. The platform features a Three.js interface with touch controls (swipe, pinch, tap), color filtering, and wallet integration. I built the frontend in React, TypeScript, and Tailwind CSS, implemented centralized state management for data consistency, and designed the Telegram-style UI. I created the 3D visualization with custom camera controls and optimized for mobile users.",
-      technologies: ["React", "TypeScript", "TailwindCSS", "Three.js"],
-      links: [
-        {
-          type: "Source - Telegram",
-          href: "https://t.me/doggearth_bot",
-          icon: <Icons.telegram className="size-3" />,
-        },
-        {
-          type: "GitHub",
-          href: "https://github.com/blackingg/doggverse",
-          icon: <Icons.github className="size-3" />,
-        },
-      ],
-      image: "/doggearth.png",
-      video: "",
-    },
-    {
       title: "Shelf",
       href: "https://www.shelf.ng/",
       dates: "Nov 2025",
@@ -183,6 +160,29 @@ export const DATA = {
         },
       ],
       image: "/shelf.png",
+      video: "",
+    },
+    {
+      title: "Doggearth",
+      href: "https://t.me/doggearth_bot",
+      dates: "Sept 2025",
+      active: true,
+      description:
+        "Doggverse is a Telegram Mini App for buying virtual land across three metaverse islands with a 3D viewer. The platform features a Three.js interface with touch controls (swipe, pinch, tap), color filtering, and wallet integration. I built the frontend in React, TypeScript, and Tailwind CSS, implemented centralized state management for data consistency, and designed the Telegram-style UI. I created the 3D visualization with custom camera controls and optimized for mobile users.",
+      technologies: ["React", "TypeScript", "TailwindCSS", "Three.js"],
+      links: [
+        {
+          type: "Source - Telegram",
+          href: "https://t.me/doggearth_bot",
+          icon: <Icons.telegram className="size-3" />,
+        },
+        {
+          type: "GitHub",
+          href: "https://github.com/blackingg/doggverse",
+          icon: <Icons.github className="size-3" />,
+        },
+      ],
+      image: "/doggearth.png",
       video: "",
     },
     {
