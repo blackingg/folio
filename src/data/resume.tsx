@@ -131,7 +131,7 @@ export const DATA = {
       technologies: ["Next.js", "Typescript", "TailwindCSS", "React"],
       links: [
         {
-          type: "Source - web",
+          type: "Source - Web",
           href: "https://www.oauhomes.org/",
           icon: <Icons.globe className="size-3" />,
         },
@@ -149,7 +149,7 @@ export const DATA = {
       technologies: ["Next.js", "Typescript", "TailwindCSS", "Motion Framer"],
       links: [
         {
-          type: "Source - web",
+          type: "Source - Web",
           href: "https://www.shelf.ng/",
           icon: <Icons.globe className="size-3" />,
         },
@@ -172,7 +172,7 @@ export const DATA = {
       technologies: ["React", "TailwindCSS", "Framer Motion"],
       links: [
         {
-          type: "Source - web",
+          type: "Source - Web",
           href: "https://notdog-blackingg.vercel.app/",
           icon: <Icons.globe className="size-3" />,
         },
@@ -201,7 +201,7 @@ export const DATA = {
       ],
       links: [
         {
-          type: "Source - web",
+          type: "Source - Web",
           href: "https://breakfastplace-blackingg.vercel.app/",
           icon: <Icons.globe className="size-3" />,
         },
@@ -224,7 +224,7 @@ export const DATA = {
       technologies: ["React", "TailwindCSS", "Framer Motion"],
       links: [
         {
-          type: "Source - web",
+          type: "Source - Web",
           href: "https://dafash.vercel.app/",
           icon: <Icons.globe className="size-3" />,
         },
@@ -247,7 +247,7 @@ export const DATA = {
       technologies: ["Next.js", "Typescript", "TailwindCSS"],
       links: [
         {
-          type: "Source - web",
+          type: "Source - Web",
           href: "https://pokedex-blackingg.vercel.app/",
           icon: <Icons.globe className="size-3" />,
         },
