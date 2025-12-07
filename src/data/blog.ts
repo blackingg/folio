@@ -78,7 +78,7 @@ export async function getBlogPosts() {
         item: ['content:encoded'],
       },
     });
-    const feed = await parser.parseURL('https://medium.com/@odetundemubarak');
+    const feed = await parser.parseURL('https://medium.com/feed/@odetundemubarak');
     return feed.items.map((item: any) => {
       // Extract image from content:encoded
       const content = item['content:encoded'] || '';
