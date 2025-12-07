@@ -14,12 +14,12 @@ export const DATA = {
   avatarUrl: "/me.png",
   skills: [
     "React",
-    "React-native",
     "Next.js",
     "Typescript",
-    "Tailwind CSS",
-    "ThreeJs",
+    "React Native",
+    "Three.js",
     "GSAP",
+    "Tailwind CSS",
   ],
   navbar: [
     { href: "/", icon: HomeIcon, label: "Home" },
