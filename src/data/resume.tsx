@@ -168,7 +168,7 @@ export const DATA = {
       dates: "Dec 2025",
       active: true,
       description:
-        "Shelf is a cross-platform e-library I founded to make it easier for Nigerian students and readers to discover, share, and preserve digital archives. It brings together textbooks, novels, magazines, comics, and school notes in one accessible, community-driven platform, with organized public and private folders, smart search, and a clean, responsive interface for seamless reading across devices. As the founder, I defined the project structure and roadmap, designed the entire user experience from scratch, and built the responsive frontend that powers content discovery and interaction. I also established the moderation and verification model that ensures authenticity and supports Shelf’s vision of an open, sustainable, community-led digital library.",
+        "NOTDOG is a playful, experimental web project that explores creative interactions with blockchain-inspired concepts without being an actual cryptocurrency. The site showcases a unique, interactive experience featuring dynamic visuals, collectible-themed elements, and whimsical animations. It’s designed as a front-end-focused project highlighting responsive design, smooth animations, and engaging UI interactions.",
       technologies: ["React", "TailwindCSS", "Framer Motion"],
       links: [
         {
