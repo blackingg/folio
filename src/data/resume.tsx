@@ -143,13 +143,13 @@ export const DATA = {
       technologies: ["Next.js", "Typescript", "TailwindCSS", "Motion Framer"],
       links: [
         {
-          type: "Source - Frontend",
-          href: "https://github.com/blackingg/shelf",
-          icon: <Icons.github className="size-3" />,
+          type: "Source - web",
+          href: "https://www.shelf.ng/",
+          icon: <Icons.globe className="size-3" />,
         },
         {
-          type: "Source - backend",
-          href: "https://github.com/blackingg/shelf-backend",
+          type: "Source - Frontend",
+          href: "https://github.com/blackingg/shelf",
           icon: <Icons.github className="size-3" />,
         },
       ],
@@ -166,12 +166,17 @@ export const DATA = {
       technologies: ["React", "TailwindCSS", "Framer Motion"],
       links: [
         {
+          type: "Source - web",
+          href: "https://notdog-blackingg.vercel.app/",
+          icon: <Icons.globe className="size-3" />,
+        },
+        {
           type: "Source ",
           href: "https://github.com/blackingg/NotDog",
           icon: <Icons.github className="size-3" />,
         },
       ],
-      image: "",
+      image: "/notdog.png",
       video: "",
     },
     {
@@ -190,12 +195,17 @@ export const DATA = {
       ],
       links: [
         {
-          type: "Source - webapp",
+          type: "Source - web",
+          href: "https://breakfastplace-blackingg.vercel.app/",
+          icon: <Icons.globe className="size-3" />,
+        },
+        {
+          type: "Source - web",
           href: "https://github.com/blackingg/resturant_webapp",
           icon: <Icons.github className="size-3" />,
         },
       ],
-      image: "/breakfastplace.svg",
+      image: "/breakfastplace.png",
       video: "",
     },
     {
@@ -208,12 +218,17 @@ export const DATA = {
       technologies: ["React", "TailwindCSS", "Framer Motion"],
       links: [
         {
+          type: "Source - web",
+          href: "https://dafash.vercel.app/",
+          icon: <Icons.globe className="size-3" />,
+        },
+        {
           type: "Source",
           href: "https://github.com/blackingg/artistPorflio",
           icon: <Icons.github className="size-3" />,
         },
       ],
-      image: "",
+      image: "/dafash.png",
       video: "",
     },
     {
@@ -226,12 +241,17 @@ export const DATA = {
       technologies: ["Next.js", "Typescript", "TailwindCSS"],
       links: [
         {
+          type: "Source - web",
+          href: "https://pokedex-blackingg.vercel.app/",
+          icon: <Icons.globe className="size-3" />,
+        },
+        {
           type: "Source",
           href: "https://github.com/blackingg/pokedex",
           icon: <Icons.github className="size-3" />,
         },
       ],
-      image: "",
+      image: "/pokedex.png",
       video: "",
     },
   ],
