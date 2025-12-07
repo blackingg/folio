@@ -62,16 +62,16 @@ export const DATA = {
 
   work: [
     {
-      company: "Brilstack",
-      href: "https://brilstack.com/",
-      badges: ["React", "Typescript", "TailwindCSS"],
+      company: "Porfolio Website for a Senior Lecturer",
+      href: "https://www.marufatoluyemisiodetunde.com/",
+      badges: ["HTML", "TailwindCSS"],
       location: "Remote",
-      title: "Frontend engineer (Contract)",
-      logoUrl: "/brilstack.png",
-      start: "March 2025",
-      end: "May 2025",
+      title: "Frontend engineer",
+      logoUrl: "",
+      start: "Sept 2025",
+      end: "",
       description:
-        "I collaborated with backend developers to optimize an existing web application, reducing overall load times and improving performance. I also implemented efficient pagination for data-heavy pages, revamped the user interface for a cleaner and more intuitive experience, and refactored redundant code to enhance maintainability and ensure smoother functionality across the application.",
+        "This is a portfolio website for a senior lecturer, built to showcase the lecturer’s professional profile, academic credentials, research interests, and services. The site features a clean, responsive landing page that highlights key information such as professional background, education, research focus, publications, and contact details. I implemented the front‑end using HTML and TailwindCSS, ensuring a responsive layout across devices, and structured the site so visitors can easily navigate the profile and view detailed academic and professional information.",
     },
     {
       company: "Onetro",
@@ -98,16 +98,16 @@ export const DATA = {
         "I built the responsive landing page to showcase the company’s services and developed dashboards, application workflows, and user authentication flows. I also implemented the consent form for partner onboarding to ensure compliance and a smooth user experience. In addition, I integrated frontend features with backend APIs for loan processing, user verification, and real-time feedback, while ensuring mobile responsiveness, clean UI/UX, and strong performance across all devices.",
     },
     {
-      company: "Porfolio Website for a senior Lecturer",
-      href: "https://www.marufatoluyemisiodetunde.com/",
-      badges: ["HTML", "TailwindCSS"],
+      company: "Brilstack",
+      href: "https://brilstack.com/",
+      badges: ["React", "Typescript", "TailwindCSS"],
       location: "Remote",
-      title: "Frontend engineer",
-      logoUrl: "",
-      start: "",
-      end: "",
+      title: "Frontend engineer (Contract)",
+      logoUrl: "/brilstack.png",
+      start: "March 2025",
+      end: "May 2025",
       description:
-        "This is a portfolio website for a senior lecturer, built to showcase the lecturer’s professional profile, academic credentials, research interests, and services. The site features a clean, responsive landing page that highlights key information such as professional background, education, research focus, publications, and contact details. I implemented the front‑end using HTML and TailwindCSS, ensuring a responsive layout across devices, and structured the site so visitors can easily navigate the profile and view detailed academic and professional information.",
+        "I collaborated with backend developers to optimize an existing web application, reducing overall load times and improving performance. I also implemented efficient pagination for data-heavy pages, revamped the user interface for a cleaner and more intuitive experience, and refactored redundant code to enhance maintainability and ensure smoother functionality across the application.",
     },
   ],
   education: [
