@@ -2,7 +2,7 @@ import { Icons } from "@/components/icons";
 import { HomeIcon, NotebookIcon } from "lucide-react";
 
 export const DATA = {
-  name: "Black",
+  name: "Mubarak Odetunde (Black)",
   initials: "Black",
   url: "https://mubarakodetunde-portfolio.netlify.app/",
   location: "Ile-Ife, Nigeria",
