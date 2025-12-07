@@ -19,9 +19,9 @@ export default async function BlogPage() {
   return (
     <section>
       <BlurFade delay={BLUR_FADE_DELAY}>
-        <h1 className="font-medium text-2xl mb-8 tracking-tighter">blog</h1>
+        <h1 className="font-medium text-2xl mb-8 tracking-tighter">Blog</h1>
       </BlurFade>
-      <div className="grid gap-6">
+      <div className="grid gap-10">
         {posts.length === 0 ? (
           <p className="text-muted-foreground">No blog posts available at the moment.</p>
         ) : (
@@ -35,7 +35,7 @@ export default async function BlogPage() {
             .map((post, id) => (
               <BlurFade delay={BLUR_FADE_DELAY * 2 + id * 0.05} key={post.link}>
                 <Link href={post.link} target="_blank" rel="noopener noreferrer">
-                  <Card className="hover:shadow-lg transition-shadow overflow-hidden">
+                  <Card className="hover:shadow-lg transition-shadow overflow-hidden space-y-2">
                     {post.image && (
                       <div className="relative w-full h-48">
                         <img

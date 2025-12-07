@@ -1,3 +1,4 @@
+import { Rotate3d } from "lucide-react";
 import { Dock, DockIcon } from "@/components/magicui/dock";
 import { ModeToggle } from "@/components/mode-toggle";
 import { buttonVariants } from "@/components/ui/button";
@@ -36,7 +37,10 @@ export default function Navbar() {
             </Tooltip>
           </DockIcon>
         ))}
-        <Separator orientation="vertical" className="h-full" />
+        <Separator
+          orientation="vertical"
+          className="h-full"
+        />
         {Object.entries(DATA.contact.social)
           .filter(([_, social]) => social.navbar)
           .map(([name, social]) => (
@@ -45,6 +49,7 @@ export default function Navbar() {
                 <TooltipTrigger asChild>
                   <Link
                     href={social.url}
+                    target="_blank"
                     className={cn(
                       buttonVariants({ variant: "ghost", size: "icon" }),
                       "size-12"
@@ -59,7 +64,33 @@ export default function Navbar() {
               </Tooltip>
             </DockIcon>
           ))}
-        <Separator orientation="vertical" className="h-full py-2" />
+        <Separator
+          orientation="vertical"
+          className="h-full py-2"
+        />
+        <DockIcon>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Link
+                href="https://mubarakodetunde-portfolio.netlify.app/"
+                target="_blank"
+                className={cn(
+                  buttonVariants({ variant: "ghost", size: "icon" }),
+                  "size-12"
+                )}
+              >
+                <Rotate3d className="size-4" />
+              </Link>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>3D</p>
+            </TooltipContent>
+          </Tooltip>
+        </DockIcon>
+        <Separator
+          orientation="vertical"
+          className="h-full py-2"
+        />
         <DockIcon>
           <Tooltip>
             <TooltipTrigger asChild>
