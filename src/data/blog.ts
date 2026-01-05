@@ -1,12 +1,15 @@
 import fs from "fs";
+// @ts-ignore
 import matter from "gray-matter";
 import path from "path";
+import rehypeParse from "rehype-parse";
 import rehypePrettyCode from "rehype-pretty-code";
 import rehypeStringify from "rehype-stringify";
 import remarkParse from "remark-parse";
 import remarkRehype from "remark-rehype";
 import { unified } from "unified";
 import Parser from "rss-parser";
+import { visit } from "unist-util-visit";
 
 type Metadata = {
   title: string;
@@ -16,12 +19,6 @@ type Metadata = {
   mediumLink?: string;
 };
 
-type MediumPost = {
-  title: string;
-  link: string;
-  pubDate: string;
-  contentSnippet: string;
-};
 
 function getMDXFiles(dir: string) {
   return fs.readdirSync(dir).filter((file) => path.extname(file) === ".mdx");
@@ -41,6 +38,61 @@ export async function markdownToHTML(markdown: string) {
     })
     .use(rehypeStringify)
     .process(markdown);
+
+  return p.toString();
+}
+
+export async function highlightHTML(html: string) {
+  const p = await unified()
+    .use(rehypeParse, { fragment: true })
+    .use(() => (tree) => {
+      visit(tree, "element", (node: any) => {
+        if (node.tagName === "pre") {
+          let codeNode = node.children.find(
+            (child: any) => child.tagName === "code"
+          );
+
+          if (!codeNode) {
+            codeNode = {
+              type: "element",
+              tagName: "code",
+              properties: {},
+              children: node.children,
+            };
+            node.children = [codeNode];
+          }
+
+          // Convert <br> to newlines and flatten text
+          const text: string[] = [];
+          const collectText = (n: any) => {
+            if (n.type === "text") {
+              text.push(n.value);
+            } else if (n.tagName === "br") {
+              text.push("\n");
+            } else if (n.children) {
+              n.children.forEach(collectText);
+            }
+          };
+
+          codeNode.children.forEach(collectText);
+          codeNode.children = [{ type: "text", value: text.join("") }];
+
+          // Add a default language class if none exists
+          if (!codeNode.properties.className) {
+            codeNode.properties.className = ["language-javascript"];
+          }
+        }
+      });
+    })
+    .use(rehypePrettyCode, {
+      theme: {
+        light: "min-light",
+        dark: "min-dark",
+      },
+      keepBackground: false,
+    })
+    .use(rehypeStringify)
+    .process(html);
 
   return p.toString();
 }
@@ -154,8 +206,10 @@ export async function getPost(slug: string): Promise<Post | null> {
     });
 
     if (feedItem) {
+      const rawContent = feedItem["content:encoded"] || "";
+      const content = await highlightHTML(rawContent);
       return {
-        source: feedItem["content:encoded"] || "",
+        source: content,
         metadata: {
           title: feedItem.title || "Untitled",
           publishedAt: feedItem.pubDate || new Date().toISOString(),
