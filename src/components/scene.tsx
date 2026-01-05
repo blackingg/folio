@@ -19,18 +19,20 @@ const SHAPES = [
   "dodecahedron",
   "torus",
 ];
+
 const COLORS = [
-  "#4f46e5",
-  "#ec4899",
-  "#14b8a6",
-  "#f59e0b",
-  "#6366f1",
-  "#8b5cf6",
+  "#a41623",
+  "#f85e00",
+  "#33673b",
+  "#8eb8e5",
+  "#ca9ce1",
+  "#c6c013",
 ];
 
 function MainSphere() {
   const meshRef = useRef<THREE.Mesh>(null!);
-  const [index, setIndex] = useState(0);
+  const [shapeIndex, setShapeIndex] = useState(0);
+  const [colorIndex, setColorIndex] = useState(0);
 
   useFrame((state) => {
     if (meshRef.current) {
@@ -40,14 +42,23 @@ function MainSphere() {
   });
 
   const handleClick = () => {
-    let newIndex = Math.floor(Math.random() * SHAPES.length);
-    while (newIndex === index && SHAPES.length > 1) {
-      newIndex = Math.floor(Math.random() * SHAPES.length);
+    // Get new shape index (different from current)
+    let newShapeIndex = Math.floor(Math.random() * SHAPES.length);
+    while (newShapeIndex === shapeIndex && SHAPES.length > 1) {
+      newShapeIndex = Math.floor(Math.random() * SHAPES.length);
     }
-    setIndex(newIndex);
+
+    // Get new color index (different from current)
+    let newColorIndex = Math.floor(Math.random() * COLORS.length);
+    while (newColorIndex === colorIndex && COLORS.length > 1) {
+      newColorIndex = Math.floor(Math.random() * COLORS.length);
+    }
+
+    setShapeIndex(newShapeIndex);
+    setColorIndex(newColorIndex);
   };
 
-  const currentColor = COLORS[index % COLORS.length];
+  const currentColor = COLORS[colorIndex];
 
   return (
     <Float
@@ -66,18 +77,22 @@ function MainSphere() {
         onClick={handleClick}
         scale={2}
       >
-        {SHAPES[index] === "torus_knot" && (
+        {SHAPES[shapeIndex] === "torus_knot" && (
           <torusKnotGeometry args={[0.8, 0.3, 100, 16]} />
         )}
-        {SHAPES[index] === "sphere" && <sphereGeometry args={[1, 32, 32]} />}
-        {SHAPES[index] === "icosahedron" && (
+        {SHAPES[shapeIndex] === "sphere" && (
+          <sphereGeometry args={[1, 32, 32]} />
+        )}
+        {SHAPES[shapeIndex] === "icosahedron" && (
           <icosahedronGeometry args={[1, 0]} />
         )}
-        {SHAPES[index] === "octahedron" && <octahedronGeometry args={[1, 0]} />}
-        {SHAPES[index] === "dodecahedron" && (
+        {SHAPES[shapeIndex] === "octahedron" && (
+          <octahedronGeometry args={[1, 0]} />
+        )}
+        {SHAPES[shapeIndex] === "dodecahedron" && (
           <dodecahedronGeometry args={[1, 0]} />
         )}
-        {SHAPES[index] === "torus" && (
+        {SHAPES[shapeIndex] === "torus" && (
           <torusGeometry args={[0.8, 0.3, 16, 100]} />
         )}
 
@@ -86,14 +101,14 @@ function MainSphere() {
           distort={0.3}
           speed={2}
           roughness={0.2}
-          metalness={0.8}
+          metalness={0.5}
         />
       </mesh>
     </Float>
   );
 }
 
-export function Scene() {
+export default function Scene() {
   return (
     <div className="aspect-video w-full rounded-xl border bg-black shadow-xl overflow-hidden relative">
       <Canvas>
@@ -101,27 +116,33 @@ export function Scene() {
           makeDefault
           position={[0, 0, 8]}
         />
-        
-        <ambientLight intensity={0.3} />
-        
+
+        <ambientLight intensity={1.2} />
+
         <directionalLight
-          position={[-5, 3, -5]}
-          intensity={0.08}
-          color="#a5b4fc"
+          position={[5, 5, 5]}
+          intensity={1.5}
+          color="#ffffff"
         />
-        
-        <pointLight
-          position={[-10, -8, -5]}
-          intensity={10}
-          color="#fbbf24"
-          decay={0}
+
+        <directionalLight
+          position={[-5, -5, -5]}
+          intensity={0.8}
+          color="#ffffff"
         />
-        
+
         <pointLight
-          position={[0, 10, 0]}
-          intensity={0.5}
-          color="#ec4899"
-          decay={0}
+          position={[10, 10, 10]}
+          intensity={50}
+          color="#ffffff"
+          decay={2}
+        />
+
+        <pointLight
+          position={[-10, -10, 5]}
+          intensity={30}
+          color="#f0f9ff"
+          decay={2}
         />
 
         <group>

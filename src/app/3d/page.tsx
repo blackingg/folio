@@ -5,7 +5,7 @@ import React, { Suspense } from "react";
 import BlurFade from "@/components/magicui/blur-fade";
 import BlurFadeText from "@/components/magicui/blur-fade-text";
 import { Button } from "@/components/ui/button";
-import { Scene } from "@/components/scene";
+import Scene from "@/components/scene";
 
 export default function Experience() {
   return (
