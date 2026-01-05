@@ -1,15 +1,20 @@
 import BlurFade from "@/components/magicui/blur-fade";
 import { getBlogPosts } from "@/data/blog";
 import Link from "next/link";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import Image from "next/image";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
 export const metadata = {
   title: "Blog",
   description: "My thoughts on software development, life, and more.",
 };
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 const BLUR_FADE_DELAY = 0.04;
 
@@ -23,18 +28,23 @@ export default async function BlogPage() {
       </BlurFade>
       <div className="grid gap-10">
         {posts.length === 0 ? (
-          <p className="text-muted-foreground">No blog posts available at the moment.</p>
+          <p className="text-muted-foreground">
+            No blog posts available at the moment.
+          </p>
         ) : (
           posts
-            .sort((a, b) => {
+            .sort((a: any, b: any) => {
               if (new Date(a.publishedAt) > new Date(b.publishedAt)) {
                 return -1;
               }
               return 1;
             })
-            .map((post, id) => (
-              <BlurFade delay={BLUR_FADE_DELAY * 2 + id * 0.05} key={post.link}>
-                <Link href={post.link} target="_blank" rel="noopener noreferrer">
+            .map((post: any, id: number) => (
+              <BlurFade
+                delay={BLUR_FADE_DELAY * 2 + id * 0.05}
+                key={post.slug}
+              >
+                <Link href={`/blog/${post.slug}`}>
                   <Card className="hover:shadow-lg transition-shadow overflow-hidden space-y-2">
                     {post.image && (
                       <div className="relative w-full h-48">
@@ -52,7 +62,9 @@ export default async function BlogPage() {
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
-                      <p className="text-sm text-muted-foreground line-clamp-3">{post.summary}</p>
+                      <p className="text-sm text-muted-foreground line-clamp-3">
+                        {post.summary}
+                      </p>
                     </CardContent>
                   </Card>
                 </Link>

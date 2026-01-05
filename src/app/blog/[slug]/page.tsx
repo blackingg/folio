@@ -1,7 +1,9 @@
+import { Icons } from "@/components/icons";
 import { getPost } from "@/data/blog";
 import { DATA } from "@/data/resume";
 import { formatDate } from "@/lib/utils";
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
@@ -14,13 +16,21 @@ export async function generateMetadata({
 }): Promise<Metadata | undefined> {
   let post = await getPost(params.slug);
 
+  if (!post) {
+    return;
+  }
+
   let {
     title,
     publishedAt: publishedTime,
     summary: description,
     image,
   } = post.metadata;
-  let ogImage = image ? `${DATA.url}${image}` : `${DATA.url}/og?title=${title}`;
+  let ogImage = image
+    ? image.startsWith("http")
+      ? image
+      : `${DATA.url}${image}`
+    : `${DATA.url}/og?title=${title}`;
 
   return {
     title,
@@ -73,7 +83,9 @@ export default async function Blog({
             dateModified: post.metadata.publishedAt,
             description: post.metadata.summary,
             image: post.metadata.image
-              ? `${DATA.url}${post.metadata.image}`
+              ? post.metadata.image.startsWith("http")
+                ? post.metadata.image
+                : `${DATA.url}${post.metadata.image}`
               : `${DATA.url}/og?title=${post.metadata.title}`,
             url: `${DATA.url}/blog/${post.slug}`,
             author: {
@@ -97,6 +109,19 @@ export default async function Blog({
         className="prose dark:prose-invert"
         dangerouslySetInnerHTML={{ __html: post.source }}
       ></article>
+      {post.metadata.mediumLink && (
+        <div className="mt-12 pt-8 border-t">
+          <Link
+            href={post.metadata.mediumLink}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors text-sm font-medium"
+          >
+            <Icons.medium className="size-4" />
+            Check this post out on Medium
+          </Link>
+        </div>
+      )}
     </section>
   );
 }

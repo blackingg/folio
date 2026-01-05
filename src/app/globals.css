@@ -142,3 +142,23 @@ code[data-line-numbers-max-digits="2"] > [data-line]::before {
 code[data-line-numbers-max-digits="3"] > [data-line]::before {
   width: 3rem;
 }
+
+.prose img {
+  @apply rounded-xl mx-auto;
+}
+
+.prose figure {
+  @apply my-8;
+}
+
+.prose figcaption {
+  @apply text-center text-sm text-muted-foreground mt-2;
+}
+
+.prose .medium-feed-snippet {
+  display: none;
+}
+
+.prose .medium-feed-item {
+  @apply mb-12;
+}
