@@ -31,23 +31,20 @@ export const ResumeCard = ({
 }: ResumeCardProps) => {
   const [isExpanded, setIsExpanded] = React.useState(false);
 
-  const handleClick = (e: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => {
+  const handleClick = () => {
     if (description) {
-      e.preventDefault();
       setIsExpanded(!isExpanded);
     }
   };
 
   return (
-    <Link
-      href={href || "#"}
-      target="_blank"
+    <div
       className="block cursor-pointer"
       onClick={handleClick}
     >
-      <Card className="flex">
+      <Card className="flex w-full p-4 sm:p-5 overflow-hidden">
         <div className="flex-none">
-          <Avatar className="border size-12 m-auto bg-muted-background dark:bg-foreground">
+          <Avatar className="border-2 size-14 m-auto bg-muted-background dark:bg-foreground">
             <AvatarImage
               src={logoUrl}
               alt={altText}
@@ -56,17 +53,16 @@ export const ResumeCard = ({
             <AvatarFallback>{altText[0]}</AvatarFallback>
           </Avatar>
         </div>
-        <div className="flex-grow ml-4 items-center flex-col group">
-          <CardHeader>
-            <div className="flex items-center justify-between gap-x-2 text-base">
-              <h3 className="inline-flex items-center justify-center font-semibold gap-x-2 leading-none text-xs sm:text-sm">
+        <div className="flex-1 min-w-0 ml-4 sm:ml-6 flex flex-col group">
+          <CardHeader className="p-0">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-x-2 text-sm leading-tight sm:leading-normal">
+              <h3 className="inline-flex flex-wrap items-center justify-start font-semibold gap-y-1 gap-x-2 text-sm sm:text-base relative pr-6">
                 {title}
                 {badges && (
                   <span className="inline-flex gap-x-1">
                     {badges.map((badge, index) => (
                       <Badge
-                        variant="secondary"
-                        className="align-middle text-xs"
+                        className="align-middle text-xs px-2 py-0.5"
                         key={index}
                       >
                         {badge}
@@ -76,16 +72,20 @@ export const ResumeCard = ({
                 )}
                 <ChevronRightIcon
                   className={cn(
-                    "size-4 translate-x-0 transform opacity-0 transition-all duration-300 ease-out group-hover:translate-x-1 group-hover:opacity-100",
+                    "size-4 absolute right-0 top-0.5 transition-all duration-300 ease-out group-hover:translate-x-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100",
                     isExpanded ? "rotate-90" : "rotate-0"
                   )}
                 />
               </h3>
-              <div className="text-xs sm:text-sm tabular-nums text-muted-foreground text-right">
+              <div className="text-sm tabular-nums text-foreground/80 mt-1 sm:mt-0 sm:text-right font-medium">
                 {period}
               </div>
             </div>
-            {subtitle && <div className="font-sans text-xs">{subtitle}</div>}
+            {subtitle && (
+              <div className="font-sans text-sm text-foreground">
+                {subtitle}
+              </div>
+            )}
           </CardHeader>
           {description && (
             <motion.div
@@ -99,23 +99,23 @@ export const ResumeCard = ({
                 duration: 0.7,
                 ease: [0.16, 1, 0.3, 1],
               }}
-              className="mt-2 text-xs sm:text-sm flex flex-col gap-2 overflow-hidden"
+              className="mt-2 text-sm sm:text-base flex flex-col gap-2 overflow-hidden leading-relaxed text-foreground/80 w-full break-words"
             >
               {description}
               {href && (
-                <a
-                  className="underline cursor-pointer"
+                <Link
                   href={href}
                   target="_blank"
+                  className="underline cursor-pointer text-primary hover:text-primary/80 transition-colors"
                   onClick={(e) => e.stopPropagation()}
                 >
                   {href}
-                </a>
+                </Link>
               )}
             </motion.div>
           )}
         </div>
       </Card>
-    </Link>
+    </div>
   );
 };

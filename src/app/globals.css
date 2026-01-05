@@ -71,7 +71,7 @@
       @apply border-border;
     }
     body {
-      @apply bg-background text-foreground;
+      @apply bg-background text-foreground overflow-x-hidden;
     }
   }
 
@@ -143,16 +143,32 @@ code[data-line-numbers-max-digits="3"] > [data-line]::before {
   width: 3rem;
 }
 
+.prose {
+  @apply max-w-full;
+}
+
 .prose img {
-  @apply rounded-xl mx-auto;
+  @apply rounded-xl mx-auto max-w-full h-auto;
 }
 
 .prose figure {
-  @apply my-8;
+  @apply my-8 max-w-full;
 }
 
 .prose figcaption {
   @apply text-center text-sm text-muted-foreground mt-2;
+}
+
+.prose pre {
+  @apply max-w-full overflow-x-auto;
+}
+
+.prose code {
+  @apply break-words whitespace-pre-wrap md:whitespace-pre;
+}
+
+.prose iframe {
+  @apply max-w-full h-auto aspect-video;
 }
 
 .prose .medium-feed-snippet {

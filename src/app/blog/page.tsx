@@ -1,3 +1,4 @@
+import { formatDate } from "@/lib/utils";
 import BlurFade from "@/components/magicui/blur-fade";
 import { getBlogPosts } from "@/data/blog";
 import Link from "next/link";
@@ -45,24 +46,29 @@ export default async function BlogPage() {
                 key={post.slug}
               >
                 <Link href={`/blog/${post.slug}`}>
-                  <Card className="hover:shadow-lg transition-shadow overflow-hidden space-y-2">
+                  <Card className="hover:shadow-lg transition-shadow overflow-hidden group">
                     {post.image && (
-                      <div className="relative w-full h-48">
+                      <div className="relative w-full h-56 overflow-hidden">
                         <img
                           src={post.image}
                           alt={post.title}
-                          className="object-cover w-full h-full"
+                          className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-105"
                         />
                       </div>
                     )}
-                    <CardHeader>
-                      <CardTitle className="text-lg">{post.title}</CardTitle>
-                      <CardDescription>
-                        {new Date(post.publishedAt).toLocaleDateString()}
+                    <CardHeader className="p-5 sm:p-6 pb-2">
+                      <CardTitle className="text-xl group-hover:text-primary transition-colors">
+                        {post.title}
+                      </CardTitle>
+                      <CardDescription
+                        suppressHydrationWarning
+                        className="text-sm"
+                      >
+                        {formatDate(post.publishedAt)}
                       </CardDescription>
                     </CardHeader>
-                    <CardContent>
-                      <p className="text-sm text-muted-foreground line-clamp-3">
+                    <CardContent className="p-5 sm:p-6 pt-0">
+                      <p className="text-base text-foreground/80 line-clamp-3 leading-relaxed">
                         {post.summary}
                       </p>
                     </CardContent>

@@ -25,10 +25,10 @@ export default function Navbar() {
                   href={item.href}
                   className={cn(
                     buttonVariants({ variant: "ghost", size: "icon" }),
-                    "size-12"
+                    "size-14"
                   )}
                 >
-                  <item.icon className="size-4" />
+                  <item.icon className="size-5" />
                 </Link>
               </TooltipTrigger>
               <TooltipContent>
@@ -52,10 +52,10 @@ export default function Navbar() {
                     target="_blank"
                     className={cn(
                       buttonVariants({ variant: "ghost", size: "icon" }),
-                      "size-12"
+                      "size-14"
                     )}
                   >
-                    <social.icon className="size-4" />
+                    <social.icon className="size-5" />
                   </Link>
                 </TooltipTrigger>
                 <TooltipContent>
@@ -76,10 +76,10 @@ export default function Navbar() {
                 target="_blank"
                 className={cn(
                   buttonVariants({ variant: "ghost", size: "icon" }),
-                  "size-12"
+                  "size-14"
                 )}
               >
-                <Rotate3d className="size-4" />
+                <Rotate3d className="size-5" />
               </Link>
             </TooltipTrigger>
             <TooltipContent>
