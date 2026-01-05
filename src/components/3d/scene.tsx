@@ -19,6 +19,8 @@ import {
 } from "@react-three/drei";
 import { useRoute, useLocation } from "wouter";
 import { easing, geometry } from "maath";
+import { ArrowLeft } from "lucide-react";
+
 
 // Custom geometry extended via maath
 extend({ RoundedPlaneGeometry: geometry.RoundedPlaneGeometry });
@@ -47,62 +49,97 @@ interface PortalMaterialApi extends THREE.ShaderMaterial {
   blend: number;
 }
 
-export const Scene: FC = () => (
-  <Canvas
-    flat
-    camera={{ fov: 15, position: [0, 0, 20] }}
-    style={{ height: "100vh", width: "100vw" }}
-    eventPrefix="client"
-    dpr={1}
-    gl={{
-      antialias: false,
-      stencil: false,
-      alpha: true,
-      powerPreference: "low-power",
-    }}
-  >
-    <Frame
-      id="01"
-      name={`pick\nles`}
-      author="Omar Faruq Tawsif"
-      bg="#e4cdac"
-      position={[-1.15, 0, 0]}
-      rotation={[0, 0.5, 0]}
-    >
-      <Gltf
-        src="/3d/pickles_3d_version_of_hyuna_lees_illustration-transformed.glb"
-        scale={8}
-        position={[0, -0.7, -2]}
-      />
-    </Frame>
-    <Frame
-      id="02"
-      name="tea"
-      author="Omar Faruq Tawsif"
-      position={[0, 0, 0]}
-    >
-      <Gltf
-        src="/3d/fiesta_tea-transformed.glb"
-        position={[0, -2, -3]}
-      />
-    </Frame>
-    <Frame
-      id="03"
-      name="still"
-      author="Omar Faruq Tawsif"
-      bg="#d1d1ca"
-      position={[1.15, 0, 0]}
-      rotation={[0, -0.5, 0]}
-    >
-      <Gltf
-        src="/3d/still_life_based_on_heathers_artwork-transformed.glb"
-        scale={2}
-        position={[0, -0.8, -4]}
-      />
-    </Frame>
-    <Rig />
-  </Canvas>
-);
+const BackButton = () => {
+
+  const [, setLocation] = useLocation();
+  const [, params] = useRoute("/item/:id");
+
+  if (!params?.id) return null;
+
+  return (
+    <div className="absolute top-6 left-6 z-50">
+      <button
+        onClick={() => setLocation("/")}
+        className="group px-4 py-2 bg-background/50 hover:bg-background/80 backdrop-blur-xl border border-border text-foreground rounded-full flex items-center gap-2 transition-all active:scale-95 shadow-lg"
+      >
+        <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
+        <span className="text-sm font-medium">Back to Gallery</span>
+      </button>
+    </div>
+  );
+};
+
+export const Scene: FC = () => {
+  return (
+    <div className="w-full h-full relative group/canvas">
+      <BackButton />
+      <Canvas
+        flat
+        camera={{ fov: 15, position: [0, 0, 20] }}
+        style={{ height: "100%", width: "100%" }}
+        eventPrefix="client"
+        dpr={[1, 2]} // Better resolution for retina while keeping performance
+        gl={{
+          antialias: true, // Re-enabling for better quality if possible, but keep it light
+          stencil: false,
+          alpha: true,
+          powerPreference: "high-performance",
+        }}
+      >
+        <Gallery />
+        <Rig />
+        <Preload all />
+      </Canvas>
+    </div>
+  );
+};
+
+// Extracted Gallery component to support different scenes later
+function Gallery() {
+  return (
+    <>
+      <Frame
+        id="01"
+        name={`pick\nles`}
+        author="Omar Faruq Tawsif"
+        bg="#e4cdac"
+        position={[-1.15, 0, 0]}
+        rotation={[0, 0.5, 0]}
+      >
+        <Gltf
+          src="/3d/pickles_3d_version_of_hyuna_lees_illustration-transformed.glb"
+          scale={8}
+          position={[0, -0.7, -2]}
+        />
+      </Frame>
+      <Frame
+        id="02"
+        name="tea"
+        author="Omar Faruq Tawsif"
+        position={[0, 0, 0]}
+      >
+        <Gltf
+          src="/3d/fiesta_tea-transformed.glb"
+          position={[0, -2, -3]}
+        />
+      </Frame>
+      <Frame
+        id="03"
+        name="still"
+        author="Omar Faruq Tawsif"
+        bg="#d1d1ca"
+        position={[1.15, 0, 0]}
+        rotation={[0, -0.5, 0]}
+      >
+        <Gltf
+          src="/3d/still_life_based_on_heathers_artwork-transformed.glb"
+          scale={2}
+          position={[0, -0.8, -4]}
+        />
+      </Frame>
+    </>
+  );
+}
 
 function Frame({
   id,
