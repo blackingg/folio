@@ -1,4 +1,5 @@
 import { Icons } from "@/components/icons";
+import { ChevronLeft } from "lucide-react";
 import { getPost } from "@/data/blog";
 import { DATA } from "@/data/resume";
 import { formatDate } from "@/lib/utils";
@@ -95,6 +96,15 @@ export default async function Blog({
           }),
         }}
       />
+      <div className="mb-8">
+        <Link
+          href="/blog"
+          className="inline-flex items-center gap-2 text-sm text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors group"
+        >
+          <ChevronLeft className="size-4 transition-transform group-hover:-translate-x-1" />
+          Back to Blog
+        </Link>
+      </div>
       <h1 className="title font-medium text-2xl tracking-tighter">
         {post.metadata.title}
       </h1>
