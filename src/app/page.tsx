@@ -55,9 +55,11 @@ export default function Page() {
         <BlurFade delay={BLUR_FADE_DELAY * 4.5}>
           <Link
             href="/3d"
-            className="group inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mt-4"
+            className="group inline-flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors mt-4"
           >
-            <span>Explore 3D Experience</span>
+            <span className="text-sm">
+              Explore 3D Experience <span className="text-2xl">🚧</span>
+            </span>
             <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
           </Link>
         </BlurFade>
