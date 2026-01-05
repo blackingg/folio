@@ -8,7 +8,7 @@ export default function NotFound() {
   return (
     <section
       id="404"
-      className="mx-auto w-full max-w-3xl space-y-8 flex flex-col justify-center min-h-[calc(100vh-200px)]"
+      className="mx-auto w-full max-w-3xl space-y-8 flex flex-col justify-center min-h-[calc(100vh-250px)]"
     >
       <div className="space-y-4">
         <BlurFade delay={0.04}>

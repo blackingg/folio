@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { DATA } from "@/data/resume";
 import Link from "next/link";
 import Markdown from "react-markdown";
+import { ChevronRight } from "lucide-react";
 
 const BLUR_FADE_DELAY = 0.04;
 
@@ -50,6 +51,15 @@ export default function Page() {
           <Markdown className="prose max-w-full text-pretty font-sans text-base text-foreground/80 dark:prose-invert leading-relaxed">
             {DATA.summary}
           </Markdown>
+        </BlurFade>
+        <BlurFade delay={BLUR_FADE_DELAY * 4.5}>
+          <Link
+            href="/3d"
+            className="group inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mt-4"
+          >
+            <span>Explore 3D Experience</span>
+            <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+          </Link>
         </BlurFade>
       </section>
       <section id="work">
