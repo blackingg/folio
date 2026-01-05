@@ -13,7 +13,7 @@ export default function Experience() {
       <div className="space-y-4 max-w-[600px]">
         <BlurFade delay={0.1}>
           <h1 className="text-3xl font-bold tracking-tighter sm:text-5xl xl:text-6xl/none">
-            Under Construction
+            Under Construction <span className="text-2xl">🚧</span>
           </h1>
         </BlurFade>
 

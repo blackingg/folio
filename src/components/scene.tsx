@@ -110,7 +110,7 @@ function MainSphere() {
 
 export default function Scene() {
   return (
-    <div className="aspect-video w-full rounded-xl border bg-black shadow-xl overflow-hidden relative">
+    <div className="w-full aspect-video min-[380px]:aspect-[3/4] md:aspect-video rounded-xl border bg-black shadow-xl overflow-hidden relative">
       <Canvas>
         <PerspectiveCamera
           makeDefault
