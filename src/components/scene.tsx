@@ -5,7 +5,6 @@ import { useRef, useState } from "react";
 import * as THREE from "three";
 import {
   OrbitControls,
-  Environment,
   Float,
   MeshDistortMaterial,
   Stars,
@@ -102,18 +101,27 @@ export function Scene() {
           makeDefault
           position={[0, 0, 8]}
         />
-        <ambientLight intensity={0.5} />
-        <spotLight
-          position={[10, 10, 10]}
-          angle={0.15}
-          penumbra={1}
-          decay={0}
-          intensity={Math.PI}
+        
+        <ambientLight intensity={0.3} />
+        
+        <directionalLight
+          position={[-5, 3, -5]}
+          intensity={0.08}
+          color="#a5b4fc"
         />
+        
         <pointLight
-          position={[-10, -10, -10]}
+          position={[-10, -8, -5]}
+          intensity={10}
+          color="#fbbf24"
           decay={0}
-          intensity={Math.PI}
+        />
+        
+        <pointLight
+          position={[0, 10, 0]}
+          intensity={0.5}
+          color="#ec4899"
+          decay={0}
         />
 
         <group>
@@ -134,7 +142,6 @@ export function Scene() {
           autoRotate
           autoRotateSpeed={0.5}
         />
-        <Environment preset="city" />
       </Canvas>
     </div>
   );
