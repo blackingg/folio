@@ -1,5 +1,5 @@
 "use client";
-import { Suspense } from "react";
+import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { ChevronRight, Home, Loader2, MousePointer2 } from "lucide-react";
 import BlurFade from "@/components/magicui/blur-fade";
@@ -8,6 +8,12 @@ import Scene from "@/components/3d/scene";
 import { Router } from "wouter";
 
 export default function Experience() {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   return (
     <main className="flex flex-col min-h-screen">
       <section className="flex flex-col items-center justify-center py-24 px-4 text-center space-y-8 max-w-3xl mx-auto">
@@ -41,22 +47,33 @@ export default function Experience() {
       </section>
 
       <section className="relative w-full h-[80vh] sm:h-screen border-y bg-muted/30 overflow-hidden">
-        <Suspense
-          fallback={
-            <div className="absolute inset-0 flex items-center justify-center bg-background/50 backdrop-blur-sm z-20">
-              <div className="flex flex-col items-center gap-4">
-                <Loader2 className="h-10 w-10 animate-spin text-primary" />
-                <p className="text-sm font-medium text-muted-foreground animate-pulse tracking-wide">
-                  Initializing Virtual Space...
-                </p>
+        {mounted ? (
+          <Suspense
+            fallback={
+              <div className="absolute inset-0 flex items-center justify-center bg-background/50 backdrop-blur-sm z-20">
+                <div className="flex flex-col items-center gap-4">
+                  <Loader2 className="h-10 w-10 animate-spin text-primary" />
+                  <p className="text-sm font-medium text-muted-foreground animate-pulse tracking-wide">
+                    Initializing Scene...
+                  </p>
+                </div>
               </div>
+            }
+          >
+            <Router base="/3d">
+              <Scene />
+            </Router>
+          </Suspense>
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center bg-background/50 backdrop-blur-sm z-20">
+            <div className="flex flex-col items-center gap-4">
+              <Loader2 className="h-10 w-10 animate-spin text-primary" />
+              <p className="text-sm font-medium text-muted-foreground animate-pulse tracking-wide">
+                Preparing Scene...
+              </p>
             </div>
-          }
-        >
-          <Router base="/3d">
-            <Scene />
-          </Router>
-        </Suspense>
+          </div>
+        )}
 
         <div className="absolute bottom-8 left-1/2 -translate-x-1/2 pointer-events-none z-10 hidden sm:block">
           <BlurFade delay={1.5}>
