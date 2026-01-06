@@ -21,7 +21,6 @@ import { useRoute, useLocation } from "wouter";
 import { easing, geometry } from "maath";
 import { ArrowLeft } from "lucide-react";
 
-
 // Custom geometry extended via maath
 extend({ RoundedPlaneGeometry: geometry.RoundedPlaneGeometry });
 
@@ -50,7 +49,6 @@ interface PortalMaterialApi extends THREE.ShaderMaterial {
 }
 
 const BackButton = () => {
-
   const [, setLocation] = useLocation();
   const [, params] = useRoute("/item/:id");
 
@@ -59,7 +57,7 @@ const BackButton = () => {
   return (
     <div className="absolute top-6 left-6 z-50">
       <button
-        onClick={() => setLocation("/")}
+        onClick={() => window.history.back()}
         className="group px-4 py-2 bg-background/50 hover:bg-background/80 backdrop-blur-xl border border-border text-foreground rounded-full flex items-center gap-2 transition-all active:scale-95 shadow-lg"
       >
         <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
@@ -205,7 +203,7 @@ function Frame({
         <roundedPlaneGeometry args={[width, height, 0.1]} />
         <MeshPortalMaterial
           ref={portal as any}
-          events={params?.id === id}
+          side={THREE.DoubleSide}
           blur={0}
           resolution={256}
         >
@@ -230,7 +228,6 @@ function Rig({
   useEffect(() => {
     const active = scene.getObjectByName(params?.id || "");
     if (active && active.parent && (controls as any)?.setLookAt) {
-      // Use temporary vectors to avoid mutating props
       const targetPos = new THREE.Vector3(0, 0.5, 0.25);
       const targetFocus = new THREE.Vector3(0, 0, -2);
       active.parent.localToWorld(targetPos);
@@ -245,6 +242,8 @@ function Rig({
         targetFocus.z,
         true
       );
+    } else if (!params?.id && (controls as any)?.setLookAt) {
+      (controls as any).setLookAt(0, 0, 20, 0, 0, 0, true);
     }
   }, [params, scene, controls]);
 
