@@ -5,7 +5,6 @@ import { ChevronRight, Home, Loader2, MousePointer2 } from "lucide-react";
 import BlurFade from "@/components/magicui/blur-fade";
 import { Button } from "@/components/ui/button";
 import Scene from "@/components/3d/scene";
-import { Router } from "wouter";
 
 export default function Experience() {
   const [mounted, setMounted] = useState(false);
@@ -60,9 +59,7 @@ export default function Experience() {
               </div>
             }
           >
-            <Router base="/3d">
-              <Scene />
-            </Router>
+            <Scene />
           </Suspense>
         ) : (
           <div className="absolute inset-0 flex items-center justify-center bg-background/50 backdrop-blur-sm z-20">

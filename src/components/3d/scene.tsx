@@ -17,7 +17,6 @@ import {
   Text,
   Preload,
 } from "@react-three/drei";
-import { useRoute, useLocation } from "wouter";
 import { easing, geometry } from "maath";
 import { ArrowLeft } from "lucide-react";
 
@@ -35,6 +34,8 @@ interface FrameProps {
   width?: number;
   height?: number;
   children?: ReactNode;
+  activeId: string | null;
+  setActiveId: (id: string | null) => void;
   position?: [number, number, number];
   rotation?: [number, number, number];
 }
@@ -42,22 +43,26 @@ interface FrameProps {
 interface RigProps {
   position?: THREE.Vector3;
   focus?: THREE.Vector3;
+  activeId: string | null;
 }
 
 interface PortalMaterial extends THREE.ShaderMaterial {
   blend: number;
 }
 
-const BackButton = () => {
-  const [, setLocation] = useLocation();
-  const [, params] = useRoute("/item/:id");
-
-  if (!params?.id) return null;
+const BackButton = ({
+  setActiveId,
+  activeId,
+}: {
+  setActiveId: (id: string | null) => void;
+  activeId: string | null;
+}) => {
+  if (!activeId) return null;
 
   return (
     <div className="absolute top-6 left-6 z-50">
       <button
-        onClick={() => window.history.back()}
+        onClick={() => setActiveId(null)}
         className="group px-4 py-2 bg-background/50 hover:bg-background/80 backdrop-blur-xl border border-border text-foreground rounded-full flex items-center gap-2 transition-all active:scale-95 shadow-lg"
       >
         <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
@@ -68,9 +73,14 @@ const BackButton = () => {
 };
 
 export const Scene: FC = () => {
+  const [activeId, setActiveId] = useState<string | null>(null);
+
   return (
     <div className="w-full h-full relative group/canvas">
-      <BackButton />
+      <BackButton
+        activeId={activeId}
+        setActiveId={setActiveId}
+      />
       <Canvas
         flat
         camera={{ fov: 15, position: [0, 0, 20] }}
@@ -83,16 +93,24 @@ export const Scene: FC = () => {
           powerPreference: "high-performance",
         }}
       >
-        <Gallery />
-        <Rig />
+        <Gallery
+          activeId={activeId}
+          setActiveId={setActiveId}
+        />
+        <Rig activeId={activeId} />
         <Preload all />
       </Canvas>
     </div>
   );
 };
 
-// Extracted Gallery component to support different scenes later
-function Gallery() {
+function Gallery({
+  activeId,
+  setActiveId,
+}: {
+  activeId: string | null;
+  setActiveId: (id: string | null) => void;
+}) {
   return (
     <>
       <Frame
@@ -102,6 +120,8 @@ function Gallery() {
         bg="#e4cdac"
         position={[-1.15, 0, 0]}
         rotation={[0, 0.5, 0]}
+        activeId={activeId}
+        setActiveId={setActiveId}
       >
         <Gltf
           src="/3d/pickles_3d_version_of_hyuna_lees_illustration-transformed.glb"
@@ -114,6 +134,8 @@ function Gallery() {
         name="tea"
         author="Omar Faruq Tawsif"
         position={[0, 0, 0]}
+        activeId={activeId}
+        setActiveId={setActiveId}
       >
         <Gltf
           src="/3d/fiesta_tea-transformed.glb"
@@ -127,6 +149,8 @@ function Gallery() {
         bg="#d1d1ca"
         position={[1.15, 0, 0]}
         rotation={[0, -0.5, 0]}
+        activeId={activeId}
+        setActiveId={setActiveId}
       >
         <Gltf
           src="/3d/still_life_based_on_heathers_artwork-transformed.glb"
@@ -146,18 +170,18 @@ function Frame({
   width = 1,
   height = 1.61803398875,
   children,
+  activeId,
+  setActiveId,
   ...props
 }: FrameProps) {
   const portal = useRef<PortalMaterial>(null!);
-  const [, setLocation] = useLocation();
-  const [, params] = useRoute("/item/:id");
   const [hovered, hover] = useState(false);
 
   useCursor(hovered);
 
   useFrame((_state, dt) => {
     if (portal.current) {
-      easing.damp(portal.current, "blend", params?.id === id ? 1 : 0, 0.2, dt);
+      easing.damp(portal.current, "blend", activeId === id ? 1 : 0, 0.2, dt);
     }
   });
 
@@ -193,7 +217,7 @@ function Frame({
         name={id}
         onDoubleClick={(e: ThreeEvent<MouseEvent>) => {
           e.stopPropagation();
-          setLocation("/item/" + id);
+          setActiveId(id);
         }}
         onPointerOver={() => hover(true)}
         onPointerOut={() => hover(false)}
@@ -220,12 +244,12 @@ function Frame({
 function Rig({
   position = new THREE.Vector3(0, 0, 2),
   focus = new THREE.Vector3(0, 0, 0),
+  activeId,
 }: RigProps) {
   const { controls, scene } = useThree();
-  const [, params] = useRoute("/item/:id");
 
   useEffect(() => {
-    const active = scene.getObjectByName(params?.id || "");
+    const active = scene.getObjectByName(activeId || "");
     if (active && active.parent && (controls as any)?.setLookAt) {
       const targetPos = new THREE.Vector3(0, 0, 1.5);
       const targetFocus = new THREE.Vector3(0, 0, -2);
@@ -241,10 +265,10 @@ function Rig({
         targetFocus.z,
         true
       );
-    } else if (!params?.id && (controls as any)?.setLookAt) {
+    } else if (!activeId && (controls as any)?.setLookAt) {
       (controls as any).setLookAt(0, 0, 20, 0, 0, 0, true);
     }
-  }, [params, scene, controls]);
+  }, [activeId, scene, controls]);
 
   return (
     <CameraControls
