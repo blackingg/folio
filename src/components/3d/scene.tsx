@@ -75,7 +75,6 @@ export const Scene: FC = () => {
         flat
         camera={{ fov: 15, position: [0, 0, 20] }}
         style={{ height: "100%", width: "100%" }}
-        eventPrefix="client"
         dpr={[1, 2]} // Better resolution for retina while keeping performance
         gl={{
           antialias: true, // Re-enabling for better quality if possible, but keep it light
