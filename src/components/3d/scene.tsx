@@ -44,7 +44,7 @@ interface RigProps {
   focus?: THREE.Vector3;
 }
 
-interface PortalMaterialApi extends THREE.ShaderMaterial {
+interface PortalMaterial extends THREE.ShaderMaterial {
   blend: number;
 }
 
@@ -149,7 +149,7 @@ function Frame({
   children,
   ...props
 }: FrameProps) {
-  const portal = useRef<PortalMaterialApi>(null!);
+  const portal = useRef<PortalMaterial>(null!);
   const [, setLocation] = useLocation();
   const [, params] = useRoute("/item/:id");
   const [hovered, hover] = useState(false);
@@ -203,7 +203,7 @@ function Frame({
         <roundedPlaneGeometry args={[width, height, 0.1]} />
         <MeshPortalMaterial
           ref={portal as any}
-          side={THREE.DoubleSide}
+          side={THREE.FrontSide}
           blur={0}
           resolution={256}
         >
