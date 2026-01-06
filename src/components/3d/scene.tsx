@@ -194,7 +194,7 @@ function Frame({
         name={id}
         onDoubleClick={(e: ThreeEvent<MouseEvent>) => {
           e.stopPropagation();
-          setLocation("/item/" + (e.object as THREE.Object3D).name);
+          setLocation("/item/" + id);
         }}
         onPointerOver={() => hover(true)}
         onPointerOut={() => hover(false)}
