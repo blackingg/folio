@@ -77,7 +77,7 @@ export const Scene: FC = () => {
         style={{ height: "100%", width: "100%" }}
         dpr={[1, 2]} // Better resolution for retina while keeping performance
         gl={{
-          antialias: true, // Re-enabling for better quality if possible, but keep it light
+          antialias: true,
           stencil: false,
           alpha: true,
           powerPreference: "high-performance",
@@ -227,7 +227,7 @@ function Rig({
   useEffect(() => {
     const active = scene.getObjectByName(params?.id || "");
     if (active && active.parent && (controls as any)?.setLookAt) {
-      const targetPos = new THREE.Vector3(0, 0.5, 0.25);
+      const targetPos = new THREE.Vector3(0, 0, 1.5);
       const targetFocus = new THREE.Vector3(0, 0, -2);
       active.parent.localToWorld(targetPos);
       active.parent.localToWorld(targetFocus);
