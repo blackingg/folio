@@ -76,7 +76,13 @@ export const Scene: FC = () => {
   const [activeId, setActiveId] = useState<string | null>(null);
 
   return (
-    <div className="w-full h-full relative group/canvas">
+    <div
+      className={`${
+        activeId
+          ? "fixed inset-0 z-50 bg-background"
+          : "w-full h-full relative"
+      } group/canvas`}
+    >
       <BackButton
         activeId={activeId}
         setActiveId={setActiveId}
@@ -217,7 +223,7 @@ function Frame({
         name={id}
         onDoubleClick={(e: ThreeEvent<MouseEvent>) => {
           e.stopPropagation();
-          setActiveId(id);
+          setActiveId(activeId === id ? null : id);
         }}
         onPointerOver={() => hover(true)}
         onPointerOut={() => hover(false)}
@@ -228,7 +234,7 @@ function Frame({
           ref={portal as any}
           side={THREE.FrontSide}
           blur={0}
-          resolution={256}
+          resolution={activeId === id ? 1024 : 256}
         >
           <color
             attach="background"
@@ -251,7 +257,7 @@ function Rig({
   useEffect(() => {
     const active = scene.getObjectByName(activeId || "");
     if (active && active.parent && (controls as any)?.setLookAt) {
-      const targetPos = new THREE.Vector3(0, 0, 4.5);
+      const targetPos = new THREE.Vector3(0, 0, 2.0);
       const targetFocus = new THREE.Vector3(0, 0, -2);
       active.parent.localToWorld(targetPos);
       active.parent.localToWorld(targetFocus);
