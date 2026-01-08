@@ -19,6 +19,7 @@ import {
 } from "@react-three/drei";
 import { easing, geometry } from "maath";
 import { ArrowLeft } from "lucide-react";
+import { motion } from "framer-motion";
 
 // Custom geometry extended via maath
 extend({ RoundedPlaneGeometry: geometry.RoundedPlaneGeometry });
@@ -76,10 +77,12 @@ export const Scene: FC = () => {
   const [activeId, setActiveId] = useState<string | null>(null);
 
   return (
-    <div
+    <motion.div
+      layout
+      transition={{ type: "spring", stiffness: 300, damping: 30 }}
       className={`${
         activeId
-          ? "fixed inset-0 z-50 bg-background"
+          ? "fixed inset-0 z-[100] bg-background"
           : "w-full h-full relative"
       } group/canvas`}
     >
@@ -106,7 +109,7 @@ export const Scene: FC = () => {
         <Rig activeId={activeId} />
         <Preload all />
       </Canvas>
-    </div>
+    </motion.div>
   );
 };
 
