@@ -88,16 +88,16 @@ export const Scene: FC = () => {
               backgroundColor: "hsl(var(--background))",
             }
           : {
-              position: "relative",
               width: "100%",
               height: "100%",
+              position: "relative",
             }
       }
       transition={{
         duration: 0.5,
         ease: [0.4, 0, 0.2, 1],
       }}
-      className="group/canvas"
+      className="group/canvas transition-all ease-in-out"
     >
       <BackButton
         activeId={activeId}
