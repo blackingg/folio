@@ -78,13 +78,26 @@ export const Scene: FC = () => {
 
   return (
     <motion.div
-      layout
-      transition={{ type: "spring", stiffness: 300, damping: 30 }}
-      className={`${
+      initial={false}
+      animate={
         activeId
-          ? "fixed inset-0 z-[100] bg-background"
-          : "w-full h-full relative"
-      } group/canvas`}
+          ? {
+              position: "fixed",
+              inset: 0,
+              zIndex: 100,
+              backgroundColor: "hsl(var(--background))",
+            }
+          : {
+              position: "relative",
+              width: "100%",
+              height: "100%",
+            }
+      }
+      transition={{
+        duration: 0.5,
+        ease: [0.4, 0, 0.2, 1],
+      }}
+      className="group/canvas"
     >
       <BackButton
         activeId={activeId}
@@ -94,7 +107,7 @@ export const Scene: FC = () => {
         flat
         camera={{ fov: 15, position: [0, 0, 20] }}
         style={{ height: "100%", width: "100%" }}
-        dpr={[1, 2]} // Better resolution for retina while keeping performance
+        dpr={[1, 2]}
         gl={{
           antialias: true,
           stencil: false,
