@@ -5,23 +5,27 @@ export const DATA = {
   name: "Mubarak Odetunde (Black)",
   initials: "Black",
   url: "https://mubarakodetunde-portfolio.netlify.app/",
-  location: "Ile-Ife, Nigeria",
+  location: "Lagos, Nigeria",
   locationLink: "https://goo.gl/maps/8Q1KZJ8v1Zz",
   description:
     "Frontend dev | React/TypeScript/Three.js | Building 3D web experiences | Intrested in building cool stuff.",
   summary:
-    "Hi! I’m Mubarak, a frontend engineer passionate about building seamless, high-performance interfaces. I work with JavaScript, TypeScript, React, and Three.js to create engaging and interactive user experiences across platforms.",
+    "Hi! I’m Mubarak, a frontend engineer passionate about building seamless, high-performance interfaces. I work with JavaScript, TypeScript, React, and Three.js to create engaging and interactive user experiences across platforms. With a strong eye for aesthetics and design, I take a design-first approach to development, ensuring every project I build is as visually stunning as it is functional.",
   avatarUrl: "/me.png",
   skills: [
+    "Typescript",
     "React",
     "Next.js",
-    "Typescript",
     "React Native",
     "Three.js",
+    "React Three Fiber",
+    "Framer Motion",
     "GSAP",
     "Tailwind CSS",
-    "Framer Motion",
+    "TanStack Query",
+    "Redux",
     "Zustand",
+    "Supabase",
   ],
   navbar: [
     { href: "/", icon: HomeIcon, label: "Home" },
@@ -125,6 +129,47 @@ export const DATA = {
   ],
   projects: [
     {
+      title: "Shelf",
+      href: "https://www.shelf.ng/",
+      dates: "Nov 2025",
+      active: true,
+      description:
+        "Shelf is a cross-platform e-library I founded to make it easier for Nigerian students and readers to discover, share, and preserve digital archives. It brings together textbooks, novels, magazines, comics, and school notes in one accessible, community-driven platform, with organized public and private folders, smart search, and a clean, responsive interface for seamless reading across devices. As the founder, I defined the project structure and roadmap, designed the entire user experience from scratch, and built the responsive frontend that powers content discovery and interaction. I also established the moderation and verification model that ensures authenticity and supports Shelf’s vision of an open, sustainable, community-led digital library.",
+      technologies: ["Next.js", "Typescript", "TailwindCSS", "Motion Framer"],
+      links: [
+        {
+          type: "Source - Web",
+          href: "https://www.shelf.ng/",
+          icon: <Icons.globe className="size-3" />,
+        },
+        {
+          type: "GitHub",
+          href: "https://github.com/blackingg/shelf",
+          icon: <Icons.github className="size-3" />,
+        },
+      ],
+      image: "/shelf.png",
+      video: "",
+    },
+    {
+      title: "OAUHomes",
+      href: "https://www.oauhomes.org/",
+      dates: "Oct 2025",
+      active: true,
+      description:
+        "OAU Homes is a Next.js platform that connects OAU students directly with verified housing agents to reduce inflated accommodation prices. The platform offers a clean, responsive interface with search and filtering tools, plus verified agent profiles for transparency. I built the frontend in Next.js and Tailwind CSS, collaborated with a backend developer within the same repo, and personally handled the UI design from scratch. I also created clear listing layouts and optimized the experience for mobile users.",
+      technologies: ["Next.js", "Typescript", "TailwindCSS", "React"],
+      links: [
+        {
+          type: "Source - Web",
+          href: "https://www.oauhomes.org/",
+          icon: <Icons.globe className="size-3" />,
+        },
+      ],
+      image: "/oauhomes.png",
+      video: "",
+    },
+    {
       title: "SokoFunds",
       href: "https://github.com/blackingg/SokoFunds",
       dates: "Nov 2025 - Jan 2026",
@@ -170,47 +215,6 @@ export const DATA = {
         },
       ],
       image: "/sokofunds-landing.png",
-      video: "",
-    },
-    {
-      title: "OAUHomes",
-      href: "https://www.oauhomes.org/",
-      dates: "Oct 2025",
-      active: true,
-      description:
-        "OAU Homes is a Next.js platform that connects OAU students directly with verified housing agents to reduce inflated accommodation prices. The platform offers a clean, responsive interface with search and filtering tools, plus verified agent profiles for transparency. I built the frontend in Next.js and Tailwind CSS, collaborated with a backend developer within the same repo, and personally handled the UI design from scratch. I also created clear listing layouts and optimized the experience for mobile users.",
-      technologies: ["Next.js", "Typescript", "TailwindCSS", "React"],
-      links: [
-        {
-          type: "Source - Web",
-          href: "https://www.oauhomes.org/",
-          icon: <Icons.globe className="size-3" />,
-        },
-      ],
-      image: "/oauhomes.png",
-      video: "",
-    },
-    {
-      title: "Shelf",
-      href: "https://www.shelf.ng/",
-      dates: "Nov 2025",
-      active: true,
-      description:
-        "Shelf is a cross-platform e-library I founded to make it easier for Nigerian students and readers to discover, share, and preserve digital archives. It brings together textbooks, novels, magazines, comics, and school notes in one accessible, community-driven platform, with organized public and private folders, smart search, and a clean, responsive interface for seamless reading across devices. As the founder, I defined the project structure and roadmap, designed the entire user experience from scratch, and built the responsive frontend that powers content discovery and interaction. I also established the moderation and verification model that ensures authenticity and supports Shelf’s vision of an open, sustainable, community-led digital library.",
-      technologies: ["Next.js", "Typescript", "TailwindCSS", "Motion Framer"],
-      links: [
-        {
-          type: "Source - Web",
-          href: "https://www.shelf.ng/",
-          icon: <Icons.globe className="size-3" />,
-        },
-        {
-          type: "GitHub",
-          href: "https://github.com/blackingg/shelf",
-          icon: <Icons.github className="size-3" />,
-        },
-      ],
-      image: "/shelf.png",
       video: "",
     },
     {
