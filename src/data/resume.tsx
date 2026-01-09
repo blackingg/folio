@@ -127,7 +127,7 @@ export const DATA = {
     {
       title: "SokoFunds",
       href: "https://github.com/blackingg/SokoFunds",
-      dates: "Jan 2026",
+      dates: "Nov 2025 - Jan 2026",
       active: true,
       description:
         "SokoFunds is a fintech mobile application built to provide a modern banking experience. It features real-time balance tracking, secure money transfers, investment management for assets like tech stocks and real estate, and digital card management. The app focuses on a sleek Glassmorphism design with smooth animations for a premium user experience.",
