@@ -20,6 +20,8 @@ export const DATA = {
     "Three.js",
     "GSAP",
     "Tailwind CSS",
+    "Framer Motion",
+    "Zustand",
   ],
   navbar: [
     { href: "/", icon: HomeIcon, label: "Home" },
@@ -122,6 +124,54 @@ export const DATA = {
     },
   ],
   projects: [
+    {
+      title: "SokoFunds",
+      href: "https://github.com/blackingg/SokoFunds",
+      dates: "Jan 2026",
+      active: true,
+      description:
+        "SokoFunds is a fintech mobile application built to provide a modern banking experience. It features real-time balance tracking, secure money transfers, investment management for assets like tech stocks and real estate, and digital card management. The app focuses on a sleek Glassmorphism design with smooth animations for a premium user experience.",
+      technologies: [
+        "React Native",
+        "Expo",
+        "TypeScript",
+        "Zustand",
+        "NativeWind",
+        "Reanimated",
+      ],
+      links: [
+        {
+          type: "GitHub",
+          href: "https://github.com/blackingg/SokoFunds",
+          icon: <Icons.github className="size-3" />,
+        },
+      ],
+      image: "/sokofunds.png",
+      video: "",
+    },
+    {
+      title: "SokoFunds Landing",
+      href: "https://sokofunds-blackingg.vercel.app/",
+      dates: "Jan 2026",
+      active: true,
+      description:
+        "The official landing page for the SokoFunds application, designed to showcase the app's premium features with high-end aesthetics. It includes a responsive device selector for app previews, smooth Framer Motion animations, and a modern UI that aligns with the SokoFunds brand identity.",
+      technologies: ["Next.js", "TypeScript", "Tailwind CSS", "Framer Motion"],
+      links: [
+        {
+          type: "Source - Web",
+          href: "https://sokofunds-blackingg.vercel.app/",
+          icon: <Icons.globe className="size-3" />,
+        },
+        {
+          type: "GitHub",
+          href: "https://github.com/blackingg/SokoFunds-landing",
+          icon: <Icons.github className="size-3" />,
+        },
+      ],
+      image: "/sokofunds-landing.png",
+      video: "",
+    },
     {
       title: "OAUHomes",
       href: "https://www.oauhomes.org/",
