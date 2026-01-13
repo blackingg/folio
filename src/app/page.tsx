@@ -32,7 +32,7 @@ export default function Page() {
               />
             </div>
             <BlurFade delay={BLUR_FADE_DELAY}>
-              <Avatar className="size-28 sm:size-32 border-2 shadow-sm">
+              <Avatar className="size-56 md:size-32 border-2 shadow-sm">
                 <AvatarImage
                   alt={DATA.name}
                   src={DATA.avatarUrl}
