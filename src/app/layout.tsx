@@ -70,8 +70,11 @@ export const metadata: Metadata = {
     images: "/me.png",
   },
   verification: {
-    google: "",
+    google: "QTqDGYmpPo7-0b7C75zH5Pl-kHEkOlyFiJfNvwh2IMo",
     yandex: "",
+  },
+  other: {
+    "google-site-verification": "QTqDGYmpPo7-0b7C75zH5Pl-kHEkOlyFiJfNvwh2IMo",
   },
 };
 
@@ -85,6 +88,27 @@ export default function RootLayout({
       lang="en"
       suppressHydrationWarning
     >
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "Person",
+              name: "Odetunde Mubarak",
+              alternateName: "whoisblxck",
+              url: "https://www.whoisblxck.xyz/",
+              image: "https://www.whoisblxck.xyz/me.png",
+              sameAs: [
+                "https://www.instagram.com/whoisblxck_/",
+                "https://www.linkedin.com/in/mubarak-odetunde-258494236/",
+                "https://x.com/whoisBlxck/",
+              ],
+              jobTitle: DATA.description,
+            }),
+          }}
+        />
+      </head>
       <body
         className={cn(
           "min-h-screen bg-background font-sans antialiased max-w-3xl mx-auto pt-12 sm:pt-24 pb-20 sm:pb-32 px-6",
