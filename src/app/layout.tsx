@@ -101,6 +101,7 @@ export default function RootLayout({
               image: "https://www.whoisblxck.xyz/me.png",
               sameAs: [
                 "https://www.instagram.com/whoisblxck_/",
+                "https://www.instagram.com/createblack.x/",
                 "https://www.linkedin.com/in/mubarak-odetunde-258494236/",
                 "https://x.com/whoisBlxck/",
               ],
