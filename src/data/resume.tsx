@@ -69,6 +69,17 @@ export const DATA = {
 
   work: [
     {
+      company: "Seedwills",
+      href: "",
+      badges: ["React", "Redux", "Framer Motion", "TailwindCSS"],
+      location: "Remote",
+      title: "Frontend engineer (Contract)",
+      logoUrl: "/seedwills.png",
+      start: "December 2025",
+      end: "Present",
+      description: "",
+    },
+    {
       company: "Porfolio Website for a Senior Lecturer",
       href: "https://www.marufatoluyemisiodetunde.com/",
       badges: ["HTML", "TailwindCSS"],
@@ -95,7 +106,7 @@ export const DATA = {
     {
       company: "Brilstash",
       href: "https://brilstash.com/",
-      badges: ["React", "Typescript", "TailwindCSS"],
+      badges: ["React", "NextJs", "Typescript", "TailwindCSS"],
       location: "Remote",
       title: "Frontend engineer (Contract)",
       logoUrl: "/brilstash.png",
@@ -124,7 +135,7 @@ export const DATA = {
       degree: "Bachelor's Degree of Computer Science with Economics (BSC)",
       logoUrl: "/oau.png",
       start: "2021",
-      end: "present",
+      end: "Present",
     },
   ],
   projects: [
@@ -135,7 +146,7 @@ export const DATA = {
       active: true,
       description:
         "Shelf is a cross-platform e-library I founded to make it easier for Nigerian students and readers to discover, share, and preserve digital archives. It brings together textbooks, novels, magazines, comics, and school notes in one accessible, community-driven platform, with organized public and private folders, smart search, and a clean, responsive interface for seamless reading across devices. As the founder, I defined the project structure and roadmap, designed the entire user experience from scratch, and built the responsive frontend that powers content discovery and interaction. I also established the moderation and verification model that ensures authenticity and supports Shelf’s vision of an open, sustainable, community-led digital library.",
-      technologies: ["Next.js", "Typescript", "TailwindCSS", "Motion Framer"],
+      technologies: ["Next.js", "Typescript", "TailwindCSS", "Framer Motion"],
       links: [
         {
           type: "Source - Web",
