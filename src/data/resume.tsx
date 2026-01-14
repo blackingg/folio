@@ -4,7 +4,7 @@ import { HomeIcon, NotebookIcon, Rotate3d } from "lucide-react";
 export const DATA = {
   name: "Mubarak Odetunde (Black)",
   initials: "Black",
-  url: "https://mubarakodetunde-portfolio.netlify.app/",
+  url: "https://www.whoisblxck.xyz/",
   location: "Lagos, Nigeria",
   locationLink: "https://goo.gl/maps/8Q1KZJ8v1Zz",
   description:
