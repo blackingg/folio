@@ -146,6 +146,7 @@ export const DATA = {
       href: "https://www.shelf.ng/",
       dates: "Nov 2025",
       active: true,
+      featured: true,
       description:
         "Shelf is a cross-platform e-library I founded to make it easier for Nigerian students and readers to discover, share, and preserve digital archives. It brings together textbooks, novels, magazines, comics, and school notes in one accessible, community-driven platform, with organized public and private folders, smart search, and a clean, responsive interface for seamless reading across devices. As the founder, I defined the project structure and roadmap, designed the entire user experience from scratch, and built the responsive frontend that powers content discovery and interaction. I also established the moderation and verification model that ensures authenticity and supports Shelf’s vision of an open, sustainable, community-led digital library.",
       technologies: ["Next.js", "Typescript", "TailwindCSS", "Framer Motion"],
@@ -169,6 +170,7 @@ export const DATA = {
       href: "https://www.oauhomes.org/",
       dates: "Oct 2025",
       active: true,
+      featured: true,
       description:
         "OAU Homes is a Next.js platform that connects OAU students directly with verified housing agents to reduce inflated accommodation prices. The platform offers a clean, responsive interface with search and filtering tools, plus verified agent profiles for transparency. I built the frontend in Next.js and Tailwind CSS, collaborated with a backend developer within the same repo, and personally handled the UI design from scratch. I also created clear listing layouts and optimized the experience for mobile users.",
       technologies: ["Next.js", "Typescript", "TailwindCSS", "React"],
@@ -187,6 +189,7 @@ export const DATA = {
       href: "https://github.com/blackingg/SokoFunds",
       dates: "Nov 2025 - Jan 2026",
       active: true,
+      featured: true,
       description:
         "SokoFunds is a fintech mobile application built to provide a modern banking experience. It features real-time balance tracking, secure money transfers, investment management for assets like tech stocks and real estate, and digital card management. The app focuses on a sleek Glassmorphism design with smooth animations for a premium user experience.",
       technologies: [
@@ -212,6 +215,7 @@ export const DATA = {
       href: "https://sokofunds-blackingg.vercel.app/",
       dates: "Jan 2026",
       active: true,
+      featured: true,
       description:
         "The official landing page for the SokoFunds application, designed to showcase the app's premium features with high-end aesthetics. It includes a responsive device selector for app previews, smooth Framer Motion animations, and a modern UI that aligns with the SokoFunds brand identity.",
       technologies: ["Next.js", "TypeScript", "Tailwind CSS", "Framer Motion"],
