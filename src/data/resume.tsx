@@ -4,13 +4,13 @@ import { HomeIcon, NotebookIcon, Rotate3d } from "lucide-react";
 export const DATA = {
   name: "Mubarak Odetunde (Black)",
   initials: "Black",
-  url: "https://mubarakodetunde-portfolio.netlify.app/",
+  url: "https://www.whoisblxck.xyz/",
   location: "Lagos, Nigeria",
   locationLink: "https://goo.gl/maps/8Q1KZJ8v1Zz",
   description:
     "Frontend dev | React/TypeScript/Three.js | Building 3D web experiences | Intrested in building cool stuff.",
   summary:
-    "Hi! I’m Mubarak, a frontend engineer passionate about building seamless, high-performance interfaces. I work with JavaScript, TypeScript, React, and Three.js to create engaging and interactive user experiences across platforms. With a strong eye for aesthetics and design, I take a design-first approach to development, ensuring every project I build is as visually stunning as it is functional.",
+    "Hi! I’m Mubarak, a Frontend Engineer passionate about building seamless, high-performance interfaces. I work with JavaScript, TypeScript, React, and Three.js to create engaging and interactive user experiences across platforms. With a strong eye for aesthetics and design, I take a design-first approach to development, ensuring every project I build is as visually stunning as it is functional.",
   avatarUrl: "/me.png",
   skills: [
     "Typescript",
@@ -69,11 +69,22 @@ export const DATA = {
 
   work: [
     {
+      company: "Seedwills",
+      href: "",
+      badges: ["React", "Redux", "Framer Motion", "TailwindCSS"],
+      location: "Remote",
+      title: "Frontend Engineer (Contract)",
+      logoUrl: "/seedwills.png",
+      start: "December 2025",
+      end: "Present",
+      description: "",
+    },
+    {
       company: "Porfolio Website for a Senior Lecturer",
       href: "https://www.marufatoluyemisiodetunde.com/",
       badges: ["HTML", "TailwindCSS"],
       location: "Remote",
-      title: "Frontend engineer",
+      title: "Frontend Engineer",
       logoUrl: "",
       start: "Sept 2025",
       end: "",
@@ -85,7 +96,7 @@ export const DATA = {
       badges: ["React", "TypeScript", "TailwindCSS"],
       href: "https://onetro.co/",
       location: "Remote",
-      title: "Frontend engineer (Contract)",
+      title: "Frontend Engineer (Contract)",
       logoUrl: "/onetro.png",
       start: "June 2025",
       end: "Aug 2025",
@@ -95,9 +106,9 @@ export const DATA = {
     {
       company: "Brilstash",
       href: "https://brilstash.com/",
-      badges: ["React", "Typescript", "TailwindCSS"],
+      badges: ["React", "NextJs", "Typescript", "TailwindCSS"],
       location: "Remote",
-      title: "Frontend engineer (Contract)",
+      title: "Frontend Engineer (Contract)",
       logoUrl: "/brilstash.png",
       start: "June 2025",
       end: "Aug 2025",
@@ -109,7 +120,7 @@ export const DATA = {
       href: "https://brilstack.com/",
       badges: ["React", "Typescript", "TailwindCSS"],
       location: "Remote",
-      title: "Frontend engineer (Contract)",
+      title: "Frontend Engineer (Contract)",
       logoUrl: "/brilstack.png",
       start: "March 2025",
       end: "May 2025",
@@ -123,8 +134,10 @@ export const DATA = {
       href: "https://oauife.edu.ng/",
       degree: "Bachelor's Degree of Computer Science with Economics (BSC)",
       logoUrl: "/oau.png",
-      start: "2021",
-      end: "present",
+      start: "",
+      end: "",
+      // start: "2021",
+      // end: "Present",
     },
   ],
   projects: [
@@ -133,9 +146,10 @@ export const DATA = {
       href: "https://www.shelf.ng/",
       dates: "Nov 2025",
       active: true,
+      featured: true,
       description:
         "Shelf is a cross-platform e-library I founded to make it easier for Nigerian students and readers to discover, share, and preserve digital archives. It brings together textbooks, novels, magazines, comics, and school notes in one accessible, community-driven platform, with organized public and private folders, smart search, and a clean, responsive interface for seamless reading across devices. As the founder, I defined the project structure and roadmap, designed the entire user experience from scratch, and built the responsive frontend that powers content discovery and interaction. I also established the moderation and verification model that ensures authenticity and supports Shelf’s vision of an open, sustainable, community-led digital library.",
-      technologies: ["Next.js", "Typescript", "TailwindCSS", "Motion Framer"],
+      technologies: ["Next.js", "Typescript", "TailwindCSS", "Framer Motion"],
       links: [
         {
           type: "Source - Web",
@@ -156,6 +170,7 @@ export const DATA = {
       href: "https://www.oauhomes.org/",
       dates: "Oct 2025",
       active: true,
+      featured: true,
       description:
         "OAU Homes is a Next.js platform that connects OAU students directly with verified housing agents to reduce inflated accommodation prices. The platform offers a clean, responsive interface with search and filtering tools, plus verified agent profiles for transparency. I built the frontend in Next.js and Tailwind CSS, collaborated with a backend developer within the same repo, and personally handled the UI design from scratch. I also created clear listing layouts and optimized the experience for mobile users.",
       technologies: ["Next.js", "Typescript", "TailwindCSS", "React"],
@@ -174,6 +189,7 @@ export const DATA = {
       href: "https://github.com/blackingg/SokoFunds",
       dates: "Nov 2025 - Jan 2026",
       active: true,
+      featured: true,
       description:
         "SokoFunds is a fintech mobile application built to provide a modern banking experience. It features real-time balance tracking, secure money transfers, investment management for assets like tech stocks and real estate, and digital card management. The app focuses on a sleek Glassmorphism design with smooth animations for a premium user experience.",
       technologies: [
@@ -199,6 +215,7 @@ export const DATA = {
       href: "https://sokofunds-blackingg.vercel.app/",
       dates: "Jan 2026",
       active: true,
+      featured: true,
       description:
         "The official landing page for the SokoFunds application, designed to showcase the app's premium features with high-end aesthetics. It includes a responsive device selector for app previews, smooth Framer Motion animations, and a modern UI that aligns with the SokoFunds brand identity.",
       technologies: ["Next.js", "TypeScript", "Tailwind CSS", "Framer Motion"],

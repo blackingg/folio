@@ -32,7 +32,7 @@ export default function Page() {
               />
             </div>
             <BlurFade delay={BLUR_FADE_DELAY}>
-              <Avatar className="size-28 sm:size-32 border-2 shadow-sm">
+              <Avatar className="size-56 md:size-32 border-2 shadow-sm">
                 <AvatarImage
                   alt={DATA.name}
                   src={DATA.avatarUrl}
@@ -110,7 +110,11 @@ export default function Page() {
                 altText={education.school}
                 title={education.school}
                 subtitle={education.degree}
-                period={`${education.start} - ${education.end}`}
+                period={
+                  education.start
+                    ? `${education.start} - ${education.end}`
+                    : undefined
+                }
               />
             </BlurFade>
           ))}
@@ -159,25 +163,38 @@ export default function Page() {
             </div>
           </BlurFade>
           <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 mx-auto px-4 sm:px-0">
-            {DATA.projects.map((project, id) => (
-              <BlurFade
-                key={project.title}
-                delay={BLUR_FADE_DELAY * 12 + id * 0.05}
-              >
-                <ProjectCard
-                  href={project.href}
+            {DATA.projects
+              .filter((project) => (project as any).featured)
+              .map((project, id) => (
+                <BlurFade
                   key={project.title}
-                  title={project.title}
-                  description={project.description}
-                  dates={project.dates}
-                  tags={project.technologies}
-                  image={project.image}
-                  video={project.video}
-                  links={project.links}
-                />
-              </BlurFade>
-            ))}
+                  delay={BLUR_FADE_DELAY * 12 + id * 0.05}
+                >
+                  <ProjectCard
+                    href={project.href}
+                    key={project.title}
+                    title={project.title}
+                    description={project.description}
+                    dates={project.dates}
+                    tags={project.technologies}
+                    image={project.image}
+                    video={project.video}
+                    links={project.links}
+                  />
+                </BlurFade>
+              ))}
           </div>
+          <BlurFade delay={BLUR_FADE_DELAY * 13}>
+            <div className="flex justify-center mt-8">
+              <Link
+                href="/projects"
+                className="inline-flex items-center gap-2 rounded-lg bg-primary px-6 py-3 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
+              >
+                View All Projects
+                <ChevronRight className="h-4 w-4" />
+              </Link>
+            </div>
+          </BlurFade>
         </div>
       </section>
       {/* <section id="hackathons">

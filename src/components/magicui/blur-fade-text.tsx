@@ -46,6 +46,8 @@ const BlurFadeText = ({
               exit="hidden"
               variants={combinedVariants}
               transition={{
+                repeat: Infinity,
+                repeatType: "reverse",
                 delay: delay + i * characterDelay,
                 ease: "easeOut",
                 duration: duration,
@@ -66,8 +68,8 @@ const BlurFadeText = ({
       <AnimatePresence>
         <motion.span
           initial="hidden"
-          animate="visible"
-          exit="hidden"
+          whileInView="visible"
+          viewport={{ once: false, amount: 0.6 }}
           variants={combinedVariants}
           transition={{
             delay,

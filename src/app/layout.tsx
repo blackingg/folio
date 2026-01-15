@@ -19,25 +19,20 @@ export const metadata: Metadata = {
     default: DATA.name,
     template: `%s | ${DATA.name}`,
   },
-  icons: [
-    {
-      rel: "icon",
-      type: "image/png",
-      sizes: "32x32",
-      url: "/favicon/favicon-32x32.png",
-    },
-    {
-      rel: "icon",
-      type: "image/png",
-      sizes: "16x16",
-      url: "/favicon/favicon-16x16.png",
-    },
-    {
-      rel: "apple-touch-icon",
-      sizes: "180x180",
-      url: "/favicon/apple-touch-icon.png",
-    },
-  ],
+  icons: {
+    icon: [
+      { url: "/favicon/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+      { url: "/favicon/favicon-16x16.png", sizes: "16x16", type: "image/png" },
+      { url: "/favicon.ico" },
+    ],
+    apple: [
+      {
+        url: "/favicon/apple-touch-icon.png",
+        sizes: "180x180",
+        type: "image/png",
+      },
+    ],
+  },
   description: DATA.description,
   openGraph: {
     title: `${DATA.name}'s portfolio`,
@@ -75,8 +70,11 @@ export const metadata: Metadata = {
     images: "/me.png",
   },
   verification: {
-    google: "",
+    google: "QTqDGYmpPo7-0b7C75zH5Pl-kHEkOlyFiJfNvwh2IMo",
     yandex: "",
+  },
+  other: {
+    "google-site-verification": "QTqDGYmpPo7-0b7C75zH5Pl-kHEkOlyFiJfNvwh2IMo",
   },
 };
 
@@ -90,6 +88,28 @@ export default function RootLayout({
       lang="en"
       suppressHydrationWarning
     >
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "Person",
+              name: "Odetunde Mubarak",
+              alternateName: "whoisblxck",
+              url: "https://www.whoisblxck.xyz/",
+              image: "https://www.whoisblxck.xyz/me.png",
+              sameAs: [
+                "https://www.instagram.com/whoisblxck_/",
+                "https://www.instagram.com/createblack.x/",
+                "https://www.linkedin.com/in/mubarak-odetunde-258494236/",
+                "https://x.com/whoisBlxck/",
+              ],
+              jobTitle: DATA.description,
+            }),
+          }}
+        />
+      </head>
       <body
         className={cn(
           "min-h-screen bg-background font-sans antialiased max-w-3xl mx-auto pt-12 sm:pt-24 pb-20 sm:pb-32 px-6",
