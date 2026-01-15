@@ -21,6 +21,7 @@ const BlurFadeText = ({
   text,
   className,
   variant,
+  duration = 0.4,
   characterDelay = 0.03,
   delay = 0,
   yOffset = 8,
@@ -28,7 +29,7 @@ const BlurFadeText = ({
 }: BlurFadeTextProps) => {
   const defaultVariants: Variants = {
     hidden: { y: yOffset, opacity: 0, filter: "blur(8px)" },
-    visible: { y: -yOffset, opacity: 1, filter: "blur(0px)" },
+    visible: { y: 0, opacity: 1, filter: "blur(0px)" },
   };
   const combinedVariants = variant || defaultVariants;
   const characters = useMemo(() => Array.from(text), [text]);
@@ -49,6 +50,7 @@ const BlurFadeText = ({
                 repeatType: "reverse",
                 delay: delay + i * characterDelay,
                 ease: "easeOut",
+                duration: duration,
               }}
               className={cn("inline-block", className)}
               style={{ width: char.trim() === "" ? "0.2em" : "auto" }}
@@ -72,6 +74,7 @@ const BlurFadeText = ({
           transition={{
             delay,
             ease: "easeOut",
+            duration: duration,
           }}
           className={cn("inline-block", className)}
         >
