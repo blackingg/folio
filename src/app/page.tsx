@@ -110,7 +110,11 @@ export default function Page() {
                 altText={education.school}
                 title={education.school}
                 subtitle={education.degree}
-                period={`${education.start} - ${education.end}`}
+                period={
+                  education.start
+                    ? `${education.start} - ${education.end}`
+                    : undefined
+                }
               />
             </BlurFade>
           ))}

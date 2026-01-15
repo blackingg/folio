@@ -16,7 +16,7 @@ interface ResumeCardProps {
   subtitle?: string;
   href?: string;
   badges?: readonly string[];
-  period: string;
+  period?: string;
   description?: string;
 }
 export const ResumeCard = ({
@@ -77,9 +77,11 @@ export const ResumeCard = ({
                   )}
                 />
               </h3>
-              <div className="text-sm tabular-nums text-foreground/80 mt-1 sm:mt-0 sm:text-right font-medium">
-                {period}
-              </div>
+              {period && (
+                <div className="text-sm tabular-nums text-foreground/80 mt-1 sm:mt-0 sm:text-right font-medium">
+                  {period}
+                </div>
+              )}
             </div>
             {subtitle && (
               <div className="font-sans text-sm text-foreground">

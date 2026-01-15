@@ -134,6 +134,8 @@ export const DATA = {
       href: "https://oauife.edu.ng/",
       degree: "Bachelor's Degree of Computer Science with Economics (BSC)",
       logoUrl: "/oau.png",
+      start: "",
+      end: "",
       // start: "2021",
       // end: "Present",
     },
