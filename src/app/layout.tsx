@@ -69,6 +69,21 @@ export const metadata: Metadata = {
     creator: DATA.name,
     images: "/me.png",
   },
+  keywords: [
+    "Odetunde Mubarak",
+    "Mubarak Odetunde",
+    "whoisblxck",
+    "Frontend Engineer",
+    "Web3 Nigeria",
+    "Portfolio",
+    "Resume",
+    "Software Engineer",
+    "React Developer",
+    "Next.js Developer",
+    "JavaScript Developer",
+    "TypeScript Developer",
+    "React-Native Developer",
+  ],
   verification: {
     google: "QTqDGYmpPo7-0b7C75zH5Pl-kHEkOlyFiJfNvwh2IMo",
     yandex: "",
@@ -114,7 +129,7 @@ export default function RootLayout({
       <body
         className={cn(
           "min-h-screen bg-background font-sans antialiased max-w-3xl mx-auto pt-12 sm:pt-24 pb-20 sm:pb-32 px-6",
-          fontSans.variable
+          fontSans.variable,
         )}
       >
         <Analytics />
