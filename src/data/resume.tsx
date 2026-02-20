@@ -73,7 +73,7 @@ export const DATA = {
       href: "https://www.bayse.markets/",
       badges: ["React", "TypeScript", "TailwindCSS", "TanStack Query"],
       location: "Remote",
-      title: "Frontend Engineer (Contract)",
+      title: "Frontend Engineer",
       logoUrl: "/bayse.jpg",
       start: "February 2026",
       end: "Present",
