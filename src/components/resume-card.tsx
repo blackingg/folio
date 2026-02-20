@@ -18,6 +18,7 @@ interface ResumeCardProps {
   badges?: readonly string[];
   period?: string;
   description?: string;
+  responsibilities?: readonly string[];
 }
 export const ResumeCard = ({
   logoUrl,
@@ -28,11 +29,12 @@ export const ResumeCard = ({
   badges,
   period,
   description,
+  responsibilities,
 }: ResumeCardProps) => {
   const [isExpanded, setIsExpanded] = React.useState(false);
 
   const handleClick = () => {
-    if (description) {
+    if (description || (responsibilities && responsibilities.length > 0)) {
       setIsExpanded(!isExpanded);
     }
   };
@@ -73,7 +75,7 @@ export const ResumeCard = ({
                 <ChevronRightIcon
                   className={cn(
                     "size-4 absolute right-0 top-0.5 transition-all duration-300 ease-out group-hover:translate-x-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100",
-                    isExpanded ? "rotate-90" : "rotate-0"
+                    isExpanded ? "rotate-90" : "rotate-0",
                   )}
                 />
               </h3>
@@ -89,7 +91,8 @@ export const ResumeCard = ({
               </div>
             )}
           </CardHeader>
-          {description && (
+          {(description ||
+            (responsibilities && responsibilities.length > 0)) && (
             <motion.div
               initial={{ opacity: 0, height: 0 }}
               animate={{
@@ -103,7 +106,19 @@ export const ResumeCard = ({
               }}
               className="mt-2 text-sm sm:text-base flex flex-col gap-2 overflow-hidden leading-relaxed text-foreground/80 w-full break-words"
             >
-              {description}
+              {description && <div>{description}</div>}
+              {responsibilities && responsibilities.length > 0 && (
+                <ul className="list-disc list-inside mt-2 space-y-1">
+                  {responsibilities.map((responsibility, index) => (
+                    <li
+                      key={index}
+                      className="text-muted-foreground text-xs sm:text-sm"
+                    >
+                      {responsibility}
+                    </li>
+                  ))}
+                </ul>
+              )}
               {href && (
                 <Link
                   href={href}

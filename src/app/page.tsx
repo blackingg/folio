@@ -87,9 +87,21 @@ export default function Page() {
                   work.end ?? "Present"
                 }`}
                 description={work.description}
+                responsibilities={work?.responsibilities}
               />
             </BlurFade>
           ))}
+          <BlurFade delay={BLUR_FADE_DELAY * 6.5}>
+            <div className="flex justify-center mt-4">
+              <Link
+                href="/work"
+                className="inline-flex items-center gap-2 rounded-lg bg-primary px-6 py-3 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
+              >
+                View Full Career Path
+                <ChevronRight className="h-4 w-4" />
+              </Link>
+            </div>
+          </BlurFade>
         </div>
       </section>
       <section id="education">

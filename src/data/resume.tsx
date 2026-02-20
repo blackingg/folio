@@ -69,15 +69,41 @@ export const DATA = {
 
   work: [
     {
+      company: "Bayse Markets (formerly Gowagr)",
+      href: "https://www.bayse.markets/",
+      badges: ["React", "TypeScript", "TailwindCSS", "TanStack Query"],
+      location: "Remote",
+      title: "Frontend Engineer (Contract)",
+      logoUrl: "/bayse.jpg",
+      start: "February 2026",
+      end: "Present",
+      description:
+        "Modernizing and scaling the frontend architecture for a decentralized prediction market platform.",
+      featured: true,
+      responsibilities: [],
+    },
+    {
       company: "Seedwills",
       href: "",
-      badges: ["React", "Redux", "Framer Motion", "TailwindCSS"],
+      badges: ["React", "Redux Toolkit", "Ant Design", "TailwindCSS"],
       location: "Remote",
       title: "Frontend Engineer (Contract)",
       logoUrl: "/seedwills.png",
       start: "December 2025",
-      end: "Present",
-      description: "",
+      end: "February 2026",
+      description:
+        "Built and led frontend engineering for a digital estate planning platform enabling users to create legal wills and manage assets.",
+      featured: true,
+      responsibilities: [
+        "Led frontend architecture using React, Redux Toolkit, Tailwind CSS, Ant Design, and modular component design.",
+        "Built responsive, multi-step wizard workflows for Will creation, covering Executors • Guardians • Asset Distribution, ensuring a seamless user experience for sensitive tasks.",
+        "Engineered a dynamic navigation stepper that reads backend metadata to intelligently route users through incomplete sections, replacing hardcoded flows with a personalized, context-aware experience based on real-time form completion status.",
+        "Developed a comprehensive Admin Dashboard for managing Users, Plans, and Document generation requests.",
+        "Implemented robust global state management with Redux to handle persistent form data across complex application flows.",
+        "Integrated frontend payment flows with Paystack, handling checkout states, VAT calculations, and document printing services.",
+        "Collaborated on RESTful API integrations to secure confidential user data and generate legal documents from frontend inputs.",
+        "Optimized build performance and application load times using code splitting and lazy loading components.",
+      ],
     },
     {
       company: "Porfolio Website for a Senior Lecturer",
@@ -88,8 +114,15 @@ export const DATA = {
       logoUrl: "",
       start: "Sept 2025",
       end: "",
+      featured: true,
       description:
-        "This is a portfolio website for a senior lecturer, built to showcase the lecturer’s professional profile, academic credentials, research interests, and services. The site features a clean, responsive landing page that highlights key information such as professional background, education, research focus, publications, and contact details. I implemented the front‑end using HTML and TailwindCSS, ensuring a responsive layout across devices, and structured the site so visitors can easily navigate the profile and view detailed academic and professional information.",
+        "Built a professional portfolio website for a senior lecturer to showcase academic credentials and research.",
+      responsibilities: [
+        "Designed and implemented a clean, responsive landing page highlighting professional background and publications.",
+        "Ensured seamless navigation and mobile responsiveness using TailwindCSS.",
+        "Structured academic data for easy discovery and readability.",
+        "Delivered a design-first solution meeting specific academic branding requirements.",
+      ],
     },
     {
       company: "Onetro",
@@ -100,8 +133,13 @@ export const DATA = {
       logoUrl: "/onetro.png",
       start: "June 2025",
       end: "Aug 2025",
+      featured: true,
       description:
-        "I took full responsibility for the frontend, working within an existing TypeScript architecture to fix issues and enhance features. I integrated backend APIs to ensure accurate data display and a smooth user experience, and I optimized the booking system for both one-on-one and group sessions with strong type safety. I also implemented Google sign-up/sign-in for secure authentication and developed new features, including the 3D customizable flippable Onetro Card and the public page. Throughout the project, I resolved bugs, refined styling, and ensured a responsive, user-friendly design across all devices.",
+        "Architected a high-performance booking ecosystem for Onetro, leveraging advanced CSS transforms and Tailwind to deliver immersive, 3D-inspired interactions.",
+      responsibilities: [
+        "Spearheaded the integration of type-safe frontend architecture with backend APIs to ensure seamless data synchronization within the dynamic interface.",
+        "Engineered the signature 3D flippable Onetro Card system using pure CSS hardware-accelerated transforms, achieving premium depth effects with zero WebGL overhead.",
+      ],
     },
     {
       company: "Brilstash",
@@ -113,7 +151,13 @@ export const DATA = {
       start: "June 2025",
       end: "Aug 2025",
       description:
-        "I built the responsive landing page to showcase the company’s services and developed dashboards, application workflows, and user authentication flows. I also implemented the consent form for partner onboarding to ensure compliance and a smooth user experience. In addition, I integrated frontend features with backend APIs for loan processing, user verification, and real-time feedback, while ensuring mobile responsiveness, clean UI/UX, and strong performance across all devices.",
+        "Developed core landing pages and internal dashboards for a financial services platform.",
+      responsibilities: [
+        "Built responsive landing pages and user authentication workflows.",
+        "Implemented complex partner onboarding forms and loan processing dashboards.",
+        "Integrated real-time feedback systems and backend APIs for loan verification.",
+        "Ensured high performance and accessibility across all user-facing components.",
+      ],
     },
     {
       company: "Brilstack",
@@ -125,7 +169,13 @@ export const DATA = {
       start: "March 2025",
       end: "May 2025",
       description:
-        "I collaborated with backend developers to optimize an existing web application, reducing overall load times and improving performance. I also implemented efficient pagination for data-heavy pages, revamped the user interface for a cleaner and more intuitive experience, and refactored redundant code to enhance maintainability and ensure smoother functionality across the application.",
+        "Focused on performance optimization and UI/UX modernization of data-heavy applications.",
+      responsibilities: [
+        "Revamped data tables with efficient pagination and filtering logic.",
+        "Collaborated with backend engineers to reduce API response latency in the UI.",
+        "Refactored legacy code to improve maintainability and type safety.",
+        "Redesigned key user flows to simplify complex data interactions.",
+      ],
     },
   ],
   education: [
