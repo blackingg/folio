@@ -87,7 +87,6 @@ export default function Page() {
                   work.end ?? "Present"
                 }`}
                 description={work.description}
-                responsibilities={work?.responsibilities}
               />
             </BlurFade>
           ))}
