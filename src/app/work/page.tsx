@@ -47,7 +47,7 @@ export default function WorkPage() {
           id="work-timeline"
           className="relative"
         >
-          <div className="absolute left-7 top-2 bottom-0 w-px border-l-2 border-dashed border-neutral-200 dark:border-neutral-800 hidden sm:block" />
+          <div className="absolute left-7 top-2 bottom-0 w-px border-l-2 border-dashed border-neutral-200 dark:border-neutral-500 hidden sm:block" />
 
           <div className="space-y-20">
             {DATA.work.map((work, id) => (
