@@ -137,8 +137,12 @@ export const DATA = {
       description:
         "Architected a high-performance booking ecosystem for Onetro, leveraging advanced CSS transforms and Tailwind to deliver immersive, 3D-inspired interactions.",
       responsibilities: [
-        "Spearheaded the integration of type-safe frontend architecture with backend APIs to ensure seamless data synchronization within the dynamic interface.",
-        "Engineered the signature 3D flippable Onetro Card system using pure CSS hardware-accelerated transforms, achieving premium depth effects with zero WebGL overhead.",
+        "Owned and scaled the frontend within an existing TypeScript architecture, resolving critical issues and improving feature reliability.",
+        "Integrated backend APIs with strong type safety to ensure accurate, real-time data synchronization across the platform.",
+        "Optimized the booking system to support one-on-one and group sessions, improving performance and user flow efficiency.",
+        "Implemented secure Google OAuth authentication for seamless user onboarding and access control.",
+        "Built the 3D customizable flippable Onetro Card using hardware-accelerated CSS transforms for high-performance visual effects.",
+        "Developed the public-facing page and improved responsiveness, accessibility, and cross-device consistency.",
       ],
     },
     {
@@ -171,10 +175,12 @@ export const DATA = {
       description:
         "Focused on performance optimization and UI/UX modernization of data-heavy applications.",
       responsibilities: [
-        "Revamped data tables with efficient pagination and filtering logic.",
-        "Collaborated with backend engineers to reduce API response latency in the UI.",
-        "Refactored legacy code to improve maintainability and type safety.",
-        "Redesigned key user flows to simplify complex data interactions.",
+        "Partnered with backend engineers to optimize API contracts and reduce UI-level latency, improving overall system responsiveness.",
+        "Engineered scalable pagination and filtering logic for data-intensive views, ensuring efficient rendering and smooth user interaction.",
+        "Optimized frontend performance through improved state management patterns and render optimization strategies.",
+        "Refactored legacy code and eliminated redundancy to enhance maintainability, architectural clarity, and long-term scalability.",
+        "Reimagined complex data-driven user flows, delivering a cleaner, more intuitive interface aligned with modern UX standards.",
+        "Strengthened application stability by identifying performance bottlenecks, resolving edge cases, and enforcing better code organization practices.",
       ],
     },
   ],
