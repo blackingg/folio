@@ -71,7 +71,13 @@ export const DATA = {
     {
       company: "Bayse Markets (formerly Gowagr)",
       href: "https://www.bayse.markets/",
-      badges: ["React", "TypeScript", "TailwindCSS", "TanStack Query"],
+      badges: [
+        "React",
+        "NextJs",
+        "TypeScript",
+        "TailwindCSS",
+        "TanStack Query",
+      ],
       location: "Remote",
       title: "Frontend Engineer",
       logoUrl: "/bayse.jpg",
@@ -84,7 +90,7 @@ export const DATA = {
     },
     {
       company: "Seedwills",
-      href: "",
+      href: "https://seedwills.io/",
       badges: ["React", "Redux Toolkit", "Ant Design", "TailwindCSS"],
       location: "Remote",
       title: "Frontend Engineer (Contract)",
