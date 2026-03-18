@@ -57,6 +57,13 @@ export const DATA = {
 
         navbar: true,
       },
+      Resume: {
+        name: "Resume",
+        url: "https://flowcv.com/resume/1u1qd2vnw7",
+        icon: Icons.resume,
+
+        navbar: false,
+      },
       email: {
         name: "Send Email",
         url: "mailto:odetundemubarak04@gmail.com",

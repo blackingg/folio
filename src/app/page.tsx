@@ -53,14 +53,26 @@ export default function Page() {
           </Markdown>
         </BlurFade>
         <BlurFade delay={BLUR_FADE_DELAY * 4.5}>
+          <div className="mt-4 flex flex-wrap items-center gap-4">
+            <Link
+              href={DATA.contact.social.Resume.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
+            >
+              Download Resume
+            </Link>
+          </div>
+        </BlurFade>
+        <BlurFade delay={BLUR_FADE_DELAY * 4.8}>
           <Link
             href="/3d"
             className="group inline-flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors mt-4"
           >
-            <span className="text-sm">
-              Explore 3D Experience <span className="text-2xl">🚧</span>
+            <span className="text-sm sm:text-base font-medium tracking-tight">
+              Explore 3D Experience <span className="text-xl">🚧</span>
             </span>
-            <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+            <ChevronRight className="h-4 w-4 text-foreground/60 transition-all group-hover:translate-x-1 group-hover:text-foreground" />
           </Link>
         </BlurFade>
       </section>
