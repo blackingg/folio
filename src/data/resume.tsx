@@ -91,7 +91,7 @@ export const DATA = {
       start: "February 2026",
       end: "Present",
       description:
-        "Modernizing and scaling the frontend architecture for a decentralized prediction market platform.",
+        "",
       featured: true,
       responsibilities: [],
     },
