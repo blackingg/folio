@@ -2,7 +2,13 @@
 
 import { useState } from "react";
 
-export function BlogImage({ src, alt }: { src: string; alt: string }) {
+export function BlogImage({
+  src,
+  alt,
+}: {
+  src: string | undefined | null;
+  alt: string;
+}) {
   const [error, setError] = useState(false);
 
   if (error || !src) return null;
