@@ -144,7 +144,7 @@ export default async function Blog({
       <div className="flex justify-between items-center mt-2 mb-8 text-sm">
         <Suspense fallback={<p className="h-5" />}>
           <div className="flex items-center gap-2 text-neutral-600 dark:text-neutral-400">
-            <p>{formatDate(post.metadata.publishedAt)}</p>
+            <p>{formatDate(post.metadata.publishedAt, true)}</p>
             {post.metadata.readingTime && (
               <>
                 <span>•</span>
