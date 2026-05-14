@@ -22,38 +22,49 @@ export async function generateMetadata({
     return;
   }
 
+  const baseUrl = DATA.url.replace(/\/$/, "");
   let {
     title,
     publishedAt: publishedTime,
     summary: description,
     image,
+    keywords,
   } = post.metadata;
+
   let ogImage = image
     ? image.startsWith("http")
       ? image
-      : `${DATA.url}${image}`
-    : `${DATA.url}/og?title=${title}`;
+      : `${baseUrl}${image}`
+    : `${baseUrl}/me.png`;
 
   return {
     title,
     description,
+    keywords: keywords || [],
+    authors: [{ name: DATA.name }],
+    alternates: {
+      canonical: post.metadata.mediumLink || `${baseUrl}/blog/${post.slug}`,
+    },
     openGraph: {
       title,
       description,
       type: "article",
       publishedTime,
-      url: `${DATA.url}/blog/${post.slug}`,
+      url: `${baseUrl}/blog/${post.slug}`,
       images: [
         {
           url: ogImage,
         },
       ],
+      authors: [DATA.name],
     },
     twitter: {
       card: "summary_large_image",
       title,
       description,
       images: [ogImage],
+      creator: "@whoisBlxck",
+      site: "@whoisBlxck",
     },
   };
 }
@@ -88,12 +99,25 @@ export default async function Blog({
             image: post.metadata.image
               ? post.metadata.image.startsWith("http")
                 ? post.metadata.image
-                : `${DATA.url}${post.metadata.image}`
-              : `${DATA.url}/og?title=${post.metadata.title}`,
-            url: `${DATA.url}/blog/${post.slug}`,
+                : `${DATA.url.replace(/\/$/, "")}${post.metadata.image}`
+              : `${DATA.url.replace(/\/$/, "")}/me.png`,
+            url: `${DATA.url.replace(/\/$/, "")}/blog/${post.slug}`,
             author: {
               "@type": "Person",
               name: DATA.name,
+              url: DATA.url,
+            },
+            publisher: {
+              "@type": "Organization",
+              name: DATA.name,
+              logo: {
+                "@type": "ImageObject",
+                url: `${DATA.url.replace(/\/$/, "")}/me.png`,
+              },
+            },
+            mainEntityOfPage: {
+              "@type": "WebPage",
+              "@id": `${DATA.url.replace(/\/$/, "")}/blog/${post.slug}`,
             },
           }),
         }}

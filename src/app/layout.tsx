@@ -16,7 +16,7 @@ const fontSans = FontSans({
 export const metadata: Metadata = {
   metadataBase: new URL(DATA.url),
   title: {
-    default: `Frontend Engineer | ${DATA.name}`,
+    default: `${DATA.name} | Frontend Engineer`,
     template: `%s | ${DATA.name}`,
   },
   icons: {
@@ -33,10 +33,10 @@ export const metadata: Metadata = {
       },
     ],
   },
-  description: DATA.description,
+  description: `Professional portfolio of ${DATA.name}, a Frontend Engineer specializing in React, TypeScript, and Three.js. Discover projects, experience, and insights on web development.`,
   openGraph: {
-    title: `Frontend Engineer | ${DATA.name}`,
-    description: DATA.description,
+    title: `${DATA.name} | Frontend Engineer`,
+    description: `Professional portfolio of ${DATA.name}, a Frontend Engineer specializing in React, TypeScript, and Three.js.`,
     url: DATA.url,
     siteName: `${DATA.name}`,
     locale: "en_US",

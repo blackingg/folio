@@ -19,6 +19,9 @@ export default function Page() {
         <div className="mx-auto w-full max-w-3xl space-y-8">
           <div className="flex flex-col-reverse sm:flex-row gap-6 items-center sm:items-start justify-between">
             <div className="flex-col flex flex-1 space-y-2 text-center sm:text-left">
+              <h1 className="sr-only">
+                {DATA.name} - Frontend Engineer Portfolio
+              </h1>
               <BlurFadeText
                 delay={BLUR_FADE_DELAY}
                 className="text-4xl font-bold tracking-tighter sm:text-5xl xl:text-6xl/none"
