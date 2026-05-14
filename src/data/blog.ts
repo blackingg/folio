@@ -44,10 +44,27 @@ export async function markdownToHTML(markdown: string) {
 }
 
 export function calculateReadingTime(content: string) {
-  const wordsPerMinute = 200;
-  const noOfWords = content.split(/\s/g).length;
-  const minutes = noOfWords / wordsPerMinute;
-  const readTime = Math.ceil(minutes);
+  // Remove HTML tags to ensure word count only includes visible text
+  const text = content.replace(/<[^>]+>/g, " ");
+  
+  // Account for images as they add to the total reading experience
+  const imageCount = (content.match(/<img/g) || []).length;
+  
+  const wordsPerMinute = 225;
+  const noOfWords = text.trim().split(/\s+/).length;
+  let minutes = noOfWords / wordsPerMinute;
+
+  // Add additional time for each image, using a staggered approach 
+  // where the time per image decreases as the reader encounters more of them
+  if (imageCount > 0) {
+    let imageTime = 0;
+    for (let i = 1; i <= imageCount; i++) {
+      imageTime += Math.max(3, 13 - i);
+    }
+    minutes += imageTime / 60;
+  }
+
+  const readTime = Math.max(1, Math.ceil(minutes));
   return `${readTime} min read`;
 }
 
@@ -162,6 +179,7 @@ export async function getBlogPosts() {
         image,
         slug,
         keywords: item.categories || [],
+        readingTime: calculateReadingTime(content),
       };
     });
   } catch (error) {
@@ -177,10 +195,7 @@ export async function getBlogPosts() {
       slug: p.slug,
       readingTime: p.metadata.readingTime,
     })),
-    ...mediumPosts.map((p: any) => ({
-      ...p,
-      readingTime: calculateReadingTime(p.summary), // Initial guess from summary, will be updated in getPost
-    })),
+    ...mediumPosts,
   ];
 
   return allPosts.sort((a: any, b: any) => {
