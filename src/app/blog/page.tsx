@@ -16,7 +16,7 @@ export const metadata = {
   description: "My thoughts on software development, life, and more.",
 };
 
-export const dynamic = "force-dynamic";
+export const revalidate = 3600;
 
 const BLUR_FADE_DELAY = 0.04;
 
@@ -58,9 +58,15 @@ export default async function BlogPage() {
                       </CardTitle>
                       <CardDescription
                         suppressHydrationWarning
-                        className="text-sm"
+                        className="text-sm flex items-center gap-2"
                       >
                         {formatDate(post.publishedAt)}
+                        {post.readingTime && (
+                          <>
+                            <span>•</span>
+                            <span>{post.readingTime}</span>
+                          </>
+                        )}
                       </CardDescription>
                     </CardHeader>
                     <CardContent className="p-5 sm:p-6 pt-0">

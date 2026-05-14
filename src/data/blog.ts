@@ -18,8 +18,8 @@ type Metadata = {
   image?: string;
   mediumLink?: string;
   keywords?: string[];
+  readingTime?: string;
 };
-
 
 function getMDXFiles(dir: string) {
   return fs.readdirSync(dir).filter((file) => path.extname(file) === ".mdx");
@@ -43,6 +43,14 @@ export async function markdownToHTML(markdown: string) {
   return p.toString();
 }
 
+export function calculateReadingTime(content: string) {
+  const wordsPerMinute = 200;
+  const noOfWords = content.split(/\s/g).length;
+  const minutes = noOfWords / wordsPerMinute;
+  const readTime = Math.ceil(minutes);
+  return `${readTime} min read`;
+}
+
 export async function highlightHTML(html: string) {
   const p = await unified()
     .use(rehypeParse, { fragment: true })
@@ -50,7 +58,7 @@ export async function highlightHTML(html: string) {
       visit(tree, "element", (node: any) => {
         if (node.tagName === "pre") {
           let codeNode = node.children.find(
-            (child: any) => child.tagName === "code"
+            (child: any) => child.tagName === "code",
           );
 
           if (!codeNode) {
@@ -110,7 +118,7 @@ async function getAllPosts(dir: string): Promise<Post[]> {
     mdxFiles.map(async (file) => {
       let slug = path.basename(file, path.extname(file));
       return await getPost(slug);
-    })
+    }),
   );
   return posts.filter((post): post is Post => post !== null);
 }
@@ -126,12 +134,15 @@ export async function getBlogPosts() {
       },
     });
     const feed = await parser.parseURL(
-      "https://medium.com/feed/@odetundemubarak"
+      "https://medium.com/feed/@odetundemubarak",
     );
     mediumPosts = feed.items.map((item: any) => {
       const content = item["content:encoded"] || "";
       const imageMatch = content.match(/<img[^>]+src="([^"]+)"/);
-      const image = imageMatch && !imageMatch[1].includes("stat.medium.com") ? imageMatch[1] : null;
+      const image =
+        imageMatch && !imageMatch[1].includes("stat.medium.com")
+          ? imageMatch[1]
+          : null;
 
       const textContent = content
         .replace(/<[^>]+>/g, " ")
@@ -164,8 +175,12 @@ export async function getBlogPosts() {
       summary: p.metadata.summary,
       image: p.metadata.image,
       slug: p.slug,
+      readingTime: p.metadata.readingTime,
     })),
-    ...mediumPosts,
+    ...mediumPosts.map((p: any) => ({
+      ...p,
+      readingTime: calculateReadingTime(p.summary), // Initial guess from summary, will be updated in getPost
+    })),
   ];
 
   return allPosts.sort((a: any, b: any) => {
@@ -184,7 +199,10 @@ export async function getPost(slug: string): Promise<Post | null> {
     const content = await markdownToHTML(rawContent);
     return {
       source: content,
-      metadata: metadata as Metadata,
+      metadata: {
+        ...metadata,
+        readingTime: calculateReadingTime(rawContent),
+      } as Metadata,
       slug,
     };
   }
@@ -199,7 +217,7 @@ export async function getPost(slug: string): Promise<Post | null> {
       },
     });
     const feed = await parser.parseURL(
-      "https://medium.com/feed/@odetundemubarak"
+      "https://medium.com/feed/@odetundemubarak",
     );
     const feedItem = feed.items.find((item: any) => {
       const linkParts = item.link.split("/");
@@ -219,6 +237,7 @@ export async function getPost(slug: string): Promise<Post | null> {
           image: mediumPost.image || undefined,
           mediumLink: feedItem.link,
           keywords: feedItem.categories || [],
+          readingTime: calculateReadingTime(rawContent),
         },
         slug,
       };

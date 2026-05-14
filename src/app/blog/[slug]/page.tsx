@@ -1,6 +1,6 @@
 import { Icons } from "@/components/icons";
 import { ChevronLeft } from "lucide-react";
-import { getPost } from "@/data/blog";
+import { getPost, getBlogPosts } from "@/data/blog";
 import { DATA } from "@/data/resume";
 import { formatDate } from "@/lib/utils";
 import type { Metadata } from "next";
@@ -8,14 +8,21 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
+export async function generateStaticParams() {
+  const posts = await getBlogPosts();
+  return posts.map((post) => ({
+    slug: post.slug,
+  }));
+}
+
 export async function generateMetadata({
   params,
 }: {
-  params: Promise<{
+  params: {
     slug: string;
-  }>;
+  };
 }): Promise<Metadata | undefined> {
-  const { slug } = await params;
+  const { slug } = params;
   let post = await getPost(slug);
 
   if (!post) {
@@ -72,11 +79,11 @@ export async function generateMetadata({
 export default async function Blog({
   params,
 }: {
-  params: Promise<{
+  params: {
     slug: string;
-  }>;
+  };
 }) {
-  const { slug } = await params;
+  const { slug } = params;
   let post = await getPost(slug);
 
   if (!post) {
@@ -136,9 +143,15 @@ export default async function Blog({
       </h1>
       <div className="flex justify-between items-center mt-2 mb-8 text-sm">
         <Suspense fallback={<p className="h-5" />}>
-          <p className="text-sm text-neutral-600 dark:text-neutral-400">
-            {formatDate(post.metadata.publishedAt)}
-          </p>
+          <div className="flex items-center gap-2 text-neutral-600 dark:text-neutral-400">
+            <p>{formatDate(post.metadata.publishedAt)}</p>
+            {post.metadata.readingTime && (
+              <>
+                <span>•</span>
+                <p>{post.metadata.readingTime}</p>
+              </>
+            )}
+          </div>
         </Suspense>
       </div>
       <article
