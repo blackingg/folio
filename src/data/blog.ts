@@ -17,6 +17,7 @@ type Metadata = {
   summary: string;
   image?: string;
   mediumLink?: string;
+  keywords?: string[];
 };
 
 
@@ -130,7 +131,7 @@ export async function getBlogPosts() {
     mediumPosts = feed.items.map((item: any) => {
       const content = item["content:encoded"] || "";
       const imageMatch = content.match(/<img[^>]+src="([^"]+)"/);
-      const image = imageMatch ? imageMatch[1] : null;
+      const image = imageMatch && !imageMatch[1].includes("stat.medium.com") ? imageMatch[1] : null;
 
       const textContent = content
         .replace(/<[^>]+>/g, " ")
@@ -149,6 +150,7 @@ export async function getBlogPosts() {
         summary: preview,
         image,
         slug,
+        keywords: item.categories || [],
       };
     });
   } catch (error) {
@@ -216,6 +218,7 @@ export async function getPost(slug: string): Promise<Post | null> {
           summary: mediumPost.summary,
           image: mediumPost.image || undefined,
           mediumLink: feedItem.link,
+          keywords: feedItem.categories || [],
         },
         slug,
       };

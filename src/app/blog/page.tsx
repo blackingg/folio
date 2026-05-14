@@ -9,6 +9,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { BlogImage } from "@/components/blog-image";
 
 export const metadata = {
   title: "Blog",
@@ -47,15 +48,10 @@ export default async function BlogPage() {
               >
                 <Link href={`/blog/${post.slug}`}>
                   <Card className="hover:shadow-lg transition-shadow overflow-hidden group">
-                    {post.image && (
-                      <div className="relative w-full h-56 overflow-hidden">
-                        <img
-                          src={post.image}
-                          alt={post.title}
-                          className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-105"
-                        />
-                      </div>
-                    )}
+                    <BlogImage
+                      src={post.image}
+                      alt={post.title}
+                    />
                     <CardHeader className="p-5 sm:p-6 pb-2">
                       <CardTitle className="text-xl group-hover:text-primary transition-colors">
                         {post.title}
