@@ -223,6 +223,31 @@ export default function Page() {
           </BlurFade>
         </div>
       </section>
+      <section id="blog">
+        <BlurFade delay={BLUR_FADE_DELAY * 14}>
+          <div className="flex flex-col items-center justify-center space-y-4 text-center py-12">
+            <div className="space-y-2">
+              <div className="inline-block rounded-lg bg-foreground text-background px-4 py-1.5 text-sm font-medium">
+                Blog
+              </div>
+              <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">
+                I write sometimes
+              </h2>
+              <p className="mx-auto max-w-[600px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
+                I share my thoughts on software development, life, and the
+                things I&apos;m learning along the way.
+              </p>
+            </div>
+            <Link
+              href="/blog"
+              className="inline-flex items-center gap-2 rounded-lg bg-primary px-6 py-3 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
+            >
+              Read My Blog
+              <ChevronRight className="h-4 w-4" />
+            </Link>
+          </div>
+        </BlurFade>
+      </section>
       {/* <section id="hackathons">
         <div className="space-y-12 w-full py-12">
           <BlurFade delay={BLUR_FADE_DELAY * 13}>
