@@ -113,7 +113,7 @@ export default function RootLayout({
               "@type": "Person",
               name: "Odetunde Mubarak",
               alternateName: "whoisblxck",
-              url: "https://www.whoisblxck.xyz/",
+              url: "https://www.whoisblxck.xyz",
               image: "https://www.whoisblxck.xyz/me.png",
               sameAs: [
                 "https://www.instagram.com/whoisblxck_/",

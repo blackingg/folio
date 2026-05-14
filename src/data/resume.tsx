@@ -4,7 +4,7 @@ import { HomeIcon, NotebookIcon, Rotate3d } from "lucide-react";
 export const DATA = {
   name: "Mubarak Odetunde (Black)",
   initials: "Black",
-  url: "https://www.whoisblxck.xyz/",
+  url: "https://www.whoisblxck.xyz",
   location: "Lagos, Nigeria",
   locationLink: "https://goo.gl/maps/8Q1KZJ8v1Zz",
   description:
@@ -90,8 +90,7 @@ export const DATA = {
       logoUrl: "/bayse.jpg",
       start: "February 2026",
       end: "Present",
-      description:
-        "",
+      description: "",
       featured: true,
       responsibilities: [],
     },
