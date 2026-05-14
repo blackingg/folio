@@ -9,10 +9,14 @@ import { DATA } from "@/data/resume";
 import Link from "next/link";
 import Markdown from "react-markdown";
 import { ChevronRight } from "lucide-react";
+import { getBlogPosts } from "@/data/blog";
+import { BlogCard } from "@/components/blog-card";
 
 const BLUR_FADE_DELAY = 0.04;
 
-export default function Page() {
+export default async function Page() {
+  const posts = await getBlogPosts();
+  const latestPosts = posts.slice(0, 3);
   return (
     <main className="flex flex-col min-h-[100dvh] space-y-10">
       <section id="hero">
@@ -224,29 +228,52 @@ export default function Page() {
         </div>
       </section>
       <section id="blog">
-        <BlurFade delay={BLUR_FADE_DELAY * 14}>
-          <div className="flex flex-col items-center justify-center space-y-4 text-center py-12">
-            <div className="space-y-2">
-              <div className="inline-block rounded-lg bg-foreground text-background px-4 py-1.5 text-sm font-medium">
-                Blog
+        <div className="space-y-12 w-full py-12">
+          <BlurFade delay={BLUR_FADE_DELAY * 14}>
+            <div className="flex flex-col items-center justify-center space-y-4 text-center">
+              <div className="space-y-2">
+                <div className="inline-block rounded-lg bg-foreground text-background px-4 py-1.5 text-sm font-medium">
+                  Blog
+                </div>
+                <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">
+                  Recent Writing
+                </h2>
+                <p className="text-muted-foreground text-sm sm:text-base md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed max-w-[600px] mx-auto">
+                  I share my thoughts on software development, life, and the
+                  things I&apos;m learning along the way.
+                </p>
               </div>
-              <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">
-                I write sometimes
-              </h2>
-              <p className="mx-auto max-w-[600px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-                I share my thoughts on software development, life, and the
-                things I&apos;m learning along the way.
-              </p>
             </div>
-            <Link
-              href="/blog"
-              className="inline-flex items-center gap-2 rounded-lg bg-primary px-6 py-3 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
-            >
-              Read My Blog
-              <ChevronRight className="h-4 w-4" />
-            </Link>
+          </BlurFade>
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 mx-auto px-4 sm:px-0">
+            {latestPosts.map((post, id) => (
+              <BlurFade
+                key={post.slug}
+                delay={BLUR_FADE_DELAY * 15 + id * 0.05}
+              >
+                <BlogCard
+                  title={post.title}
+                  publishedAt={post.publishedAt}
+                  summary={post.summary}
+                  image={post.image}
+                  slug={post.slug}
+                  readingTime={post.readingTime}
+                />
+              </BlurFade>
+            ))}
           </div>
-        </BlurFade>
+          <BlurFade delay={BLUR_FADE_DELAY * 16}>
+            <div className="flex justify-center mt-4">
+              <Link
+                href="/blog"
+                className="inline-flex items-center gap-2 rounded-lg bg-primary px-6 py-3 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
+              >
+                View All Posts
+                <ChevronRight className="h-4 w-4" />
+              </Link>
+            </div>
+          </BlurFade>
+        </div>
       </section>
       {/* <section id="hackathons">
         <div className="space-y-12 w-full py-12">
