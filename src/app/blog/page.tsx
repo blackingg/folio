@@ -1,15 +1,6 @@
-import { formatDate } from "@/lib/utils";
 import BlurFade from "@/components/magicui/blur-fade";
 import { getBlogPosts } from "@/data/blog";
-import Link from "next/link";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { BlogImage } from "@/components/blog-image";
+import { BlogCard } from "@/components/blog-card";
 
 export const metadata = {
   title: "Blog",
@@ -46,36 +37,14 @@ export default async function BlogPage() {
                 delay={BLUR_FADE_DELAY * 2 + id * 0.05}
                 key={post.slug}
               >
-                <Link href={`/blog/${post.slug}`}>
-                  <Card className="overflow-hidden group border-none shadow-none">
-                    <BlogImage
-                      src={post.image}
-                      alt={post.title}
-                    />
-                    <CardHeader className="p-5 sm:p-6 pb-2">
-                      <CardTitle className="text-xl group-hover:text-primary transition-colors">
-                        {post.title}
-                      </CardTitle>
-                      <CardDescription
-                        suppressHydrationWarning
-                        className="text-sm flex items-center gap-2"
-                      >
-                        {formatDate(post.publishedAt)}
-                        {post.readingTime && (
-                          <>
-                            <span>•</span>
-                            <span>{post.readingTime}</span>
-                          </>
-                        )}
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent className="p-5 sm:p-6 pt-0">
-                      <p className="text-base text-foreground/80 line-clamp-3 leading-relaxed">
-                        {post.summary}
-                      </p>
-                    </CardContent>
-                  </Card>
-                </Link>
+                <BlogCard
+                  title={post.title}
+                  publishedAt={post.publishedAt}
+                  summary={post.summary}
+                  image={post.image}
+                  slug={post.slug}
+                  readingTime={post.readingTime}
+                />
               </BlurFade>
             ))
         )}
