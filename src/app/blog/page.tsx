@@ -47,7 +47,7 @@ export default async function BlogPage() {
                 key={post.slug}
               >
                 <Link href={`/blog/${post.slug}`}>
-                  <Card className="hover:shadow-lg transition-shadow overflow-hidden group">
+                  <Card className="overflow-hidden group border-none shadow-none">
                     <BlogImage
                       src={post.image}
                       alt={post.title}
