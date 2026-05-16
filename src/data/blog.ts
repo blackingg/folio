@@ -140,19 +140,47 @@ async function getAllPosts(dir: string): Promise<Post[]> {
   return posts.filter((post): post is Post => post !== null);
 }
 
-export async function getBlogPosts() {
-  const localPosts = await getAllPosts(path.join(process.cwd(), "content"));
+let cachedFeed: any = null;
 
-  let mediumPosts: any[] = [];
+async function getMediumFeed() {
+  if (cachedFeed) return cachedFeed;
+
   try {
+    const response = await fetch("https://medium.com/feed/@odetundemubarak", {
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+      },
+      next: { revalidate: 3600 },
+    });
+
+    if (!response.ok) {
+      throw new Error(
+        `Failed to fetch Medium feed: ${response.status} ${response.statusText}`,
+      );
+    }
+
+    const xml = await response.text();
     const parser = new Parser({
       customFields: {
         item: ["content:encoded"],
       },
     });
-    const feed = await parser.parseURL(
-      "https://medium.com/feed/@odetundemubarak",
-    );
+    cachedFeed = await parser.parseString(xml);
+    return cachedFeed;
+  } catch (error) {
+    console.error("Error fetching Medium feed:", error);
+    return null;
+  }
+}
+
+export async function getBlogPosts() {
+  const localPosts = await getAllPosts(path.join(process.cwd(), "content"));
+
+  let mediumPosts: any[] = [];
+  const feed = await getMediumFeed();
+
+  if (feed) {
     mediumPosts = feed.items.map((item: any) => {
       const content = item["content:encoded"] || "";
       const imageMatch = content.match(/<img[^>]+src="([^"]+)"/);
@@ -182,8 +210,6 @@ export async function getBlogPosts() {
         readingTime: calculateReadingTime(content),
       };
     });
-  } catch (error) {
-    console.error("Error fetching Medium posts:", error);
   }
 
   const allPosts = [
@@ -222,41 +248,46 @@ export async function getPost(slug: string): Promise<Post | null> {
     };
   }
 
-  const posts = await getBlogPosts();
-  const mediumPost = posts.find((p: any) => p.slug === slug);
+  const feed = await getMediumFeed();
+  if (!feed) return null;
 
-  if (mediumPost) {
-    const parser = new Parser({
-      customFields: {
-        item: ["content:encoded"],
+  const feedItem = feed.items.find((item: any) => {
+    const linkParts = item.link.split("/");
+    const itemSlug = linkParts[linkParts.length - 1].split("?")[0];
+    return itemSlug === slug;
+  });
+
+  if (feedItem) {
+    const rawContent = feedItem["content:encoded"] || "";
+    const content = await highlightHTML(rawContent);
+
+    // Find the summary from getBlogPosts to keep consistency
+    const textContent = rawContent
+      .replace(/<[^>]+>/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+    const summary =
+      textContent.slice(0, 250) + (textContent.length > 250 ? "..." : "");
+
+    const imageMatch = rawContent.match(/<img[^>]+src="([^"]+)"/);
+    const image =
+      imageMatch && !imageMatch[1].includes("stat.medium.com")
+        ? imageMatch[1]
+        : null;
+
+    return {
+      source: content,
+      metadata: {
+        title: feedItem.title || "Untitled",
+        publishedAt: feedItem.pubDate || new Date().toISOString(),
+        summary: summary,
+        image: image,
+        mediumLink: feedItem.link,
+        keywords: feedItem.categories || [],
+        readingTime: calculateReadingTime(rawContent),
       },
-    });
-    const feed = await parser.parseURL(
-      "https://medium.com/feed/@odetundemubarak",
-    );
-    const feedItem = feed.items.find((item: any) => {
-      const linkParts = item.link.split("/");
-      const itemSlug = linkParts[linkParts.length - 1].split("?")[0];
-      return itemSlug === slug;
-    });
-
-    if (feedItem) {
-      const rawContent = feedItem["content:encoded"] || "";
-      const content = await highlightHTML(rawContent);
-      return {
-        source: content,
-        metadata: {
-          title: feedItem.title || "Untitled",
-          publishedAt: feedItem.pubDate || new Date().toISOString(),
-          summary: mediumPost.summary,
-          image: mediumPost.image || undefined,
-          mediumLink: feedItem.link,
-          keywords: feedItem.categories || [],
-          readingTime: calculateReadingTime(rawContent),
-        },
-        slug,
-      };
-    }
+      slug,
+    };
   }
 
   return null;
