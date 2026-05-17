@@ -50,7 +50,7 @@ export async function generateMetadata({
     keywords: keywords || [],
     authors: [{ name: DATA.name }],
     alternates: {
-      canonical: post.metadata.mediumLink || `${baseUrl}/blog/${post.slug}`,
+      canonical: `${baseUrl}/blog/${post.slug}`,
     },
     openGraph: {
       title,
