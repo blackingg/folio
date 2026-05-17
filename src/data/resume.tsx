@@ -238,7 +238,6 @@ export const DATA = {
       href: "https://www.oauhomes.org/",
       dates: "Oct 2025",
       active: true,
-      featured: true,
       description:
         "OAU Homes is a Next.js platform that connects OAU students directly with verified housing agents to reduce inflated accommodation prices. The platform offers a clean, responsive interface with search and filtering tools, plus verified agent profiles for transparency. I built the frontend in Next.js and Tailwind CSS, collaborated with a backend developer within the same repo, and personally handled the UI design from scratch. I also created clear listing layouts and optimized the experience for mobile users.",
       technologies: ["Next.js", "Typescript", "TailwindCSS", "React"],
@@ -283,7 +282,6 @@ export const DATA = {
       href: "https://sokofunds-blackingg.vercel.app/",
       dates: "Jan 2026",
       active: true,
-      featured: true,
       description:
         "The official landing page for the SokoFunds application, designed to showcase the app's premium features with high-end aesthetics. It includes a responsive device selector for app previews, smooth Framer Motion animations, and a modern UI that aligns with the SokoFunds brand identity.",
       technologies: ["Next.js", "TypeScript", "Tailwind CSS", "Framer Motion"],
@@ -307,6 +305,7 @@ export const DATA = {
       href: "https://t.me/doggearth_bot",
       dates: "Sept 2025",
       active: true,
+      featured: true,
       description:
         "Doggverse is a Telegram Mini App for buying virtual land across three metaverse islands with a 3D viewer. The platform features a Three.js interface with touch controls (swipe, pinch, tap), color filtering, and wallet integration. I built the frontend in React, TypeScript, and Tailwind CSS, implemented centralized state management for data consistency, and designed the Telegram-style UI. I created the 3D visualization with custom camera controls and optimized for mobile users.",
       technologies: ["React", "TypeScript", "TailwindCSS", "Three.js"],
@@ -353,6 +352,7 @@ export const DATA = {
       href: "https://breakfastplace-blackingg.vercel.app/",
       dates: "Oct 2023",
       active: true,
+      featured: true,
       description:
         "The Breakfast Place is an innovative e-commerce web application for a restaurant, featuring interactive 3D models of customizable breakfast items and real-time 3D rendering of user-created meals. It is integrated with Supabase for efficient data management and designed responsively to deliver a seamless experience across all devices.",
       technologies: [
