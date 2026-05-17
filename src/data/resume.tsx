@@ -90,9 +90,14 @@ export const DATA = {
       logoUrl: "/bayse.jpg",
       start: "February 2026",
       end: "Present",
-      description: "",
+      description:
+        "Frontend engineer at Bayse, Africa's largest prediction market platform, allowing users to trade real-world event shares.",
       featured: true,
-      responsibilities: [],
+      responsibilities: [
+        "Contributed to maintaining and scaling the main predictive market platform, ensuring a seamless and high-performance user experience for trading real-world event shares across sports, crypto, politics, and entertainment.",
+        "Architected and implemented interactive new user-facing features using React, Next.js, TypeScript, and TailwindCSS.",
+        "Maintained and developed major features for the secure, in-house administration and moderator portals, enabling efficient event creation, market management, and moderation.",
+      ],
     },
     {
       company: "Seedwills",
