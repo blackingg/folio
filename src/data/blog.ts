@@ -145,7 +145,27 @@ let cachedFeed: any = null;
 async function getMediumFeed() {
   if (cachedFeed) return cachedFeed;
 
+  const cacheFile = path.join(process.cwd(), ".next", "medium-cache.json");
+  const CACHE_DURATION_MS = 5 * 60 * 1000; // 5 minutes cache duration
+
+  // Check if cache file exists and is fresh
+  if (fs.existsSync(cacheFile)) {
+    try {
+      const stats = fs.statSync(cacheFile);
+      const now = Date.now();
+      if (now - stats.mtimeMs < CACHE_DURATION_MS) {
+        console.log("Loading Medium feed from `.next/medium-cache.json`...");
+        const cachedData = JSON.parse(fs.readFileSync(cacheFile, "utf-8"));
+        cachedFeed = cachedData;
+        return cachedData;
+      }
+    } catch (e) {
+      console.error("Error reading Medium feed cache file:", e);
+    }
+  }
+
   try {
+    console.log("Fetching live Medium feed...");
     const response = await fetch("https://medium.com/feed/@odetundemubarak", {
       headers: {
         "User-Agent":
@@ -166,10 +186,33 @@ async function getMediumFeed() {
         item: ["content:encoded"],
       },
     });
-    cachedFeed = await parser.parseString(xml);
+    const parsedFeed = await parser.parseString(xml);
+
+    cachedFeed = parsedFeed;
+
+    // Save to `.next` cache file
+    try {
+      fs.mkdirSync(path.dirname(cacheFile), { recursive: true });
+      fs.writeFileSync(cacheFile, JSON.stringify(parsedFeed, null, 2), "utf-8");
+      console.log("Medium feed fetched and saved to `.next/medium-cache.json`.");
+    } catch (writeError) {
+      console.error("Error writing Medium feed cache file:", writeError);
+    }
+
     return cachedFeed;
   } catch (error) {
     console.error("Error fetching Medium feed:", error);
+    // If live fetch fails, fall back to existing cache file regardless of age
+    if (fs.existsSync(cacheFile)) {
+      try {
+        console.log("Falling back to existing `.next/medium-cache.json` cache file...");
+        const cachedData = JSON.parse(fs.readFileSync(cacheFile, "utf-8"));
+        cachedFeed = cachedData;
+        return cachedData;
+      } catch (e) {
+        console.error("Error reading fallback cache file:", e);
+      }
+    }
     return null;
   }
 }
