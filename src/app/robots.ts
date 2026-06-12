@@ -19,6 +19,6 @@ export default function robots(): MetadataRoute.Robots {
         allow: "/",
       },
     ],
-    sitemap: "https://whoisblxck.xyz",
+    sitemap: "https://www.whoisblxck.xyz/sitemap.xml",
   };
 }
