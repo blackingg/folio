@@ -100,6 +100,24 @@ export const DATA = {
       ],
     },
     {
+      company: "Shelf",
+      href: "https://www.shelf.ng/",
+      badges: ["Next.js", "TypeScript", "TailwindCSS", "Framer Motion"],
+      location: "On-site",
+      title: "Founder",
+      logoUrl: "/shelf.png",
+      start: "September 2025",
+      end: "Present",
+      description:
+        "Founded Shelf, a digital library and academic resource-sharing platform serving student communities.",
+      responsibilities: [
+        "Defined product vision and roadmap for a student-driven academic repository.",
+        "Designed the core platform structure, including folder-based organization and document-sharing workflows.",
+        "Introduced Public/Private/Unlisted visibility and collaboration roles (Owner/Editor/Viewer) to support scalable content sharing.",
+        "Led product decisions around moderation systems, ensuring quality control through document vetting and approval flows.",
+      ],
+    },
+    {
       company: "Seedwills",
       href: "https://seedwills.io/",
       badges: ["React", "Redux Toolkit", "Ant Design", "TailwindCSS"],
@@ -235,7 +253,7 @@ export const DATA = {
           icon: <Icons.github className="size-3" />,
         },
       ],
-      image: "/shelf.png",
+      image: "/shelf-landing.png",
       video: "",
     },
     {
