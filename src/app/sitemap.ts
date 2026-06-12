@@ -2,6 +2,7 @@ import { getBlogPosts } from "@/data/blog";
 import { MetadataRoute } from "next";
 
 export const dynamic = "force-static";
+export const revalidate = 86400;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = "https://www.whoisblxck.xyz";
