@@ -6,7 +6,13 @@ export const revalidate = 86400;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = "https://www.whoisblxck.xyz";
-  const posts = await getBlogPosts();
+
+  let posts: Awaited<ReturnType<typeof getBlogPosts>> = [];
+  try {
+    posts = await getBlogPosts();
+  } catch (e) {
+    console.error("Sitemap: failed to fetch posts", e);
+  }
 
   const blogEntries = posts.map((post) => ({
     url: `${baseUrl}/blog/${post.slug}`,
