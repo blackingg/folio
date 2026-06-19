@@ -13,7 +13,7 @@ export default class DayCycle
         this.autoUpdate = true
         this.timeProgress = 0
         this.progress = 0
-        this.duration = 45 // Seconds
+        this.duration = 1800 // Seconds (30 minutes)
 
         this.setDebug()
     }
@@ -48,7 +48,7 @@ export default class DayCycle
         folder
             .add(this, 'duration')
             .min(5)
-            .max(100)
+            .max(7200)
             .step(1)
     }
 }
