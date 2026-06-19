@@ -1,11 +1,11 @@
-import * as THREE from 'three'
+import { ShaderMaterial } from 'three';
 
 import vertexShader from './shaders/skyBackground/vertex.glsl'
 import fragmentShader from './shaders/skyBackground/fragment.glsl'
 
 export default function SkyBackgroundMaterial()
 {
-    const material = new THREE.ShaderMaterial({
+    const material = new ShaderMaterial({
         uniforms:
         {
             uTexture: { value: null }
