@@ -3,6 +3,7 @@ import Controls from './Controls.js'
 import Viewport from './Viewport.js'
 import DayCycle from './DayCycle.js'
 import Sun from './Sun.js'
+import Moon from './Moon.js'
 import Player from './Player.js'
 import Terrains from './Terrains.js'
 import Chunks from './Chunks.js'
@@ -28,6 +29,7 @@ export default class State
         this.viewport = new Viewport()
         this.day = new DayCycle()
         this.sun = new Sun()
+        this.moon = new Moon()
         this.player = new Player()
         this.terrains = new Terrains()
         this.chunks = new Chunks()
@@ -44,6 +46,7 @@ export default class State
         this.controls.update()
         this.day.update()
         this.sun.update()
+        this.moon.update()
         this.player.update()
         this.chunks.update()
     }
