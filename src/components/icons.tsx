@@ -286,4 +286,32 @@ export const Icons = {
       <path d="M13.54 12a6.8 6.8 0 0 1-6.77 6.82A6.8 6.8 0 0 1 0 12a6.8 6.8 0 0 1 6.77-6.82A6.8 6.8 0 0 1 13.54 12zM20.96 12c0 3.54-1.51 6.42-3.38 6.42S14.2 15.54 14.2 12s1.51-6.42 3.38-6.42S20.96 8.46 20.96 12zM24 12c0 3.17-.53 5.75-1.19 5.75s-1.19-2.58-1.19-5.75.53-5.75 1.19-5.75S24 8.83 24 12z" />
     </svg>
   ),
+  folderBack: (props: IconProps) => (
+    <svg
+      viewBox="0 0 200 150"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      {...props}
+    >
+      <path
+        d="M0 23 C0 15, 4 15, 10 15 L52 15 L62 30 L190 30 C196 30, 200 34, 200 40 L200 140 C200 146, 196 150, 190 150 L10 150 C4 150, 0 146, 0 140 Z"
+        className="fill-secondary stroke-foreground/10"
+        strokeWidth="1"
+      />
+    </svg>
+  ),
+  folderFront: (props: IconProps) => (
+    <svg
+      viewBox="0 0 200 150"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      {...props}
+    >
+      <path
+        d="M0 58 C0 50, 4 50, 10 50 L190 50 C196 50, 200 54, 200 60 L200 140 C200 146, 196 150, 190 150 L10 150 C4 150, 0 146, 0 140 Z"
+        className="fill-background stroke-secondary/10"
+        strokeWidth="1"
+      />
+    </svg>
+  ),
 };
