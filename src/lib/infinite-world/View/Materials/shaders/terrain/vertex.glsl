@@ -1,3 +1,5 @@
+#define M_PI 3.1415926535897932384626433832795
+
 uniform vec3 uPlayerPosition;
 uniform float uLightnessSmoothness;
 uniform float uFresnelOffset;
@@ -7,6 +9,7 @@ uniform vec3 uSunPosition;
 uniform float uGrassDistance;
 uniform sampler2D uTexture;
 uniform sampler2D uFogTexture;
+uniform float uDayCycleProgress;
 
 varying vec3 vColor;
 

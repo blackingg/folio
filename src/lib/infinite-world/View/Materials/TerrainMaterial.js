@@ -1,11 +1,11 @@
-import * as THREE from 'three'
+import { ShaderMaterial } from 'three';
 
 import vertexShader from './shaders/terrain/vertex.glsl'
 import fragmentShader from './shaders/terrain/fragment.glsl'
 
 export default function TerrainMaterial()
 {
-    const material = new THREE.ShaderMaterial({
+    const material = new ShaderMaterial({
         uniforms:
         {
             uPlayerPosition: { value: null },
@@ -17,7 +17,8 @@ export default function TerrainMaterial()
             uSunPosition: { value: null },
             uFogTexture: { value: null },
             uGrassDistance: { value: null },
-            uTexture: { value: null }
+            uTexture: { value: null },
+            uDayCycleProgress: { value: 0 }
         },
         vertexShader: vertexShader,
         fragmentShader: fragmentShader
