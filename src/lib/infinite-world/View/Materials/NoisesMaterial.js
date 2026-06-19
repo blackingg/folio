@@ -1,11 +1,11 @@
-import * as THREE from 'three'
+import { ShaderMaterial } from 'three';
 
 import vertexShader from './shaders/noises/vertex.glsl'
 import fragmentShader from './shaders/noises/fragment.glsl'
 
 export default function NoisesMaterial()
 {
-    const material = new THREE.ShaderMaterial({
+    const material = new ShaderMaterial({
         uniforms:
         {
         },
