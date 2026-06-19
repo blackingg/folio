@@ -40,7 +40,7 @@ export function PlaylistCard({
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={src}
-                className="object-full w-full h-full"
+                className="object-cover w-full h-full"
                 alt=""
               />
               <div className="absolute inset-0 bg-black/10" />
