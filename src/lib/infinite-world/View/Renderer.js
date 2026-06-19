@@ -1,4 +1,4 @@
-import * as THREE from 'three'
+import { PCFSoftShadowMap, ReinhardToneMapping, WebGLRenderer, sRGBEncoding } from 'three';
 
 import Game from '../Game.js'
 import View from './View.js'
@@ -28,7 +28,7 @@ export default class Renderer
         this.clearColor = '#222222'
 
         // Renderer
-        this.instance = new THREE.WebGLRenderer({
+        this.instance = new WebGLRenderer({
             alpha: false,
             antialias: true
         })
@@ -47,11 +47,11 @@ export default class Renderer
 
         // this.instance.physicallyCorrectLights = true
         // this.instance.gammaOutPut = true
-        // this.instance.outputEncoding = THREE.sRGBEncoding
-        // this.instance.shadowMap.type = THREE.PCFSoftShadowMap
+        // this.instance.outputEncoding = sRGBEncoding
+        // this.instance.shadowMap.type = PCFSoftShadowMap
         // this.instance.shadowMap.enabled = false
-        // this.instance.toneMapping = THREE.ReinhardToneMapping
-        // this.instance.toneMapping = THREE.ReinhardToneMapping
+        // this.instance.toneMapping = ReinhardToneMapping
+        // this.instance.toneMapping = ReinhardToneMapping
         // this.instance.toneMappingExposure = 1.3
 
         this.context = this.instance.getContext()

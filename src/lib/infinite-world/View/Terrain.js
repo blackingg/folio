@@ -1,4 +1,4 @@
-import * as THREE from 'three'
+import { BufferAttribute, BufferGeometry, ClampToEdgeWrapping, DataTexture, Float32BufferAttribute, FloatType, LinearFilter, Mesh, MeshNormalMaterial, RGBAFormat, UVMapping } from 'three';
 
 import View from './View.js'
 import State from '../State/State.js'
@@ -34,9 +34,9 @@ export default class Terrain
             this.geometry.dispose()
 
             // Create new geometry
-            this.geometry = new THREE.BufferGeometry()
-            this.geometry.setAttribute('position', new THREE.BufferAttribute(this.terrainState.positions, 3))
-            this.geometry.index = new THREE.BufferAttribute(this.terrainState.indices, 1, false)
+            this.geometry = new BufferGeometry()
+            this.geometry.setAttribute('position', new BufferAttribute(this.terrainState.positions, 3))
+            this.geometry.index = new BufferAttribute(this.terrainState.indices, 1, false)
         
             this.mesh.geometry = this.geometry
         }
@@ -45,23 +45,23 @@ export default class Terrain
         else
         {
             // Create geometry
-            this.geometry = new THREE.BufferGeometry()
-            this.geometry.setAttribute('position', new THREE.Float32BufferAttribute(this.terrainState.positions, 3))
-            this.geometry.setAttribute('uv', new THREE.Float32BufferAttribute(this.terrainState.uv, 2))
-            this.geometry.index = new THREE.BufferAttribute(this.terrainState.indices, 1, false)
+            this.geometry = new BufferGeometry()
+            this.geometry.setAttribute('position', new Float32BufferAttribute(this.terrainState.positions, 3))
+            this.geometry.setAttribute('uv', new Float32BufferAttribute(this.terrainState.uv, 2))
+            this.geometry.index = new BufferAttribute(this.terrainState.indices, 1, false)
 
             // Texture
-            this.texture = new THREE.DataTexture(
+            this.texture = new DataTexture(
                 this.terrainState.texture,
                 terrainsState.segments,
                 terrainsState.segments,
-                THREE.RGBAFormat,
-                THREE.FloatType,
-                THREE.UVMapping,
-                THREE.ClampToEdgeWrapping,
-                THREE.ClampToEdgeWrapping,
-                THREE.LinearFilter,
-                THREE.LinearFilter
+                RGBAFormat,
+                FloatType,
+                UVMapping,
+                ClampToEdgeWrapping,
+                ClampToEdgeWrapping,
+                LinearFilter,
+                LinearFilter
             )
             this.texture.flipY = false
             this.texture.needsUpdate = true
@@ -71,9 +71,9 @@ export default class Terrain
             // this.material.uniforms.uTexture.value = this.texture
 
             // Create mesh
-            this.mesh = new THREE.Mesh(this.geometry, this.terrains.material)
+            this.mesh = new Mesh(this.geometry, this.terrains.material)
             this.mesh.userData.texture = this.texture
-            // this.mesh = new THREE.Mesh(this.geometry, new THREE.MeshNormalMaterial())
+            // this.mesh = new Mesh(this.geometry, new MeshNormalMaterial())
             this.scene.add(this.mesh)
             
             this.created = true

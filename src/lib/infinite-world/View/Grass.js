@@ -1,4 +1,4 @@
-import * as THREE from 'three'
+import { BufferGeometry, Float32BufferAttribute, Mesh, MeshBasicMaterial, Vector2, Vector3 } from 'three';
 
 import Game from '../Game.js'
 import View from './View.js'
@@ -87,10 +87,10 @@ export default class Grass
             }
         }
         
-        this.geometry = new THREE.BufferGeometry()
-        this.geometry.setAttribute('center', new THREE.Float32BufferAttribute(centers, 2))
-        this.geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3))
-        // this.geometry.setAttribute('tipness', new THREE.Float32BufferAttribute(tipness, 1))
+        this.geometry = new BufferGeometry()
+        this.geometry.setAttribute('center', new Float32BufferAttribute(centers, 2))
+        this.geometry.setAttribute('position', new Float32BufferAttribute(positions, 3))
+        // this.geometry.setAttribute('tipness', new Float32BufferAttribute(tipness, 1))
     }
 
     setMaterial()
@@ -98,32 +98,32 @@ export default class Grass
         const engineChunks = this.state.chunks
         const engineTerrains = this.state.terrains
 
-        // this.material = new THREE.MeshBasicMaterial({ wireframe: true, color: 'green' })
+        // this.material = new MeshBasicMaterial({ wireframe: true, color: 'green' })
         this.material = new GrassMaterial()
         this.material.uniforms.uTime.value = 0
         this.material.uniforms.uGrassDistance.value = this.size
-        this.material.uniforms.uPlayerPosition.value = new THREE.Vector3()
+        this.material.uniforms.uPlayerPosition.value = new Vector3()
         this.material.uniforms.uTerrainSize.value = engineChunks.minSize
         this.material.uniforms.uTerrainTextureSize.value = engineTerrains.segments
         this.material.uniforms.uTerrainATexture.value = null
-        this.material.uniforms.uTerrainAOffset.value = new THREE.Vector2()
+        this.material.uniforms.uTerrainAOffset.value = new Vector2()
         this.material.uniforms.uTerrainBTexture.value = null
-        this.material.uniforms.uTerrainBOffset.value = new THREE.Vector2()
+        this.material.uniforms.uTerrainBOffset.value = new Vector2()
         this.material.uniforms.uTerrainCTexture.value = null
-        this.material.uniforms.uTerrainCOffset.value = new THREE.Vector2()
+        this.material.uniforms.uTerrainCOffset.value = new Vector2()
         this.material.uniforms.uTerrainDTexture.value = null
-        this.material.uniforms.uTerrainDOffset.value = new THREE.Vector2()
+        this.material.uniforms.uTerrainDOffset.value = new Vector2()
         this.material.uniforms.uNoiseTexture.value = this.noiseTexture
         this.material.uniforms.uFresnelOffset.value = 0
         this.material.uniforms.uFresnelScale.value = 0.5
         this.material.uniforms.uFresnelPower.value = 2
-        this.material.uniforms.uSunPosition.value = new THREE.Vector3(- 0.5, - 0.5, - 0.5)
+        this.material.uniforms.uSunPosition.value = new Vector3(- 0.5, - 0.5, - 0.5)
         // this.material.wireframe = true
     }
 
     setMesh()
     {
-        this.mesh = new THREE.Mesh(
+        this.mesh = new Mesh(
             this.geometry,
             this.material
         )
@@ -137,9 +137,11 @@ export default class Grass
         const playerPosition = playerState.position.current
         const engineChunks = this.state.chunks
         const sunState = this.state.sun
+        const dayState = this.state.day
 
         this.material.uniforms.uTime.value = this.time.elapsed
         this.material.uniforms.uSunPosition.value.set(sunState.position.x, sunState.position.y, sunState.position.z)
+        this.material.uniforms.uDayCycleProgress.value = dayState.progress
         
         this.mesh.position.set(playerPosition[0], 0, playerPosition[2])
         // this.mesh.position.set(playerPosition[0], playerPosition[1], playerPosition[2])

@@ -1,4 +1,4 @@
-import * as THREE from 'three'
+import { Texture } from 'three';
 
 import Game from '../Game.js'
 
@@ -10,7 +10,7 @@ export default class TerrainGradient
 
         this.canvas = document.createElement('canvas')
         this.context = this.canvas.getContext('2d')
-        this.texture = new THREE.Texture(this.canvas)
+        this.texture = new Texture(this.canvas)
 
         this.colors = {
             aboveFar: '#ffffff',
