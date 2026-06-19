@@ -128,7 +128,7 @@ export default function RootLayout({
       </head>
       <body
         className={cn(
-          "min-h-screen bg-background font-sans antialiased max-w-3xl mx-auto pt-12 sm:pt-24 pb-20 sm:pb-32 px-6",
+          "min-h-screen bg-background font-sans antialiased max-w-3xl mx-auto pt-12 sm:pt-24 pb-20 sm:pb-32",
           fontSans.variable,
         )}
       >
@@ -138,7 +138,7 @@ export default function RootLayout({
           defaultTheme="dark"
         >
           <TooltipProvider delayDuration={0}>
-            {children}
+            <div className="px-6">{children}</div>
             <Navbar />
           </TooltipProvider>
         </ThemeProvider>

@@ -10,6 +10,7 @@ import remarkRehype from "remark-rehype";
 import { unified } from "unified";
 import Parser from "rss-parser";
 import { visit } from "unist-util-visit";
+import { PLAYLISTS } from "./playlists";
 
 type Metadata = {
   title: string;
@@ -334,4 +335,29 @@ export async function getPost(slug: string): Promise<Post | null> {
   }
 
   return null;
+}
+
+export type PlaylistWithPosts = {
+  slug: string;
+  title: string;
+  description: string;
+  posts: any[];
+};
+
+export async function getPlaylistsWithPosts(): Promise<PlaylistWithPosts[]> {
+  const allPosts = await getBlogPosts();
+  
+  return PLAYLISTS.map(playlistConfig => {
+    // Filter and order posts based on postSlugs array
+    const playlistPosts = playlistConfig.postSlugs
+      .map(slug => allPosts.find((post: any) => post.slug === slug))
+      .filter(post => post !== undefined);
+      
+    return {
+      slug: playlistConfig.slug,
+      title: playlistConfig.title,
+      description: playlistConfig.description,
+      posts: playlistPosts,
+    };
+  }).filter(playlist => playlist.posts.length > 0);
 }
