@@ -1,4 +1,4 @@
-import * as THREE from 'three'
+import { Mesh, SphereGeometry, Vector3 } from 'three';
 
 import Game from '../Game.js'
 import View from './View.js'
@@ -42,13 +42,13 @@ export default class Terrains
     setMaterial()
     {
         this.material = new TerrainMaterial()
-        this.material.uniforms.uPlayerPosition.value = new THREE.Vector3()
+        this.material.uniforms.uPlayerPosition.value = new Vector3()
         this.material.uniforms.uGradientTexture.value = this.gradient.texture
         this.material.uniforms.uLightnessSmoothness.value = 0.25
         this.material.uniforms.uFresnelOffset.value = 0
         this.material.uniforms.uFresnelScale.value = 0.5
         this.material.uniforms.uFresnelPower.value = 2
-        this.material.uniforms.uSunPosition.value = new THREE.Vector3(- 0.5, - 0.5, - 0.5)
+        this.material.uniforms.uSunPosition.value = new Vector3(- 0.5, - 0.5, - 0.5)
         this.material.uniforms.uFogTexture.value = this.sky.customRender.texture
         this.material.uniforms.uGrassDistance.value = this.state.chunks.minSize
 
@@ -60,8 +60,8 @@ export default class Terrains
 
         // this.material.wireframe = true
 
-        // const dummy = new THREE.Mesh(
-        //     new THREE.SphereGeometry(30, 64, 32),
+        // const dummy = new Mesh(
+        //     new SphereGeometry(30, 64, 32),
         //     this.material
         // )
         // dummy.position.y = 50
@@ -112,9 +112,11 @@ export default class Terrains
         const playerState = this.state.player
         const playerPosition = playerState.position.current
         const sunState = this.state.sun
+        const dayState = this.state.day
 
         this.material.uniforms.uPlayerPosition.value.set(playerPosition[0], playerPosition[1], playerPosition[2])
         this.material.uniforms.uSunPosition.value.set(sunState.position.x, sunState.position.y, sunState.position.z)
+        this.material.uniforms.uDayCycleProgress.value = dayState.progress
     }
 
     resize()

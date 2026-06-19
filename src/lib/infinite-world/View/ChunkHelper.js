@@ -1,4 +1,4 @@
-import * as THREE from 'three'
+import { Group, Mesh, MeshBasicMaterial, PlaneGeometry, Vector3 } from 'three';
 // import { PointTextHelper } from '@jniac/three-point-text-helper' // Commented out - debug only
 
 import View from './View.js'
@@ -26,7 +26,7 @@ export default class ChunkHelper
 
     setGroup()
     {
-        this.group = new THREE.Group()
+        this.group = new Group()
         this.group.position.x = this.chunkState.x
         this.group.position.z = this.chunkState.z
         this.scene.add(this.group)
@@ -47,9 +47,9 @@ export default class ChunkHelper
         if(!this.areaVisible)
             return
 
-        this.area = new THREE.Mesh(
-            new THREE.PlaneGeometry(this.chunkState.size, this.chunkState.size),
-            new THREE.MeshBasicMaterial({ wireframe: true })
+        this.area = new Mesh(
+            new PlaneGeometry(this.chunkState.size, this.chunkState.size),
+            new MeshBasicMaterial({ wireframe: true })
         )
         this.area.geometry.rotateX(Math.PI * 0.5)
 
@@ -83,7 +83,7 @@ export default class ChunkHelper
             text: this.chunkState.id,
             color: '#ffc800',
             size: (this.state.chunks.maxDepth - this.chunkState.depth + 1) * 6,
-            position: new THREE.Vector3(0, (this.state.chunks.maxDepth - this.chunkState.depth) * 10, 0)
+            position: new Vector3(0, (this.state.chunks.maxDepth - this.chunkState.depth) * 10, 0)
         })
         this.group.add(this.id)
     }
@@ -127,7 +127,7 @@ export default class ChunkHelper
             text: nLabel,
             color: '#00bfff',
             size: size,
-            position: new THREE.Vector3(
+            position: new Vector3(
                 0,
                 y,
                 - this.chunkState.quarterSize
@@ -139,7 +139,7 @@ export default class ChunkHelper
             text: eLabel,
             color: '#00bfff',
             size: size,
-            position: new THREE.Vector3(
+            position: new Vector3(
                 this.chunkState.quarterSize,
                 y,
                 0
@@ -151,7 +151,7 @@ export default class ChunkHelper
             text: sLabel,
             color: '#00bfff',
             size: size,
-            position: new THREE.Vector3(
+            position: new Vector3(
                 0,
                 y,
                 this.chunkState.quarterSize
@@ -163,7 +163,7 @@ export default class ChunkHelper
             text: wLabel,
             color: '#00bfff',
             size: size,
-            position: new THREE.Vector3(
+            position: new Vector3(
                 - this.chunkState.quarterSize,
                 y,
                 0
