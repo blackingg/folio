@@ -7,6 +7,15 @@ const __dirname = dirname(__filename);
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  transpilePackages: ['three'],
+  experimental: {
+    optimizePackageImports: [
+      'lucide-react', 
+      'framer-motion', 
+      'three', 
+      '@radix-ui/react-icons'
+    ],
+  },
   webpack: (config) => {
     config.module.rules.push({
       test: /\.glsl$/,

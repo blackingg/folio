@@ -8,7 +8,7 @@ import Sky from './Sky.js'
 import Terrains from './Terrains.js'
 import Water from './Water.js'
 
-import * as THREE from 'three'
+import { Scene } from 'three';
 
 export default class View
 {
@@ -26,7 +26,7 @@ export default class View
 
         View.instance = this
 
-        this.scene = new THREE.Scene()
+        this.scene = new Scene()
         
         this.camera = new Camera()
         this.renderer = new Renderer()
