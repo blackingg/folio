@@ -18,6 +18,7 @@ uniform float uFresnelOffset;
 uniform float uFresnelScale;
 uniform float uFresnelPower;
 uniform vec3 uSunPosition;
+uniform float uDayCycleProgress;
 
 attribute vec2 center;
 // attribute float tipness;
