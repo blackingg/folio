@@ -1,11 +1,11 @@
-import * as THREE from 'three'
+import { ShaderMaterial } from 'three';
 
 import vertexShader from './shaders/grass/vertex.glsl'
 import fragmentShader from './shaders/grass/fragment.glsl'
 
 export default function GrassMaterial()
 {
-    const material = new THREE.ShaderMaterial({
+    const material = new ShaderMaterial({
         uniforms:
         {
             uTime: { value: null },
@@ -26,6 +26,7 @@ export default function GrassMaterial()
             uFresnelScale: { value: null },
             uFresnelPower: { value: null },
             uSunPosition: { value: null },
+            uDayCycleProgress: { value: 0 }
         },
         vertexShader: vertexShader,
         fragmentShader: fragmentShader

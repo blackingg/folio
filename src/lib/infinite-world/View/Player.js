@@ -1,4 +1,4 @@
-import * as THREE from 'three'
+import { AxesHelper, CapsuleGeometry, Color, ConeGeometry, Group, Mesh, MeshBasicMaterial, Vector3 } from 'three';
 
 import Game from '../Game.js'
 import View from './View.js'
@@ -24,24 +24,24 @@ export default class Player
 
     setGroup()
     {
-        this.group = new THREE.Group()
+        this.group = new Group()
         this.scene.add(this.group)
     }
     
     setHelper()
     {
-        this.helper = new THREE.Mesh()
+        this.helper = new Mesh()
         this.helper.material = new PlayerMaterial()
-        this.helper.material.uniforms.uColor.value = new THREE.Color('#fff8d6')
-        this.helper.material.uniforms.uSunPosition.value = new THREE.Vector3(- 0.5, - 0.5, - 0.5)
+        this.helper.material.uniforms.uColor.value = new Color('#fff8d6')
+        this.helper.material.uniforms.uSunPosition.value = new Vector3(- 0.5, - 0.5, - 0.5)
 
-        this.helper.geometry = new THREE.CapsuleGeometry(0.5, 0.8, 3, 16),
+        this.helper.geometry = new CapsuleGeometry(0.5, 0.8, 3, 16),
         this.helper.geometry.translate(0, 0.9, 0)
         this.group.add(this.helper)
 
-        // const arrow = new THREE.Mesh(
-        //     new THREE.ConeGeometry(0.2, 0.2, 4),
-        //     new THREE.MeshBasicMaterial({ color: 0xffffff, wireframe: false })
+        // const arrow = new Mesh(
+        //     new ConeGeometry(0.2, 0.2, 4),
+        //     new MeshBasicMaterial({ color: 0xffffff, wireframe: false })
         // )
         // arrow.rotation.x = - Math.PI * 0.5
         // arrow.position.y = 1.5
@@ -49,7 +49,7 @@ export default class Player
         // this.helper.add(arrow)
         
         // // Axis helper
-        // this.axisHelper = new THREE.AxesHelper(3)
+        // this.axisHelper = new AxesHelper(3)
         // this.group.add(this.axisHelper)
     }
 
@@ -69,6 +69,7 @@ export default class Player
     {
         const playerState = this.state.player
         const sunState = this.state.sun
+        const dayState = this.state.day
 
         this.group.position.set(
             playerState.position.current[0],
@@ -79,5 +80,6 @@ export default class Player
         // Helper
         this.helper.rotation.y = playerState.rotation
         this.helper.material.uniforms.uSunPosition.value.set(sunState.position.x, sunState.position.y, sunState.position.z)
+        this.helper.material.uniforms.uDayCycleProgress.value = dayState.progress
     }
 }
