@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 export const dynamic = "force-static";
 export const revalidate = 86400;
 export async function GET() {
-  const baseUrl = "https://www.whoisblxck.xyz";
+  const baseUrl = "https://whoisblxck.xyz";
   let posts: Awaited<ReturnType<typeof getBlogPosts>> = [];
   try {
     posts = await getBlogPosts();
@@ -16,6 +16,12 @@ export async function GET() {
       lastModified: new Date().toISOString(),
       changeFrequency: "weekly",
       priority: 1,
+    },
+    {
+      url: `${baseUrl}/3d`,
+      lastModified: new Date().toISOString(),
+      changeFrequency: "weekly",
+      priority: 0.9,
     },
     ...posts.map((post) => ({
       url: `${baseUrl}/blog/${post.slug}`,
