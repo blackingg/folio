@@ -7,6 +7,7 @@ import Renderer from './Renderer.js'
 import Sky from './Sky.js'
 import Terrains from './Terrains.js'
 import Water from './Water.js'
+import Underwater from './Underwater.js'
 
 import { Scene } from 'three';
 
@@ -37,6 +38,7 @@ export default class View
         this.chunks = new Chunks()
         this.player = new Player()
         this.grass = new Grass()
+        this.underwater = new Underwater()
     }
 
     resize()
@@ -55,6 +57,7 @@ export default class View
         this.chunks.update()
         this.player.update()
         this.grass.update()
+        this.underwater.update()
         this.camera.update()
         this.renderer.update()
     }
