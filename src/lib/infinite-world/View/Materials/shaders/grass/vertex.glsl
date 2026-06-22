@@ -81,7 +81,8 @@ void main()
     // Attenuation
     float distanceScale = getGrassAttenuation(modelCenter.xz);
     float slopeScale = smoothstep(remap(slope, 0.4, 0.5, 1.0, 0.0), 0.0, 1.0);
-    float scale = distanceScale * slopeScale;
+    float waterScale = terrainData.a > 0.0 ? 1.0 : 0.0;
+    float scale = distanceScale * slopeScale * waterScale;
     modelPosition.xyz = mix(modelCenter.xyz, modelPosition.xyz, scale);
 
     // Tipness
