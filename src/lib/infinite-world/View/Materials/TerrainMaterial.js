@@ -18,7 +18,10 @@ export default function TerrainMaterial()
             uFogTexture: { value: null },
             uGrassDistance: { value: null },
             uTexture: { value: null },
-            uDayCycleProgress: { value: 0 }
+            uDayCycleProgress: { value: 0 },
+            uSeed_t: { value: 0 },
+            uSeed_b: { value: 0 },
+            uOffset: { value: null }
         },
         vertexShader: vertexShader,
         fragmentShader: fragmentShader

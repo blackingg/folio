@@ -1,4 +1,4 @@
-import { Mesh, SphereGeometry, Vector3 } from 'three';
+import { Mesh, SphereGeometry, Vector3, Vector2 } from 'three';
 
 import Game from '../Game.js'
 import View from './View.js'
@@ -6,6 +6,12 @@ import State from '../State/State.js'
 import Terrain from './Terrain.js'
 import TerrainGradient from './TerrainGradient.js'
 import TerrainMaterial from './Materials/TerrainMaterial.js'
+
+function hashString(str) {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) hash = Math.imul(31, hash) + str.charCodeAt(i) | 0;
+    return (hash >>> 0) / 4294967296.0;
+}
 
 export default class Terrains
 {
@@ -51,6 +57,14 @@ export default class Terrains
         this.material.uniforms.uSunPosition.value = new Vector3(- 0.5, - 0.5, - 0.5)
         this.material.uniforms.uFogTexture.value = this.sky.customRender.texture
         this.material.uniforms.uGrassDistance.value = this.state.chunks.minSize
+
+        const globalSeed = this.game.seed + 'b';
+        this.material.uniforms.uSeed_t.value = hashString(globalSeed + '_t') * 100.0;
+        this.material.uniforms.uSeed_b.value = hashString(globalSeed + '_b') * 100.0;
+        this.material.uniforms.uOffset.value = new Vector2(
+            this.state.terrains.iterationsOffsets[0][0],
+            this.state.terrains.iterationsOffsets[0][1]
+        );
 
         this.material.onBeforeRender = (renderer, scene, camera, geometry, mesh) =>
         {

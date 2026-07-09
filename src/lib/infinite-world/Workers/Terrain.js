@@ -1,5 +1,12 @@
 import SimplexNoise from './SimplexNoise.js'
 import { vec3 } from 'gl-matrix'
+import { snoise3D } from './glslSimplex.js'
+
+function hashString(str) {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) hash = Math.imul(31, hash) + str.charCodeAt(i) | 0;
+    return (hash >>> 0) / 4294967296.0;
+}
 
 let elevationRandom = null
 
@@ -40,6 +47,7 @@ onmessage = function(event)
     const baseX = event.data.x
     const baseZ = event.data.z
     const seed = event.data.seed
+    const precision = event.data.precision
     const subdivisions = event.data.subdivisions
     const lacunarity = event.data.lacunarity
     const persistence = event.data.persistence
@@ -418,6 +426,98 @@ onmessage = function(event)
         }
     }
 
+    /**
+     * Trees
+     */
+    const trees = []
+
+    if (precision >= 0.75)
+    {
+        const uSeed_t = hashString(seed + '_t') * 100.0
+        const uSeed_b = hashString(seed + '_b') * 100.0
+
+        const pseudoRandom = (x, z) => {
+            let n = Math.sin(x * 12.9898 + z * 78.233) * 43758.5453
+            return n - Math.floor(n)
+        }
+
+        for(let iZ = 0; iZ < segments; iZ++)
+        {
+            for(let iX = 0; iX < segments; iX++)
+            {
+                const iPositionStride = (iZ * segments + iX) * 3
+                const x = positions[iPositionStride    ]
+                const y = positions[iPositionStride + 1]
+                const z = positions[iPositionStride + 2]
+
+                const iNormalStride = (iZ * segments + iX) * 3
+                const normal = vec3.fromValues(
+                    normals[iNormalStride    ],
+                    normals[iNormalStride + 1],
+                    normals[iNormalStride + 2]
+                )
+
+                const upward = Math.max(0, normal[1])
+
+                // Above water and relatively flat
+                if(y > 0 && upward > 0.95)
+                {
+                    // Biome noise for dense/sparse areas (-1.0 to 1.0)
+                    let biome = snoise3D(x * 0.01 + iterationsOffsets[0][0], z * 0.01 + iterationsOffsets[0][1], uSeed_b)
+                    
+                    let threshold = 0.95 // sparse
+                    if (biome > 0.2) {
+                        threshold = 0.6 // dense forest
+                    } else if (biome > -0.2) {
+                        threshold = 0.85 // medium
+                    }
+
+                    let treeNoise = snoise3D(x * 0.5 + iterationsOffsets[0][0], z * 0.5 + iterationsOffsets[0][1], uSeed_t)
+                    treeNoise = (treeNoise + 1.0) * 0.5 // Normalize to 0.0 - 1.0
+
+                    if (treeNoise > threshold) {
+                        const r1 = pseudoRandom(x, z)
+                        const r2 = pseudoRandom(x + 1, z)
+                        const r3 = pseudoRandom(x, z + 1)
+
+                        let typeIndex = 0;
+                        if (biome > 0.8) {
+                            // Orange Grove (16-23)
+                            typeIndex = 16 + Math.floor(r1 * 8) % 8;
+                        } else if (biome < -0.8) {
+                            // Blue Grove (8-15)
+                            typeIndex = 8 + Math.floor(r1 * 8) % 8;
+                        } else {
+                            // Green Forest (0-7)
+                            typeIndex = Math.floor(r1 * 8) % 8;
+                        }
+
+                        const scale = 1.0 + r2 * 0.5 // 1.0 to 1.5
+                        const rotation = r3 * Math.PI * 2
+
+                        // Optional slight position offset to break the grid
+                        const r4 = pseudoRandom(x + 2, z)
+                        const r5 = pseudoRandom(x, z + 2)
+                        const interSegmentX = size / subdivisions
+                        const interSegmentZ = size / subdivisions
+                        
+                        const finalX = x + (r4 - 0.5) * interSegmentX
+                        const finalZ = z + (r5 - 0.5) * interSegmentZ
+
+                        const finalY = getElevation(finalX, finalZ, lacunarity, persistence, iterations, baseFrequency, baseAmplitude, power, elevationOffset, iterationsOffsets)
+
+                        trees.push({
+                            position: [finalX, finalY, finalZ],
+                            type: typeIndex,
+                            scale: scale,
+                            rotation: rotation
+                        })
+                    }
+                }
+            }
+        }
+    }
+
     // Post
     postMessage({
         id: id,
@@ -425,6 +525,7 @@ onmessage = function(event)
         normals: normals,
         indices: indices,
         texture: texture,
-        uv: uv
+        uv: uv,
+        trees: trees
     })
 }
