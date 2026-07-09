@@ -10,6 +10,9 @@ uniform float uGrassDistance;
 uniform sampler2D uTexture;
 uniform sampler2D uFogTexture;
 uniform float uDayCycleProgress;
+uniform float uSeed_t;
+uniform float uSeed_b;
+uniform vec2 uOffset;
 
 varying vec3 vColor;
 
@@ -21,6 +24,7 @@ varying vec3 vColor;
 #include ../partials/getSunReflectionColor.glsl;
 #include ../partials/getFogColor.glsl;
 #include ../partials/getGrassAttenuation.glsl;
+#include ../partials/simplex.glsl
 
 void main()
 {
@@ -52,6 +56,32 @@ void main()
     vec3 grassColor = mix(uGrassShadedColor, uGrassDefaultColor, 1.0 - grassAttenuation);
 
     vec3 color = grassColor;
+
+    // --- Tier 1 Forest Tint ---
+    float upward = max(0.0, normal.y);
+    float slopeMask = smoothstep(0.9, 0.95, upward);
+    
+    float biomeNoise = snoise(vec3(modelPosition.x * 0.01 + uOffset.x, modelPosition.z * 0.01 + uOffset.y, uSeed_b));
+    
+    float threshold = 0.95;
+    if (biomeNoise > 0.2) threshold = 0.6;
+    else if (biomeNoise > -0.2) threshold = 0.85;
+
+    float treeNoise = snoise(vec3(modelPosition.x * 0.5 + uOffset.x, modelPosition.z * 0.5 + uOffset.y, uSeed_t));
+    treeNoise = (treeNoise + 1.0) * 0.5;
+
+    float treeDensity = smoothstep(threshold, threshold + 0.2, treeNoise);
+    
+    vec3 forestColor = vec3(0.176, 0.290, 0.117); // Green (#2d4a1e)
+    if (biomeNoise > 0.8) {
+        forestColor = vec3(0.290, 0.227, 0.117); // Orange (#4a3a1e)
+    } else if (biomeNoise < -0.8) {
+        forestColor = vec3(0.117, 0.227, 0.227); // Blue (#1e3a3a)
+    }
+
+    float tier1Fade = smoothstep(600.0, 1500.0, depth);
+    vec3 forestTint = mix(color, forestColor, treeDensity * tier1Fade * slopeMask * 0.75);
+    color = forestTint;
 
     // Sun shade
     float sunShade = getSunShade(normal);
