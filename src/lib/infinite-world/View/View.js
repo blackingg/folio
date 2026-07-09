@@ -7,6 +7,8 @@ import Renderer from './Renderer.js'
 import Sky from './Sky.js'
 import Terrains from './Terrains.js'
 import Water from './Water.js'
+import Trees from './Trees.js'
+import TreeBillboards from './TreeBillboards.js'
 import Underwater from './Underwater.js'
 
 import { Scene } from 'three';
@@ -38,6 +40,8 @@ export default class View
         this.chunks = new Chunks()
         this.player = new Player()
         this.grass = new Grass()
+        this.treeBillboards = new TreeBillboards()
+        this.trees = new Trees()
         this.underwater = new Underwater()
     }
 
@@ -57,6 +61,8 @@ export default class View
         this.chunks.update()
         this.player.update()
         this.grass.update()
+        this.treeBillboards.update()
+        this.trees.update()
         this.underwater.update()
         this.camera.update()
         this.renderer.update()
