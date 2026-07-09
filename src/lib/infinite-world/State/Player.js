@@ -66,6 +66,24 @@ export default class Player
             this.position.current[2] -= z
         }
 
+        // Tree collision
+        const collisionRadius = 0.8;
+        for (const [id, chunk] of this.state.chunks.allChunks) {
+            if (chunk.final && chunk.terrain && chunk.terrain.trees) {
+                for (const tree of chunk.terrain.trees) {
+                    const dx = this.position.current[0] - tree.position[0];
+                    const dz = this.position.current[2] - tree.position[2];
+                    const distSq = dx * dx + dz * dz;
+                    if (distSq < collisionRadius * collisionRadius && distSq > 0.0001) {
+                        const dist = Math.sqrt(distSq);
+                        const push = collisionRadius - dist;
+                        this.position.current[0] += (dx / dist) * push;
+                        this.position.current[2] += (dz / dist) * push;
+                    }
+                }
+            }
+        }
+
         vec3.sub(this.position.delta, this.position.current, this.position.previous)
         vec3.copy(this.position.previous, this.position.current)
 
