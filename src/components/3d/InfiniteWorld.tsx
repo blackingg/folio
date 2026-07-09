@@ -63,7 +63,8 @@ export default function InfiniteWorld({ className }: InfiniteWorldProps) {
 
   // Initialize game engine
   useEffect(() => {
-    if (!containerRef.current || isMobile) return;
+    const shouldBlock = isMobile && process.env.NODE_ENV !== "development";
+    if (!containerRef.current || shouldBlock) return;
 
     let destroyed = false;
 
@@ -90,7 +91,7 @@ export default function InfiniteWorld({ className }: InfiniteWorldProps) {
     };
   }, [isMobile, handleLoadProgress, handleLoadComplete]);
 
-  if (isMobile) {
+  if (isMobile && process.env.NODE_ENV !== "development") {
     return (
       <div className="fixed inset-0 z-10 flex items-center justify-center bg-background">
         <div className="mx-auto max-w-md px-6 text-center">
