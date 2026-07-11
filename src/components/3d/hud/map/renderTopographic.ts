@@ -167,7 +167,7 @@ export function renderTopographicTerrain(
   // or just loop pixel grid with big rects.
   // Actually, easiest is filling pixel grid at a low resolution.
   const bgStep = size > 200 ? 4 : 2;
-  ctx.fillStyle = "#c8ddb0"; // land
+  ctx.fillStyle = "#8da67c"; // land
   ctx.fillRect(0, 0, size, size);
 
   ctx.fillStyle = "#7ab8d4"; // water
