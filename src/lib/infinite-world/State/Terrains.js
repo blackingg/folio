@@ -91,6 +91,19 @@ export default class Terrains
         const terrain = new Terrain(this, id, size, x, z, precision)
         this.terrains.set(terrain.id, terrain)
 
+        // Extract experiences for terrain flattening
+        const experiencesData = [];
+        if (this.game.experienceManager) {
+            this.game.experienceManager.registry.forEach(exp => {
+                experiencesData.push({
+                    x: exp.config.position.x,
+                    z: exp.config.position.z,
+                    radius: exp.config.flattenRadius,
+                    targetHeight: exp.config.targetHeight
+                });
+            });
+        }
+
         // Post to worker
         // console.time(`terrains: worker (${terrain.id})`)
         this.worker.postMessage({
@@ -108,7 +121,8 @@ export default class Terrains
             baseAmplitude: this.baseAmplitude,
             power: this.power,
             elevationOffset: this.elevationOffset,
-            iterationsOffsets: this.iterationsOffsets
+            iterationsOffsets: this.iterationsOffsets,
+            experiences: experiencesData
         })
 
         this.events.emit('create', terrain)

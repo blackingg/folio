@@ -1,0 +1,172 @@
+import * as THREE from 'three';
+import Game from '../Game.js';
+import State from './State.js';
+import View from '../View/View.js';
+import Basketball from '../experiences/Basketball.js';
+import Village from '../experiences/Village.js';
+
+let instance = null;
+
+export default class ExperienceManager {
+    constructor() {
+        if (instance) return instance;
+        instance = this;
+
+        this.game = Game.getInstance();
+        this.state = State.getInstance();
+        this.view = View.getInstance();
+
+        this.activeExperience = null;
+        
+        // Setup registry
+        this.registry = [
+            new Basketball({
+                id: 'basketball_court',
+                position: new THREE.Vector3(150, 0, 150), // Sample location
+                triggerRadius: 20,
+                preloadRadius: 100,
+                flattenRadius: 30,
+                targetHeight: 5,
+                gltfPaths: ['/models/court.glb'],
+                overridesControls: false
+            }),
+            new Village({
+                id: 'village',
+                position: new THREE.Vector3(-200, 0, -200), // Sample location
+                triggerRadius: 40,
+                preloadRadius: 150,
+                flattenRadius: 60,
+                targetHeight: 12,
+                gltfPaths: ['/models/village.glb'],
+                overridesControls: false
+            })
+        ];
+
+        this.markers = new Map();
+        
+        // Wait for scene to be ready before adding markers
+        setTimeout(() => {
+            this.initMarkers();
+        }, 100);
+    }
+
+    static getInstance() {
+        if (!instance) return new ExperienceManager();
+        return instance;
+    }
+
+    initMarkers() {
+        const scene = this.view.scene;
+        
+        this.registry.forEach(exp => {
+            const markerGroup = new THREE.Group();
+            
+            // thetaLength is stretched past Math.PI / 2 to extend the dome down into the terrain
+            const domeGeo = new THREE.SphereGeometry(
+                exp.config.triggerRadius,
+                32, 16,
+                0, Math.PI * 2,
+                0, Math.PI * 0.65
+            );
+            
+            const domeMat = new THREE.MeshStandardMaterial({
+                color: 0x90b0d0, // misty blue-grey color
+                transparent: true,
+                opacity: 0.98,
+                roughness: 0.9,
+                metalness: 0.1,
+                side: THREE.DoubleSide,
+                depthWrite: true
+            });
+            
+            const dome = new THREE.Mesh(domeGeo, domeMat);
+            dome.name = 'dome';
+            
+            markerGroup.add(dome);
+            markerGroup.position.copy(exp.config.position);
+            
+            scene.add(markerGroup);
+            this.markers.set(exp.config.id, markerGroup);
+        });
+    }
+
+    checkZones(playerPosition) {
+        // Adjust markers to terrain height & update dome fading based on proximity
+        this.registry.forEach(exp => {
+            const marker = this.markers.get(exp.config.id);
+            if (marker) {
+                if (this.state.chunks) {
+                    const elevation = this.state.chunks.getElevationForPosition(exp.config.position.x, exp.config.position.z);
+                    if (elevation !== false) {
+                        marker.position.y = elevation;
+                    }
+                }
+
+                // Smoothly fade out dome as player approaches the trigger radius
+                const dome = marker.getObjectByName('dome');
+                if (dome) {
+                    const dx = playerPosition[0] - exp.config.position.x;
+                    const dz = playerPosition[2] - exp.config.position.z;
+                    const dist = Math.hypot(dx, dz);
+                    
+                    const triggerR = exp.config.triggerRadius;
+                    const fadeStart = triggerR + 20; // begin fading out 20 units before entering
+                    
+                    if (dist < triggerR) {
+                        dome.visible = false;
+                        dome.material.opacity = 0;
+                    } else if (dist < fadeStart) {
+                        dome.visible = true;
+                        // Linear interpolation between 0 (at triggerRadius) and 0.98 (at fadeStart)
+                        const t = (dist - triggerR) / (fadeStart - triggerR);
+                        dome.material.opacity = t * 0.98;
+                    } else {
+                        dome.visible = true;
+                        dome.material.opacity = 0.98;
+                    }
+                }
+            }
+        });
+
+        // Check active distances
+        this.registry.forEach(exp => {
+            const dx = playerPosition[0] - exp.config.position.x;
+            const dz = playerPosition[2] - exp.config.position.z;
+            const dist = Math.hypot(dx, dz);
+
+            // Preload boundary
+            if (dist < exp.config.preloadRadius) {
+                if (!exp.isLoaded) {
+                    exp.load();
+                }
+            }
+
+            // Trigger boundary
+            if (dist < exp.config.triggerRadius) {
+                if (!exp.isActive) {
+                    if (this.activeExperience && this.activeExperience !== exp) {
+                        this.activeExperience.onExit();
+                    }
+                    exp.onEnter();
+                    this.activeExperience = exp;
+                }
+            } else if (exp.isActive) {
+                exp.onExit();
+                if (this.activeExperience === exp) {
+                    this.activeExperience = null;
+                }
+            }
+            
+            // Dispose boundary (e.g. preloadRadius + margin)
+            if (dist > exp.config.preloadRadius * 1.5) {
+                if (exp.isLoaded) {
+                    exp.dispose();
+                }
+            }
+        });
+
+        if (this.activeExperience) {
+            this.activeExperience.update(this.state.time.delta);
+        }
+    }
+}

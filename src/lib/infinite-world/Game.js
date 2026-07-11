@@ -29,6 +29,14 @@ export default class Game {
     this.debug = new Debug();
     this.state = new State();
     this.view = new View();
+    
+    // Lazy-load modules that require both State and View singletons to exist
+    import('./State/AssetManager.js').then(module => {
+        this.assetManager = new module.default();
+    });
+    import('./State/ExperienceManager.js').then(module => {
+        this.experienceManager = new module.default();
+    });
 
     // Track loading via chunks
     this._readyChunks = 0;
@@ -76,6 +84,9 @@ export default class Game {
 
   _checkLoaded() {
     if (this._readyChunks >= 9) {
+      if (this.state?.controls) {
+        this.state.controls.inputEnabled = true;
+      }
       this.onLoadComplete();
     }
   }
@@ -115,6 +126,9 @@ export default class Game {
         );
       }
     }
+
+    if (this.state?.controls) this.state.controls.destroy();
+    if (this.state?.gamepad) this.state.gamepad.destroy();
 
     // Reset singletons
     Game.instance = null;
