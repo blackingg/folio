@@ -28,6 +28,11 @@ export default class Player
 
     update()
     {
+        // Control override guard
+        if (this.game.experienceManager && this.game.experienceManager.activeExperience?.config?.overridesControls) {
+            return; // Freeze movement if experience takes over
+        }
+
         if(this.camera.mode !== Camera.MODE_FLY && (this.controls.keys.down.forward || this.controls.keys.down.backward || this.controls.keys.down.strafeLeft || this.controls.keys.down.strafeRight))
         {
             this.rotation = this.camera.thirdPerson.theta
@@ -84,6 +89,14 @@ export default class Player
             }
         }
 
+        // Experience Fake Collision
+        if (this.game.experienceManager && this.game.experienceManager.activeExperience) {
+            for (const box of this.game.experienceManager.activeExperience.boundingBoxes) {
+                // A simple placeholder AABB collision logic could go here if boundingBoxes were populated
+                // e.g. check if position.current is inside AABB and push out on shortest axis
+            }
+        }
+
         vec3.sub(this.position.delta, this.position.current, this.position.previous)
         vec3.copy(this.position.previous, this.position.current)
 
@@ -100,5 +113,10 @@ export default class Player
             this.position.current[1] = elevation
         else
             this.position.current[1] = 0
+
+        // Check Experiences trigger zones
+        if (this.game.experienceManager) {
+            this.game.experienceManager.checkZones(this.position.current);
+        }
     }
 }

@@ -15,7 +15,7 @@ const linearStep = (edgeMin, edgeMax, value) =>
     return Math.max(0.0, Math.min(1.0, (value - edgeMin) / (edgeMax - edgeMin)))
 }
 
-const getElevation = (x, y, lacunarity, persistence, iterations, baseFrequency, baseAmplitude, power, elevationOffset, iterationsOffsets) =>
+const getElevation = (x, y, lacunarity, persistence, iterations, baseFrequency, baseAmplitude, power, elevationOffset, iterationsOffsets, experiences) =>
 {
     let elevation = 0
     let frequency = baseFrequency
@@ -37,6 +37,27 @@ const getElevation = (x, y, lacunarity, persistence, iterations, baseFrequency, 
     elevation *= baseAmplitude
     elevation += elevationOffset
 
+    // Terrain flattening for experiences
+    if (experiences && experiences.length > 0) {
+        for (const exp of experiences) {
+            const dx = x - exp.x;
+            const dz = y - exp.z; // y in this context is world z
+            const dist = Math.hypot(dx, dz);
+            
+            if (dist < exp.radius) {
+                // Smooth blend over the outer 15 units of the radius
+                const innerRadius = Math.max(0, exp.radius - 15);
+                let factor = 1.0;
+                
+                if (dist > innerRadius) {
+                    factor = linearStep(exp.radius, innerRadius, dist);
+                }
+                
+                elevation = elevation * (1.0 - factor) + exp.targetHeight * factor;
+            }
+        }
+    }
+
     return elevation
 }
 
@@ -57,6 +78,7 @@ onmessage = function(event)
     const power = event.data.power
     const elevationOffset = event.data.elevationOffset
     const iterationsOffsets = event.data.iterationsOffsets
+    const experiences = event.data.experiences
     
     const segments = subdivisions + 1
     elevationRandom = new SimplexNoise(seed)
@@ -75,7 +97,7 @@ onmessage = function(event)
         for(let iZ = 0; iZ < segments + 1; iZ++)
         {
             const z = baseZ + (iZ / subdivisions - 0.5) * size
-            const elevation = getElevation(x, z, lacunarity, persistence, iterations, baseFrequency, baseAmplitude, power, elevationOffset, iterationsOffsets)
+            const elevation = getElevation(x, z, lacunarity, persistence, iterations, baseFrequency, baseAmplitude, power, elevationOffset, iterationsOffsets, experiences)
 
             const i = iZ * (segments + 1) + iX
             overflowElevations[i] = elevation

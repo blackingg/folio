@@ -12,6 +12,36 @@ export default class Controls
 
         this.events = new EventsEmitter()
 
+        this.inputEnabled = true
+
+        this._onKeyDown = (event) =>
+        {
+            if (!this.inputEnabled) return
+
+            const mapItem = this.keys.findPerCode(event.code)
+
+            if(mapItem)
+            {
+                this.events.emit('keyDown', mapItem.name)
+                this.events.emit(`${mapItem.name}Down`)
+                this.keys.down[mapItem.name] = true
+            }
+        }
+
+        this._onKeyUp = (event) =>
+        {
+            if (!this.inputEnabled) return
+
+            const mapItem = this.keys.findPerCode(event.code)
+
+            if(mapItem)
+            {
+                this.events.emit('keyUp', mapItem.name)
+                this.events.emit(`${mapItem.name}Up`)
+                this.keys.down[mapItem.name] = false
+            }
+        }
+
         this.setKeys()
         this.setPointer()
 
@@ -29,7 +59,7 @@ export default class Controls
     setKeys()
     {
         this.keys = {}
-        
+
         // Map
         this.keys.map = [
             {
@@ -92,30 +122,8 @@ export default class Controls
             return this.keys.map.find((mapItem) => mapItem.codes.includes(key))
         }
 
-        // Event
-        window.addEventListener('keydown', (event) =>
-        {
-            const mapItem = this.keys.findPerCode(event.code)
-            
-            if(mapItem)
-            {
-                this.events.emit('keyDown', mapItem.name)
-                this.events.emit(`${mapItem.name}Down`)
-                this.keys.down[mapItem.name] = true
-            }
-        })
-
-        window.addEventListener('keyup', (event) =>
-        {
-            const mapItem = this.keys.findPerCode(event.code)
-            
-            if(mapItem)
-            {
-                this.events.emit('keyUp', mapItem.name)
-                this.events.emit(`${mapItem.name}Up`)
-                this.keys.down[mapItem.name] = false
-            }
-        })
+        window.addEventListener('keydown', this._onKeyDown)
+        window.addEventListener('keyup', this._onKeyUp)
     }
 
     setPointer()
@@ -125,21 +133,17 @@ export default class Controls
         this.pointer.deltaTemp = { x: 0, y: 0 }
         this.pointer.delta = { x: 0, y: 0 }
 
-        window.addEventListener('pointerdown', (event) =>
-        {
-            this.pointer.down = true
-        })
-
-        window.addEventListener('pointermove', (event) =>
+        this._onPointerDown = () => { this.pointer.down = true }
+        this._onPointerMove = (event) =>
         {
             this.pointer.deltaTemp.x += event.movementX
             this.pointer.deltaTemp.y += event.movementY
-        })
+        }
+        this._onPointerUp = () => { this.pointer.down = false }
 
-        window.addEventListener('pointerup', () =>
-        {
-            this.pointer.down = false
-        })
+        window.addEventListener('pointerdown', this._onPointerDown)
+        window.addEventListener('pointermove', this._onPointerMove)
+        window.addEventListener('pointerup', this._onPointerUp)
     }
 
     update()
@@ -149,5 +153,15 @@ export default class Controls
 
         this.pointer.deltaTemp.x = 0
         this.pointer.deltaTemp.y = 0
+    }
+
+    destroy()
+    {
+        this.inputEnabled = false
+        window.removeEventListener('keydown', this._onKeyDown)
+        window.removeEventListener('keyup', this._onKeyUp)
+        window.removeEventListener('pointerdown', this._onPointerDown)
+        window.removeEventListener('pointermove', this._onPointerMove)
+        window.removeEventListener('pointerup', this._onPointerUp)
     }
 }
