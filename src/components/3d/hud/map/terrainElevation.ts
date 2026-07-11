@@ -1,5 +1,5 @@
+// @ts-expect-error — no types for seedrandom
 import seedrandom from "seedrandom";
-// @ts-expect-error — worker module, no types
 import SimplexNoise from "@/lib/infinite-world/Workers/SimplexNoise.js";
 
 const TERRAIN_SEED = "pb";
@@ -26,6 +26,7 @@ for (let i = 0; i < 6; i++) {
   ]);
 }
 
+// @ts-expect-error — SimplexNoise seed parameter typed incorrectly in TS fallback
 const elevationNoise = new SimplexNoise(TERRAIN_SEED);
 
 function linearStep(edgeMin: number, edgeMax: number, value: number) {
