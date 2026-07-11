@@ -141,6 +141,24 @@ export const DATA = {
       ],
     },
     {
+      company: "Leoninedao",
+      href: "https://leoninedao.org/",
+      badges: ["Electron", "React", "TypeScript", "TailwindCSS", "Zustand"],
+      location: "Remote",
+      title: "Frontend Engineer (Contract)",
+      logoUrl: "/leoninedao.png",
+      start: "November 2025",
+      end: "January 2026",
+      description:
+        "Designed and built the NOZY wallet's landing page and shipped v1 of Nozy Wallet, a cross-platform desktop client for managing shielded digital assets.",
+      featured: true,
+      responsibilities: [
+        "Designed and built the NOZY wallet's landing page, translating the product's privacy and zero-knowledge-proof feature set into a styled marketing site.",
+        "Built and shipped v1 of Nozy Wallet, a cross-platform desktop client (Electron, React 18, Vite, Tailwind CSS 4, Zustand) for managing shielded digital assets.",
+        "Integrated TanStack Query/Axios to connect the frontend to a locally-run Rust backend for wallet balances, transaction history, and key management.",
+      ],
+    },
+    {
       company: "Porfolio Website for a Senior Lecturer",
       href: "https://www.marufatoluyemisiodetunde.com/",
       badges: ["HTML", "TailwindCSS"],
