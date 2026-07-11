@@ -61,21 +61,28 @@ export default class ExperienceManager {
         this.registry.forEach(exp => {
             const markerGroup = new THREE.Group();
             
-            // Ground Ring
-            const ringGeo = new THREE.RingGeometry(exp.config.preloadRadius - 1, exp.config.preloadRadius, 64);
-            const ringMat = new THREE.MeshBasicMaterial({ color: 0x4488ff, side: THREE.DoubleSide, transparent: true, opacity: 0.5 });
-            const ring = new THREE.Mesh(ringGeo, ringMat);
-            ring.rotation.x = -Math.PI / 2;
+            // thetaLength is stretched past Math.PI / 2 to extend the dome down into the terrain
+            const domeGeo = new THREE.SphereGeometry(
+                exp.config.triggerRadius,
+                32, 16,
+                0, Math.PI * 2,
+                0, Math.PI * 0.65
+            );
             
-            // Marker Orb
-            const orbGeo = new THREE.SphereGeometry(2, 16, 16);
-            const orbMat = new THREE.MeshBasicMaterial({ color: 0x4488ff, wireframe: true });
-            const orb = new THREE.Mesh(orbGeo, orbMat);
-            orb.position.y = 2; // hover slightly above ground
+            const domeMat = new THREE.MeshStandardMaterial({
+                color: 0x90b0d0, // misty blue-grey color
+                transparent: true,
+                opacity: 0.98,
+                roughness: 0.9,
+                metalness: 0.1,
+                side: THREE.DoubleSide,
+                depthWrite: true
+            });
             
-            markerGroup.add(ring);
-            markerGroup.add(orb);
+            const dome = new THREE.Mesh(domeGeo, domeMat);
+            dome.name = 'dome';
             
+            markerGroup.add(dome);
             markerGroup.position.copy(exp.config.position);
             
             scene.add(markerGroup);
@@ -84,13 +91,39 @@ export default class ExperienceManager {
     }
 
     checkZones(playerPosition) {
-        // Adjust markers to terrain height
+        // Adjust markers to terrain height & update dome fading based on proximity
         this.registry.forEach(exp => {
             const marker = this.markers.get(exp.config.id);
-            if (marker && this.state.chunks) {
-                const elevation = this.state.chunks.getElevationForPosition(exp.config.position.x, exp.config.position.z);
-                if (elevation !== false) {
-                    marker.position.y = elevation;
+            if (marker) {
+                if (this.state.chunks) {
+                    const elevation = this.state.chunks.getElevationForPosition(exp.config.position.x, exp.config.position.z);
+                    if (elevation !== false) {
+                        marker.position.y = elevation;
+                    }
+                }
+
+                // Smoothly fade out dome as player approaches the trigger radius
+                const dome = marker.getObjectByName('dome');
+                if (dome) {
+                    const dx = playerPosition[0] - exp.config.position.x;
+                    const dz = playerPosition[2] - exp.config.position.z;
+                    const dist = Math.hypot(dx, dz);
+                    
+                    const triggerR = exp.config.triggerRadius;
+                    const fadeStart = triggerR + 20; // begin fading out 20 units before entering
+                    
+                    if (dist < triggerR) {
+                        dome.visible = false;
+                        dome.material.opacity = 0;
+                    } else if (dist < fadeStart) {
+                        dome.visible = true;
+                        // Linear interpolation between 0 (at triggerRadius) and 0.98 (at fadeStart)
+                        const t = (dist - triggerR) / (fadeStart - triggerR);
+                        dome.material.opacity = t * 0.98;
+                    } else {
+                        dome.visible = true;
+                        dome.material.opacity = 0.98;
+                    }
                 }
             }
         });
