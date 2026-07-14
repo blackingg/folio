@@ -1,8 +1,8 @@
 import BlurFade from "@/components/magicui/blur-fade";
 import { getBlogPosts, getPlaylistsWithPosts } from "@/data/blog";
-import { BlogCard } from "@/components/blog-card";
+import { BlogPostsPaginated } from "@/components/blog-posts-paginated";
 import { PlaylistCard } from "@/components/playlist-card";
-import Link from "next/link";
+import { Suspense } from "react";
 
 export const metadata = {
   title: "Blog",
@@ -56,38 +56,18 @@ export default async function BlogPage() {
         <h2 className="font-medium text-xl mb-6 tracking-tighter">All Posts</h2>
       </BlurFade>
 
-      <div className="grid gap-10">
-        {posts.length === 0 ? (
-          <p className="text-muted-foreground">
-            No blog posts available at the moment.
-          </p>
-        ) : (
-          posts
-            .sort((a: any, b: any) => {
-              if (new Date(a.publishedAt) > new Date(b.publishedAt)) {
-                return -1;
-              }
-              return 1;
-            })
-            .map((post: any, id: number) => (
-              <BlurFade
-                delay={
-                  BLUR_FADE_DELAY * 3 + playlists.length * 0.05 + id * 0.05
-                }
-                key={post.slug}
-              >
-                <BlogCard
-                  title={post.title}
-                  publishedAt={post.publishedAt}
-                  summary={post.summary}
-                  image={post.image}
-                  slug={post.slug}
-                  readingTime={post.readingTime}
-                />
-              </BlurFade>
-            ))
-        )}
-      </div>
+      {posts.length === 0 ? (
+        <p className="text-muted-foreground">
+          No blog posts available at the moment.
+        </p>
+      ) : (
+        <Suspense>
+          <BlogPostsPaginated
+            posts={posts}
+            initialDelay={BLUR_FADE_DELAY * 2 + playlists.length * 0.05}
+          />
+        </Suspense>
+      )}
     </section>
   );
 }
