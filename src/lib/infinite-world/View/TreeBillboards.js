@@ -4,12 +4,8 @@ import Game from '../Game.js'
 import View from './View.js'
 import State from '../State/State.js'
 import TreeBillboardMaterial from './Materials/TreeBillboardMaterial.js'
-
-function hashString(str) {
-    let hash = 0;
-    for (let i = 0; i < str.length; i++) hash = Math.imul(31, hash) + str.charCodeAt(i) | 0;
-    return (hash >>> 0) / 4294967296.0;
-}
+import seededRandom from '../utils/seededRandom.js'
+import { hashString } from '../worldGen.js'
 
 export default class TreeBillboards
 {
@@ -27,6 +23,9 @@ export default class TreeBillboards
         this.size = 2500               // Covers a 2500x2500 world-unit area
         this.count = this.details * this.details
         this.fragmentSize = this.size / this.details
+
+        // Seeded so the billboard jitter is identical for every visitor
+        this._random = seededRandom(this.game.seed + '_billboards')
 
         this.setGeometry()
         this.setMaterial()
@@ -61,8 +60,8 @@ export default class TreeBillboards
                 const vStride = instanceIndex * 12
 
                 // Add slight random offset to break the grid pattern
-                const r1 = Math.random() - 0.5
-                const r2 = Math.random() - 0.5
+                const r1 = this._random() - 0.5
+                const r2 = this._random() - 0.5
                 const centerX = fragmentX + r1 * this.fragmentSize * 0.8
                 const centerZ = fragmentZ + r2 * this.fragmentSize * 0.8
 

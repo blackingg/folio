@@ -4,6 +4,12 @@ import State from './State.js';
 import View from '../View/View.js';
 import Basketball from '../experiences/Basketball.js';
 import Village from '../experiences/Village.js';
+import { EXPERIENCES } from '../worldGen.js';
+
+const EXPERIENCE_CLASSES = {
+    basketball_court: Basketball,
+    village: Village,
+};
 
 let instance = null;
 
@@ -18,29 +24,20 @@ export default class ExperienceManager {
 
         this.activeExperience = null;
         
-        // Setup registry
-        this.registry = [
-            new Basketball({
-                id: 'basketball_court',
-                position: new THREE.Vector3(150, 0, 150), // Sample location
-                triggerRadius: 20,
-                preloadRadius: 100,
-                flattenRadius: 30,
-                targetHeight: 5,
-                gltfPaths: ['/models/court.glb'],
+        // Setup registry from the shared world definitions (worldGen.js)
+        this.registry = EXPERIENCES.map((def) => {
+            const ExperienceClass = EXPERIENCE_CLASSES[def.id];
+            return new ExperienceClass({
+                id: def.id,
+                position: new THREE.Vector3(def.x, 0, def.z),
+                triggerRadius: def.triggerRadius,
+                preloadRadius: def.preloadRadius,
+                flattenRadius: def.flattenRadius,
+                targetHeight: def.targetHeight,
+                gltfPaths: def.gltfPaths,
                 overridesControls: false
-            }),
-            new Village({
-                id: 'village',
-                position: new THREE.Vector3(-200, 0, -200), // Sample location
-                triggerRadius: 40,
-                preloadRadius: 150,
-                flattenRadius: 60,
-                targetHeight: 12,
-                gltfPaths: ['/models/village.glb'],
-                overridesControls: false
-            })
-        ];
+            });
+        });
 
         this.markers = new Map();
         

@@ -6,12 +6,7 @@ import State from '../State/State.js'
 import Terrain from './Terrain.js'
 import TerrainGradient from './TerrainGradient.js'
 import TerrainMaterial from './Materials/TerrainMaterial.js'
-
-function hashString(str) {
-    let hash = 0;
-    for (let i = 0; i < str.length; i++) hash = Math.imul(31, hash) + str.charCodeAt(i) | 0;
-    return (hash >>> 0) / 4294967296.0;
-}
+import { hashString } from '../worldGen.js'
 
 export default class Terrains
 {

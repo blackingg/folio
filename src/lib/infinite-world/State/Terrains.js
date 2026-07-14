@@ -1,11 +1,11 @@
 import EventsEmitter from 'events'
-import seedrandom from 'seedrandom'
 
 import Game from '../Game.js'
 import State from './State.js'
 import Debug from '../Debug/Debug.js'
 // Worker is loaded via new Worker() instead of Vite's ?worker import
 import Terrain from './Terrain.js'
+import { TERRAIN, computeIterationsOffsets } from '../worldGen.js'
 
 export default class Terrains
 {
@@ -21,15 +21,14 @@ export default class Terrains
         this.debug = Debug.getInstance()
 
         this.seed = this.game.seed + 'b'
-        this.random = new seedrandom(this.seed)
-        this.subdivisions = 40
-        this.lacunarity = 2.05
-        this.persistence = 0.45
-        this.maxIterations = 6
-        this.baseFrequency = 0.003
-        this.baseAmplitude = 40
-        this.power = 3
-        this.elevationOffset = 1
+        this.subdivisions = TERRAIN.subdivisions
+        this.lacunarity = TERRAIN.lacunarity
+        this.persistence = TERRAIN.persistence
+        this.maxIterations = TERRAIN.maxIterations
+        this.baseFrequency = TERRAIN.baseFrequency
+        this.baseAmplitude = TERRAIN.baseAmplitude
+        this.power = TERRAIN.power
+        this.elevationOffset = TERRAIN.elevationOffset
 
         this.segments = this.subdivisions + 1
         this.iterationsFormula = Terrains.ITERATIONS_FORMULA_POWERMIX
@@ -40,10 +39,7 @@ export default class Terrains
         this.events = new EventsEmitter()
         
         // Iterations offsets
-        this.iterationsOffsets = []
-
-        for(let i = 0; i < this.maxIterations; i++)
-            this.iterationsOffsets.push([(this.random() - 0.5) * 200000, (this.random() - 0.5) * 200000])
+        this.iterationsOffsets = computeIterationsOffsets(this.seed)
 
         this.setWorkers()
         this.setDebug()
