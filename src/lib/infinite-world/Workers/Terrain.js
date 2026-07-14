@@ -1,65 +1,27 @@
 import SimplexNoise from './SimplexNoise.js'
 import { vec3 } from 'gl-matrix'
 import { snoise3D } from './glslSimplex.js'
-
-function hashString(str) {
-    let hash = 0;
-    for (let i = 0; i < str.length; i++) hash = Math.imul(31, hash) + str.charCodeAt(i) | 0;
-    return (hash >>> 0) / 4294967296.0;
-}
+import {
+    getElevation as computeElevation,
+    createBorder,
+    BORDER,
+    hashString,
+    linearStep,
+} from '../worldGen.js'
 
 let elevationRandom = null
 
-const linearStep = (edgeMin, edgeMax, value) =>
-{
-    return Math.max(0.0, Math.min(1.0, (value - edgeMin) / (edgeMax - edgeMin)))
-}
-
+// Thin wrapper binding the shared canonical formula (worldGen.js) to this
+// worker's message-supplied params and seeded noise instance.
 const getElevation = (x, y, lacunarity, persistence, iterations, baseFrequency, baseAmplitude, power, elevationOffset, iterationsOffsets, experiences) =>
-{
-    let elevation = 0
-    let frequency = baseFrequency
-    let amplitude = 1
-    let normalisation = 0
-
-    for(let i = 0; i < iterations; i++)
-    {
-        const noise = elevationRandom.noise2D(x * frequency + iterationsOffsets[i][0], y * frequency + iterationsOffsets[i][1])
-        elevation += noise * amplitude
-
-        normalisation += amplitude
-        amplitude *= persistence
-        frequency *= lacunarity
-    }
-
-    elevation /= normalisation
-    elevation = Math.pow(Math.abs(elevation), power) * Math.sign(elevation)
-    elevation *= baseAmplitude
-    elevation += elevationOffset
-
-    // Terrain flattening for experiences
-    if (experiences && experiences.length > 0) {
-        for (const exp of experiences) {
-            const dx = x - exp.x;
-            const dz = y - exp.z; // y in this context is world z
-            const dist = Math.hypot(dx, dz);
-            
-            if (dist < exp.radius) {
-                // Smooth blend over the outer 15 units of the radius
-                const innerRadius = Math.max(0, exp.radius - 15);
-                let factor = 1.0;
-                
-                if (dist > innerRadius) {
-                    factor = linearStep(exp.radius, innerRadius, dist);
-                }
-                
-                elevation = elevation * (1.0 - factor) + exp.targetHeight * factor;
-            }
-        }
-    }
-
-    return elevation
-}
+    computeElevation(
+        x,
+        y,
+        (nx, ny) => elevationRandom.noise2D(nx, ny),
+        iterationsOffsets,
+        { lacunarity, persistence, iterations, baseFrequency, baseAmplitude, power, elevationOffset },
+        experiences
+    )
 
 onmessage = function(event)
 {
@@ -463,6 +425,15 @@ onmessage = function(event)
             return n - Math.floor(n)
         }
 
+        // World border — shared formula from worldGen.js (coastline wall of
+        // blue trees with a single gate due north)
+        const border = createBorder(seed)
+        const borderRadiusAt = border.radiusAt
+        const gateDistanceAt = border.gateArcDistance
+        const BORDER_CLEAR_BAND = BORDER.clearBand
+        const GATE_WIDTH = BORDER.gateWidth
+        const GATE_CORRIDOR = BORDER.gateCorridor
+
         for(let iZ = 0; iZ < segments; iZ++)
         {
             for(let iX = 0; iX < segments; iX++)
@@ -526,6 +497,19 @@ onmessage = function(event)
                         const finalX = x + (r4 - 0.5) * interSegmentX
                         const finalZ = z + (r5 - 0.5) * interSegmentZ
 
+                        // Keep the wall line clean and the gate corridor open
+                        const treeDist = Math.hypot(finalX, finalZ)
+                        const treeTheta = Math.atan2(finalZ, finalX)
+                        const wallRadius = borderRadiusAt(treeTheta)
+                        const wallOffset = Math.abs(treeDist - wallRadius)
+                        if (wallOffset < BORDER_CLEAR_BAND) continue
+                        if (wallOffset < GATE_CORRIDOR && gateDistanceAt(treeTheta, wallRadius) < GATE_WIDTH) continue
+
+                        // Inside the map, blue is reserved for the border wall
+                        if (typeIndex >= 8 && typeIndex <= 15 && treeDist < wallRadius) {
+                            typeIndex -= 8
+                        }
+
                         const finalY = getElevation(finalX, finalZ, lacunarity, persistence, iterations, baseFrequency, baseAmplitude, power, elevationOffset, iterationsOffsets)
 
                         trees.push({
@@ -536,6 +520,65 @@ onmessage = function(event)
                         })
                     }
                 }
+            }
+        }
+
+        /**
+         * Border wall — two staggered rows of blue trees along the coastline.
+         * Spacing 1.5 with per-tree collision radius 0.8 leaves no walkable gap,
+         * so the gate is genuinely the only way through. Half-open chunk bounds
+         * ensure each wall tree is emitted by exactly one chunk.
+         */
+        const chunkMinX = baseX - size * 0.5
+        const chunkMaxX = baseX + size * 0.5
+        const chunkMinZ = baseZ - size * 0.5
+        const chunkMaxZ = baseZ + size * 0.5
+
+        // Quick reject: only walk the ring for chunks that can intersect it
+        const maxWobble = BORDER.wobble[0] + BORDER.wobble[1] + BORDER.wobble[2]
+        const nearX = Math.max(chunkMinX, Math.min(0, chunkMaxX))
+        const nearZ = Math.max(chunkMinZ, Math.min(0, chunkMaxZ))
+        const chunkMinDist = Math.hypot(nearX, nearZ)
+        let chunkMaxDist = 0
+        for (const cx of [chunkMinX, chunkMaxX])
+            for (const cz of [chunkMinZ, chunkMaxZ])
+                chunkMaxDist = Math.max(chunkMaxDist, Math.hypot(cx, cz))
+
+        if (chunkMaxDist >= BORDER.radius - maxWobble - 3 && chunkMinDist <= BORDER.radius + maxWobble + 3)
+        {
+            const WALL_SPACING = 1.5
+            const WALL_ROW_OFFSET = 1.1
+
+            let theta = 0
+            while (theta < Math.PI * 2)
+            {
+                const r0 = borderRadiusAt(theta)
+
+                for (let row = 0; row < 2; row++)
+                {
+                    // Stagger the outer row half a step along the arc
+                    const t = row === 0 ? theta : theta + (WALL_SPACING * 0.5) / r0
+                    const r = borderRadiusAt(t) + (row === 0 ? -WALL_ROW_OFFSET : WALL_ROW_OFFSET)
+                    const wx = Math.cos(t) * r
+                    const wz = Math.sin(t) * r
+
+                    if (wx < chunkMinX || wx >= chunkMaxX || wz < chunkMinZ || wz >= chunkMaxZ) continue
+                    if (gateDistanceAt(t, r0) < GATE_WIDTH * 0.5) continue
+
+                    const r1 = pseudoRandom(wx, wz)
+                    const r2 = pseudoRandom(wx + 1, wz)
+                    const r3 = pseudoRandom(wx, wz + 1)
+                    const wy = getElevation(wx, wz, lacunarity, persistence, iterations, baseFrequency, baseAmplitude, power, elevationOffset, iterationsOffsets)
+
+                    trees.push({
+                        position: [wx, wy, wz],
+                        type: 8 + Math.floor(r1 * 8) % 8,
+                        scale: 1.2 + r2 * 0.4,
+                        rotation: r3 * Math.PI * 2
+                    })
+                }
+
+                theta += WALL_SPACING / r0
             }
         }
     }
