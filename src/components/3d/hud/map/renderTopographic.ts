@@ -1,6 +1,12 @@
 import { getTerrainElevation } from "./terrainElevation";
+import { GATE_ANGLE, borderRadiusAt, gateArcDistance } from "./border";
 
 const WATER_LEVEL = 0;
+
+// Works on the main thread and inside the map worker alike
+export type Canvas2D =
+  | CanvasRenderingContext2D
+  | OffscreenCanvasRenderingContext2D;
 
 export interface TopoRenderOptions {
   centerX: number;
@@ -148,7 +154,7 @@ function marchingSquares(
 }
 
 export function renderTopographicTerrain(
-  ctx: CanvasRenderingContext2D,
+  ctx: Canvas2D,
   { centerX, centerZ, viewRadius, size, sampleStep = 1, contourInterval = 5 }: TopoRenderOptions
 ) {
   // Use a coarser step for grid extraction to save performance, as paths are smooth anyway
@@ -162,21 +168,24 @@ export function renderTopographicTerrain(
     if (grid[i] > max) max = grid[i];
   }
 
-  // Draw base background (per-pixel distinction between land/water)
-  // To keep it fast, we'll draw land colour everywhere, then draw a rect for water mask,
-  // or just loop pixel grid with big rects.
-  // Actually, easiest is filling pixel grid at a low resolution.
-  const bgStep = size > 200 ? 4 : 2;
+  // Draw base background (land everywhere, then mask water on top).
+  // The water mask reuses the elevation grid built for the contours instead
+  // of re-sampling the 6-octave noise field a second time — roughly 40%
+  // fewer elevation evaluations per rebuild.
   ctx.fillStyle = "#8da67c"; // land
   ctx.fillRect(0, 0, size, size);
 
   ctx.fillStyle = "#7ab8d4"; // water
-  for (let y = 0; y < size; y += bgStep) {
-    for (let x = 0; x < size; x += bgStep) {
-      const wx = centerX + (x / size - 0.5) * viewRadius * 2;
-      const wz = centerZ + (y / size - 0.5) * viewRadius * 2;
-      if (getTerrainElevation(wx, wz) < 0) {
-        ctx.fillRect(x, y, bgStep, bgStep);
+  const half = extractStep * 0.5;
+  for (let gy = 0; gy < cols; gy++) {
+    for (let gx = 0; gx < cols; gx++) {
+      if (grid[gy * cols + gx] < WATER_LEVEL) {
+        ctx.fillRect(
+          gx * extractStep - half,
+          gy * extractStep - half,
+          extractStep,
+          extractStep
+        );
       }
     }
   }
@@ -244,6 +253,127 @@ export function renderTopographicTerrain(
     ctx.strokeStyle = "#2a5a7a";
     const coastPaths = marchingSquares(grid, cols, extractStep, 0);
     drawPaths(coastPaths);
+  }
+}
+
+export interface BorderRenderOptions {
+  centerX: number;
+  centerZ: number;
+  viewRadius: number;
+  size: number;
+  gateLabel?: boolean;
+}
+
+/**
+ * Draw the blue-tree world border, the gate opening, and shade the wilds
+ * beyond the wall. Cheap enough to run per-frame so it tracks the minimap
+ * centre smoothly instead of snapping with the cached terrain layer.
+ */
+export function drawWorldBorder(
+  ctx: CanvasRenderingContext2D,
+  { centerX, centerZ, viewRadius, size, gateLabel }: BorderRenderOptions
+) {
+  const SAMPLES = 720;
+  // The real opening is 12 units — draw it wider so it reads at map scale
+  const MAP_GATE_GAP = 15;
+
+  const pointAt = (theta: number): [number, number] => {
+    const r = borderRadiusAt(theta);
+    return worldToCanvas(
+      Math.cos(theta) * r,
+      Math.sin(theta) * r,
+      centerX,
+      centerZ,
+      viewRadius,
+      size
+    );
+  };
+
+  // Shade everything outside the border — the wilds
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(0, 0, size, size);
+  for (let i = 0; i <= SAMPLES; i++) {
+    const t = (i / SAMPLES) * Math.PI * 2;
+    const [cx, cy] = pointAt(t);
+    if (i === 0) ctx.moveTo(cx, cy);
+    else ctx.lineTo(cx, cy);
+  }
+  ctx.closePath();
+  ctx.fillStyle = "rgba(15, 20, 40, 0.16)";
+  ctx.fill("evenodd");
+  ctx.restore();
+
+  // The wall — dark underlay, then a dotted blue tree-line on top,
+  // both broken at the gate
+  ctx.save();
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+
+  const passes: Array<{ width: number; style: string; dash: number[] }> = [
+    { width: 4.5, style: "rgba(15, 35, 90, 0.45)", dash: [] },
+    { width: 3, style: "#4f7df9", dash: [0.1, 6] },
+  ];
+
+  for (const pass of passes) {
+    ctx.beginPath();
+    let penDown = false;
+    for (let i = 0; i <= SAMPLES; i++) {
+      const t = (i / SAMPLES) * Math.PI * 2;
+      const r = borderRadiusAt(t);
+      if (gateArcDistance(t, r) < MAP_GATE_GAP) {
+        penDown = false;
+        continue;
+      }
+      const [cx, cy] = worldToCanvas(
+        Math.cos(t) * r,
+        Math.sin(t) * r,
+        centerX,
+        centerZ,
+        viewRadius,
+        size
+      );
+      if (!penDown) {
+        ctx.moveTo(cx, cy);
+        penDown = true;
+      } else {
+        ctx.lineTo(cx, cy);
+      }
+    }
+    ctx.lineWidth = pass.width;
+    ctx.strokeStyle = pass.style;
+    ctx.setLineDash(pass.dash);
+    ctx.stroke();
+  }
+  ctx.restore();
+
+  // Gate marker — amber diamond at the opening
+  const [gx, gy] = pointAt(GATE_ANGLE);
+  if (gx > -20 && gy > -20 && gx < size + 20 && gy < size + 20) {
+    ctx.save();
+    ctx.translate(gx, gy);
+    ctx.rotate(Math.PI / 4);
+    ctx.fillStyle = "#f59e0b";
+    ctx.strokeStyle = "rgba(0, 0, 0, 0.45)";
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.rect(-4.5, -4.5, 9, 9);
+    ctx.fill();
+    ctx.stroke();
+    ctx.restore();
+
+    if (gateLabel) {
+      ctx.save();
+      ctx.font = "bold 10px system-ui";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "bottom";
+      ctx.strokeStyle = "rgba(0, 0, 0, 0.55)";
+      ctx.lineWidth = 3;
+      ctx.strokeText("Gate", gx, gy - 8);
+      ctx.fillStyle = "rgba(255, 255, 255, 0.95)";
+      ctx.fillText("Gate", gx, gy - 8);
+      ctx.restore();
+    }
   }
 }
 

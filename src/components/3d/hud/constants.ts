@@ -1,24 +1,27 @@
 // Shared constants used across all HUD panels
 
-export const MAP_WORLD_RADIUS = 600;
+import { EXPERIENCES } from "@/lib/infinite-world/worldGen.js";
 
-export const EXPERIENCE_ZONES = [
-  {
-    id: "basketball_court",
-    label: "Basketball Court",
-    emoji: "🏀",
-    description: "A flat court zone where you can shoot hoops and explore the basketball experience.",
-    x: 150,
-    z: 150,
-  },
-  {
-    id: "village",
-    label: "Village",
-    emoji: "🏘️",
-    description: "A hillside village with buildings to wander through and discover.",
-    x: -200,
-    z: -200,
-  },
-] as const;
+// Wide enough that the world border (500 ± 113 wobble) always fits with margin
+export const MAP_WORLD_RADIUS = 650;
 
-export type ExperienceZone = (typeof EXPERIENCE_ZONES)[number];
+export interface ExperienceZone {
+  id: string;
+  label: string;
+  emoji: string;
+  description: string;
+  x: number;
+  z: number;
+}
+
+// Derived from the single source of truth in worldGen.js
+export const EXPERIENCE_ZONES: ExperienceZone[] = EXPERIENCES.map(
+  (exp: any) => ({
+    id: exp.id,
+    label: exp.label,
+    emoji: exp.emoji,
+    description: exp.description,
+    x: exp.x,
+    z: exp.z,
+  })
+);
