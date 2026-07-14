@@ -5,6 +5,7 @@ import { HudCluster } from "./hud/HudCluster";
 import { MapPanel } from "./hud/MapPanel";
 import { InfoPanel } from "./hud/InfoPanel";
 import { SettingsPanel } from "./hud/SettingsPanel";
+import { WorldLoader } from "./WorldLoader";
 
 interface InfiniteWorldProps {
   className?: string;
@@ -153,29 +154,10 @@ export default function InfiniteWorld({ className }: InfiniteWorldProps) {
       `}</style>
 
       {/* Loading overlay */}
-      <div
-        className={`fixed inset-0 z-50 flex flex-col items-center justify-center bg-background/95 backdrop-blur-md transition-all duration-1000 ${
-          isLoaded
-            ? "pointer-events-none opacity-0"
-            : "pointer-events-auto opacity-100"
-        }`}
-      >
-        <div className="flex flex-col items-center gap-6">
-          <div className="h-16 w-16 animate-spin rounded-full border-4 border-muted border-t-foreground" />
-          <div className="flex flex-col items-center gap-2">
-            <p className="text-sm font-medium tracking-wide text-foreground/80">
-              Generating World
-            </p>
-            <div className="h-1.5 w-48 overflow-hidden rounded-full bg-muted">
-              <div
-                className="h-full rounded-full bg-foreground transition-all duration-300 ease-out"
-                style={{ width: `${loadProgress}%` }}
-              />
-            </div>
-            <p className="text-xs text-muted-foreground">{loadProgress}%</p>
-          </div>
-        </div>
-      </div>
+      <WorldLoader
+        progress={loadProgress}
+        isLoaded={isLoaded}
+      />
 
       <HudCluster
         gameRef={gameRef}

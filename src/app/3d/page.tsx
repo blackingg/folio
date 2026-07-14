@@ -5,7 +5,16 @@ import type { Metadata } from "next";
 
 const InfiniteWorld = dynamic(
   () => import("@/components/3d/InfiniteWorld"),
-  { ssr: false }
+  {
+    ssr: false,
+    // Match the WorldLoader's resting state so the overlay appears seamless
+    // while the component's own JS chunk is still downloading.
+    loading: () => (
+      <div className="fixed inset-0 z-50 bg-background">
+        <div className="absolute inset-x-0 top-1/2 h-px bg-foreground/15" />
+      </div>
+    ),
+  }
 );
 
 export const metadata: Metadata = {
