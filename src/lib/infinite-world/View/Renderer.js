@@ -27,12 +27,34 @@ export default class Renderer
     {
         this.clearColor = '#222222'
 
-        // Renderer
-        this.instance = new WebGLRenderer({
-            alpha: false,
-            antialias: true
-        })
-        
+        // Reuse a single WebGLRenderer (and its WebGL context) across Game
+        // instances — dev hot-reloads and route remounts otherwise churn real
+        // contexts, which both exhausts the browser's context cap and can trip
+        // Chrome's "page caused context loss" blocking.
+        const cached = globalThis.__infiniteWorldRenderer
+        if (cached && !cached.getContext().isContextLost()) {
+            this.instance = cached
+        } else {
+            try {
+                this.instance = new WebGLRenderer({
+                    alpha: false,
+                    antialias: true
+                })
+            } catch (error) {
+                // Marginal GPUs / software rasterizers sometimes refuse an
+                // antialiased context — retry with the cheapest settings
+                // before giving up (throws again if truly unavailable).
+                console.warn('[Renderer] Antialiased context failed, retrying without:', error)
+                this.instance = new WebGLRenderer({
+                    alpha: false,
+                    antialias: false,
+                    powerPreference: 'low-power',
+                    failIfMajorPerformanceCaveat: false
+                })
+            }
+            globalThis.__infiniteWorldRenderer = this.instance
+        }
+
         this.instance.sortObjects = false
         this.instance.domElement.style.position = 'absolute'
         this.instance.domElement.style.top = 0

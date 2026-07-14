@@ -93,19 +93,28 @@ export default function InfiniteWorld({ className }: InfiniteWorldProps) {
   }, []);
 
   // Boot game engine
+  const [bootFailed, setBootFailed] = useState(false);
+  const [bootAttempt, setBootAttempt] = useState(0);
   useEffect(() => {
     const shouldBlock = isMobile && process.env.NODE_ENV !== "development";
-    if (!containerRef.current || shouldBlock) return;
+    if (!containerRef.current || shouldBlock || bootFailed) return;
 
     let destroyed = false;
     (async () => {
       const { default: Game } = await import("@/lib/infinite-world/Game.js");
       if (destroyed || !containerRef.current) return;
-      gameRef.current = new Game(
-        containerRef.current,
-        handleLoadProgress,
-        handleLoadComplete,
-      );
+      try {
+        gameRef.current = new Game(
+          containerRef.current,
+          handleLoadProgress,
+          handleLoadComplete,
+        );
+      } catch (error) {
+        // Typically "Error creating WebGL context" — GPU unavailable,
+        // context cap reached, or the browser blocked the page
+        console.error("[InfiniteWorld] Failed to boot engine:", error);
+        setBootFailed(true);
+      }
     })();
 
     return () => {
@@ -113,7 +122,37 @@ export default function InfiniteWorld({ className }: InfiniteWorldProps) {
       gameRef.current?.destroy();
       gameRef.current = null;
     };
-  }, [isMobile, handleLoadProgress, handleLoadComplete]);
+  }, [isMobile, handleLoadProgress, handleLoadComplete, bootFailed, bootAttempt]);
+
+  // WebGL unavailable screen
+  if (bootFailed) {
+    return (
+      <div className="fixed inset-0 z-10 flex items-center justify-center bg-background">
+        <div className="mx-auto max-w-md px-6 text-center">
+          <div className="mb-6 text-6xl">🌫️</div>
+          <h2 className="mb-3 text-2xl font-bold tracking-tight">
+            3D unavailable
+          </h2>
+          <p className="text-muted-foreground leading-relaxed">
+            Your browser couldn&apos;t create a WebGL context, which this world
+            needs to render. Make sure &quot;Use graphics acceleration when
+            available&quot; is enabled in your browser&apos;s system settings
+            (it also enables software rendering), then relaunch the browser.
+            Closing other GPU-heavy tabs can help too.
+          </p>
+          <button
+            onClick={() => {
+              setBootFailed(false);
+              setBootAttempt((attempt) => attempt + 1);
+            }}
+            className="mt-6 rounded-full border px-5 py-2 text-sm font-medium transition-colors hover:bg-secondary/50"
+          >
+            Try again
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   // Mobile block screen
   if (isMobile && process.env.NODE_ENV !== "development") {

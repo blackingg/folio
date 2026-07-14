@@ -1,6 +1,7 @@
 import Debug from "./Debug/Debug.js";
 import State from "./State/State.js";
 import View from "./View/View.js";
+import { WORLD_SEED } from "./worldGen.js";
 
 export default class Game {
   static instance;
@@ -18,7 +19,7 @@ export default class Game {
     Game.instance = this;
 
     this.domElement = domElement;
-    this.seed = "p";
+    this.seed = WORLD_SEED;
     this.destroyed = false;
     this.animationFrameId = null;
 
@@ -117,15 +118,39 @@ export default class Game {
 
     window.removeEventListener("resize", this._resizeHandler);
 
-    // Clean up renderer
+    // Clean up renderer — the WebGLRenderer and its context are cached
+    // globally and reused by the next Game instance (see Renderer.setInstance),
+    // so never dispose() or forceContextLoss() here: only detach the canvas
+    // and free this run's GPU resources.
     if (this.view && this.view.renderer && this.view.renderer.instance) {
-      this.view.renderer.instance.dispose();
-      if (this.view.renderer.instance.domElement.parentNode) {
-        this.view.renderer.instance.domElement.parentNode.removeChild(
-          this.view.renderer.instance.domElement
-        );
+      const renderer = this.view.renderer.instance;
+
+      if (this.view.scene) {
+        this.view.scene.traverse((obj) => {
+          obj.geometry?.dispose?.();
+          const materials = Array.isArray(obj.material)
+            ? obj.material
+            : obj.material
+              ? [obj.material]
+              : [];
+          for (const material of materials) {
+            for (const value of Object.values(material)) {
+              if (value?.isTexture) value.dispose();
+            }
+            material.dispose();
+          }
+        });
+      }
+      renderer.renderLists.dispose();
+
+      if (renderer.domElement.parentNode) {
+        renderer.domElement.parentNode.removeChild(renderer.domElement);
       }
     }
+
+    // Stop the terrain generation worker thread — it is never reused
+    // across Game instances and leaks otherwise
+    if (this.state?.terrains?.worker) this.state.terrains.worker.terminate();
 
     if (this.state?.controls) this.state.controls.destroy();
     if (this.state?.gamepad) this.state.gamepad.destroy();
