@@ -91,7 +91,7 @@ export const DATA = {
       start: "February 2026",
       end: "Present",
       description:
-        "Frontend engineer at Bayse, Africa's largest prediction market platform, allowing users to trade real-world event shares.",
+        "Frontend engineer at Bayse, Africa's largest prediction market — building user-facing trading features on the main platform and the in-house admin and moderator portals.",
       featured: true,
       responsibilities: [
         "Contributed to maintaining and scaling the main predictive market platform, ensuring a seamless and high-performance user experience for trading real-world event shares across sports, crypto, politics, and entertainment.",
@@ -109,7 +109,8 @@ export const DATA = {
       start: "September 2025",
       end: "Present",
       description:
-        "Founded Shelf, a digital library and academic resource-sharing platform for Nigerian university students.",
+        "Founded Shelf, a digital library and academic resource-sharing platform for Nigerian university students — built end to end, from the shared-library architecture to the reader and moderation tooling.",
+      featured: true,
       responsibilities: [
         "Defined product vision and roadmap for a student-driven academic repository.",
         "Built the platform architecture around a shared-library model, where every upload joins a collective pool and folders act as curated subsets — the core product bet behind Shelf.",
@@ -128,12 +129,13 @@ export const DATA = {
       start: "October 2025",
       end: "Present",
       description:
-        "Frontend engineer for OAU Homes, a two-sided rental marketplace connecting students with verified housing agents.",
+        "Architected the frontend for a two-sided rental marketplace and its companion event ticketing platform — role-based UI for students, listers, and admins, end-to-end booking and inspection flows, and Paystack payments.",
+      featured: true,
       responsibilities: [
         "Architected the frontend for a two-sided rental marketplace using Next.js, TypeScript, and Tailwind CSS, with role-based UI for Students, Listers, and Admins.",
         "Built the booking and inspection flows end-to-end — client-side state management, form validation, and optimistic UI updates across the approval workflow.",
         "Handled payment integration (Paystack) alongside webhook-driven status updates for checkout and booking states.",
-        "Wired production API endpoints into reusable frontend abstractions shared across both the rental and ticketing platforms.",
+        "Wired production API endpoints into reusable frontend abstractions shared across both the rental and event-ticketing platforms.",
       ],
     },
     {
@@ -146,7 +148,7 @@ export const DATA = {
       start: "December 2025",
       end: "March 2026",
       description:
-        "Built and led frontend engineering for a digital estate planning platform enabling users to create legal wills and manage assets.",
+        "Led frontend engineering for a digital estate planning platform — multi-step will creation, Paystack payments, and the admin dashboard behind it.",
       featured: true,
       responsibilities: [
         "Led full frontend engineering for a digital estate planning platform (React, Redux Toolkit, Tailwind CSS, Ant Design).",
@@ -185,7 +187,6 @@ export const DATA = {
       logoUrl: "",
       start: "Sept 2025",
       end: "",
-      featured: true,
       description:
         "Built a professional portfolio website for a senior lecturer to showcase academic credentials and research.",
       responsibilities: [
@@ -204,9 +205,8 @@ export const DATA = {
       logoUrl: "/onetro.png",
       start: "June 2025",
       end: "Aug 2025",
-      featured: true,
       description:
-        "Frontend engineer for Onetro, a platform for selling coaching sessions and digital products with built-in video calls.",
+        "Took ownership of the frontend for Onetro, a platform for selling coaching sessions and digital products — shipped the wallet, products, and scheduling experiences plus the 3D Onetro Card.",
       responsibilities: [
         "Took ownership of an existing TypeScript codebase, fixing issues and shipping new features across the platform.",
         "Built the wallet page — bank account linking with name-match validation against the account holder, plus consolidated earnings from sessions and products and withdrawal handling.",
@@ -224,7 +224,7 @@ export const DATA = {
       start: "June 2025",
       end: "Aug 2025",
       description:
-        "Built the marketing site and core application dashboards for a financial services platform.",
+        "Built the marketing site, auth flows, and core user dashboards for a financial services platform, integrated end-to-end with the backend for loan processing and verification.",
       responsibilities: [
         "Built the company's marketing landing page and the core application dashboards and auth flows.",
         "Implemented the partner onboarding consent form with compliance requirements built into the flow.",
@@ -241,7 +241,7 @@ export const DATA = {
       start: "April 2025",
       end: "June 2025",
       description:
-        "Optimized frontend performance on an HR platform connecting job seekers with companies through a job board and applicant tracking system.",
+        "Frontend work on an HR platform connecting job seekers with companies — fixed major performance issues, built the AI applicant-ranking feature, and revamped the UI.",
       responsibilities: [
         "Fixed a major performance issue on applicant listing and payroll pages that were loading every record and its preloaded files upfront — replaced with paginated loading that prefetches a page or two ahead, cutting load times from several seconds to near-instant.",
         "Built the AI ranking feature that scores and orders applicants against a posted job's requirements, surfaced on the job poster's applicant view.",
