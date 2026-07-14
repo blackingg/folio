@@ -4,6 +4,8 @@
 
 @layer base {
     :root {
+      --neon: 186 100% 50%;  /* #00F0FF — cyan */
+
       --background: 0 0% 100%;
       --foreground: 210 11.1% 3.53%;
 
