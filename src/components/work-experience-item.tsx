@@ -41,8 +41,8 @@ export function WorkExperienceItem({ work, index }: WorkExperienceItemProps) {
 
       <div className="space-y-4">
         <div className="flex flex-col gap-2">
-          <div className="flex flex-wrap items-center gap-2 sm:hidden mb-2">
-            <Avatar className="size-10 border bg-background shadow-sm">
+          <div className="flex items-center gap-3 sm:hidden">
+            <Avatar className="size-12 shrink-0 border bg-background shadow-sm">
               <AvatarImage
                 src={work.logoUrl}
                 alt={work.company}
@@ -50,11 +50,18 @@ export function WorkExperienceItem({ work, index }: WorkExperienceItemProps) {
               />
               <AvatarFallback>{work.company[0]}</AvatarFallback>
             </Avatar>
-            <span className="font-bold text-lg">{work.company}</span>
+            <div className="flex min-w-0 flex-col">
+              <span className="font-bold text-lg leading-tight">
+                {work.company}
+              </span>
+              <span className="text-sm font-medium text-neutral-500 tabular-nums">
+                {work.start} — {work.end ?? "Present"}
+              </span>
+            </div>
           </div>
 
-          <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-2">
-            <h3 className="text-xl sm:text-2xl font-bold tracking-tight hidden sm:block">
+          <div className="hidden sm:flex sm:items-baseline justify-between gap-2">
+            <h3 className="text-xl sm:text-2xl font-bold tracking-tight">
               {work.company}
             </h3>
             <span className="text-sm sm:text-base font-medium text-neutral-500 tabular-nums">
@@ -62,28 +69,30 @@ export function WorkExperienceItem({ work, index }: WorkExperienceItemProps) {
             </span>
           </div>
 
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="flex flex-wrap items-center gap-3">
-              <span className="text-lg font-semibold text-primary/90">
+          <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-3">
+            <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3">
+              <span className="text-base sm:text-lg font-semibold text-primary/90">
                 {work.title}
               </span>
-              <div className="flex flex-wrap gap-1.5">
-                {work.badges?.map((badge) => (
-                  <Badge
-                    key={badge}
-                    variant="secondary"
-                    className="px-2 py-0 text-[10px] font-semibold uppercase tracking-wider"
-                  >
-                    {badge}
-                  </Badge>
-                ))}
-              </div>
+              {work.badges && work.badges.length > 0 && (
+                <div className="flex flex-wrap gap-1.5">
+                  {work.badges.map((badge) => (
+                    <Badge
+                      key={badge}
+                      variant="secondary"
+                      className="px-2 py-0 text-[10px] font-semibold uppercase tracking-wider"
+                    >
+                      {badge}
+                    </Badge>
+                  ))}
+                </div>
+              )}
             </div>
 
             {work.responsibilities && work.responsibilities.length > 0 && (
               <button
                 onClick={() => setIsExpanded(!isExpanded)}
-                className="flex items-center gap-1 text-sm font-medium text-primary hover:underline transition-all"
+                className="flex items-center gap-1 self-start py-1 text-sm font-medium text-primary hover:underline transition-all"
               >
                 {isExpanded ? "Show Less" : "Show Details"}
                 <ChevronDown
