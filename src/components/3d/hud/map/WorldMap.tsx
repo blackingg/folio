@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { EXPERIENCE_ZONES, MAP_WORLD_RADIUS, type ExperienceZone } from "../constants";
 import {
   canvasToWorld,
+  drawWorldBorder,
   renderTopographicTerrain,
   worldToCanvas,
 } from "./renderTopographic";
@@ -32,8 +33,10 @@ export function WorldMap({
 }: WorldMapProps) {
   const isInteractive = interactive ?? mode === "full";
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const terrainCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const terrainImageRef = useRef<ImageBitmap | HTMLCanvasElement | null>(null);
   const terrainKeyRef = useRef("");
+  const pendingKeyRef = useRef("");
+  const workerRef = useRef<Worker | null>(null);
   const rafRef = useRef<number | null>(null);
   const [activeZone, setActiveZone] = useState<ExperienceZone | null>(null);
   const [popupPos, setPopupPos] = useState<{ x: number; y: number } | null>(null);
@@ -47,20 +50,63 @@ export function WorldMap({
     return { x: pos?.[0] ?? 0, z: pos?.[2] ?? 0 };
   }, [gameRef, mode]);
 
+  // Terrain rebuilds run in a worker (OffscreenCanvas) so they never block
+  // the game's render loop; the previous image keeps drawing until the fresh
+  // one arrives a few frames later.
+  useEffect(() => {
+    if (typeof OffscreenCanvas === "undefined" || typeof Worker === "undefined")
+      return; // sync fallback path stays active
+
+    const worker = new Worker(
+      new URL("./terrainMap.worker.ts", import.meta.url)
+    );
+    worker.onmessage = (
+      event: MessageEvent<{ key: string; bitmap: ImageBitmap }>
+    ) => {
+      const { key, bitmap } = event.data;
+      // Drop stale responses — the player kept moving and a newer
+      // request is already in flight
+      if (key !== pendingKeyRef.current) {
+        bitmap.close();
+        return;
+      }
+      const old = terrainImageRef.current;
+      if (old instanceof ImageBitmap) old.close();
+      terrainImageRef.current = bitmap;
+      terrainKeyRef.current = key;
+      pendingKeyRef.current = "";
+    };
+    workerRef.current = worker;
+
+    return () => {
+      worker.terminate();
+      workerRef.current = null;
+      pendingKeyRef.current = "";
+    };
+  }, []);
+
   const ensureTerrain = useCallback(
     (centerX: number, centerZ: number) => {
       const snapStep = mode === "full" ? 30 : 15;
       const key = `${mode}:${Math.round(centerX / snapStep)}:${Math.round(centerZ / snapStep)}:${viewRadius}:${size}`;
-      if (terrainKeyRef.current === key && terrainCanvasRef.current) return;
+      if (terrainKeyRef.current === key && terrainImageRef.current) return;
 
-      if (!terrainCanvasRef.current) {
-        terrainCanvasRef.current = document.createElement("canvas");
+      const worker = workerRef.current;
+      if (worker) {
+        if (pendingKeyRef.current === key) return; // already requested
+        pendingKeyRef.current = key;
+        worker.postMessage({ key, centerX, centerZ, viewRadius, size, sampleStep });
+        return;
       }
 
-      const terrainCanvas = terrainCanvasRef.current;
-      terrainCanvas.width = size;
-      terrainCanvas.height = size;
-      const tctx = terrainCanvas.getContext("2d");
+      // Fallback: synchronous main-thread render (no OffscreenCanvas support)
+      let canvas = terrainImageRef.current;
+      if (!(canvas instanceof HTMLCanvasElement)) {
+        canvas = document.createElement("canvas");
+      }
+      canvas.width = size;
+      canvas.height = size;
+      const tctx = canvas.getContext("2d");
       if (!tctx) return;
 
       renderTopographicTerrain(tctx, {
@@ -72,6 +118,7 @@ export function WorldMap({
         contourInterval: 5,
       });
 
+      terrainImageRef.current = canvas;
       terrainKeyRef.current = key;
     },
     [mode, viewRadius, size, sampleStep]
@@ -152,9 +199,21 @@ export function WorldMap({
 
       ctx.clearRect(0, 0, size, size);
 
-      if (terrainCanvasRef.current) {
-        ctx.drawImage(terrainCanvasRef.current, 0, 0, size, size);
+      if (terrainImageRef.current) {
+        ctx.drawImage(terrainImageRef.current, 0, 0, size, size);
+      } else {
+        // First worker render hasn't landed yet — hold the land colour
+        ctx.fillStyle = "#8da67c";
+        ctx.fillRect(0, 0, size, size);
       }
+
+      drawWorldBorder(ctx, {
+        centerX: center.x,
+        centerZ: center.z,
+        viewRadius,
+        size,
+        gateLabel: mode === "full",
+      });
 
       for (const zone of EXPERIENCE_ZONES) {
         const [cx, cy] = worldToCanvas(
