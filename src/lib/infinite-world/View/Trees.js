@@ -258,6 +258,11 @@ export default class Trees {
 
                     instancedMesh.receiveShadow = false;
 
+                    // Instances span the whole world while the bounding sphere only
+                    // covers the base geometry at the origin — never frustum cull,
+                    // matching Grass and TreeBillboards.
+                    instancedMesh.frustumCulled = false;
+
 
 
                     this.scene.add(instancedMesh);
