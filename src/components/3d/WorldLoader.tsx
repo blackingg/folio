@@ -21,18 +21,18 @@ const LOG_HISTORY = 2;
 function logFor(v: number) {
   if (v < 3) return "booting world engine";
   if (v < 6) return "seeding simplex noise";
-  if (v < 48) {
-    const chunk = Math.min(9, Math.max(1, Math.ceil(((v - 6) / 42) * 9)));
+  if (v < 26) {
+    const chunk = Math.min(9, Math.max(1, Math.ceil(((v - 6) / 20) * 9)));
     return `generating terrain chunk ${chunk}/9`;
   }
-  if (v < 54) return "smoothing terrain normals";
-  if (v < 61) return "planting trees";
-  if (v < 67) return "growing distant billboards";
-  if (v < 73) return "scattering grass";
-  if (v < 79) return "filling the ocean";
-  if (v < 85) return "raising the sky dome";
-  if (v < 90) return "hanging the sun and moon";
-  if (v < 94) return "sprinkling stars";
+  if (v < 34) return "smoothing terrain normals";
+  if (v < 42) return "planting trees";
+  if (v < 50) return "growing distant billboards";
+  if (v < 58) return "scattering grass";
+  if (v < 66) return "filling the ocean";
+  if (v < 74) return "wizard summoning clouds";
+  if (v < 82) return "hanging the sun and moon";
+  if (v < 90) return "sprinkling stars";
   if (v < 99.5) return "waking the player";
   return "entering world";
 }
@@ -132,7 +132,7 @@ export function WorldLoader({
         <div className="absolute inset-x-0 bottom-0 h-px bg-foreground/15" />
         <motion.div
           style={{ scaleX }}
-          className="absolute inset-x-0 bottom-0 h-px origin-left bg-foreground"
+          className="absolute inset-x-0 bottom-0 h-px origin-left bg-[hsl(var(--neon))] shadow-[0_0_8px_hsl(var(--neon))]"
         />
       </motion.div>
 
