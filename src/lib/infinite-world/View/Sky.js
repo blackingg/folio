@@ -63,7 +63,9 @@ export default class Sky {
         this.customRender = {};
         this.customRender.scene = new Scene();
         this.customRender.camera = this.view.camera.instance.clone();
-        this.customRender.resolutionRatio = 1;
+        // Backdrop resolution — the gradient and flat clouds are smooth, so
+        // linear upscaling is invisible and the fill cost drops ~25x.
+        this.customRender.resolutionRatio = 0.2;
         this.customRender.renderTarget = new WebGLRenderTarget(
             this.viewport.width * this.customRender.resolutionRatio,
             this.viewport.height * this.customRender.resolutionRatio,
@@ -385,9 +387,11 @@ export default class Sky {
     }
 
     resize() {
-        this.customRender.renderTarget.width =
-            this.viewport.width * this.customRender.resolutionRatio;
-        this.customRender.renderTarget.height =
-            this.viewport.height * this.customRender.resolutionRatio;
+        // setSize() actually reallocates the target — assigning .width/.height
+        // directly leaves the underlying texture at its old resolution.
+        this.customRender.renderTarget.setSize(
+            this.viewport.width * this.customRender.resolutionRatio,
+            this.viewport.height * this.customRender.resolutionRatio,
+        );
     }
 }
