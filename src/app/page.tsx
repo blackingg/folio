@@ -88,7 +88,9 @@ export default async function Page() {
           <BlurFade delay={BLUR_FADE_DELAY * 5}>
             <h2 className="text-xl font-bold">Work Experience</h2>
           </BlurFade>
-          {DATA.work.map((work, id) => (
+          {DATA.work
+            .filter((work) => (work as any).featured)
+            .map((work, id) => (
             <BlurFade
               key={work.company}
               delay={BLUR_FADE_DELAY * 6 + id * 0.05}
@@ -250,6 +252,7 @@ export default async function Page() {
               <BlurFade
                 key={post.slug}
                 delay={BLUR_FADE_DELAY * 15 + id * 0.05}
+                className="sm:last:odd:col-span-2 lg:last:odd:col-span-1"
               >
                 <BlogCard
                   title={post.title}
