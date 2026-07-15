@@ -26,7 +26,11 @@ export default function GrassMaterial()
             uFresnelScale: { value: null },
             uFresnelPower: { value: null },
             uSunPosition: { value: null },
-            uDayCycleProgress: { value: 0 }
+            uDayCycleProgress: { value: 0 },
+            uBorderRadius: { value: null },
+            uBorderWobble: { value: null },
+            uBorderPhases: { value: null },
+            uBorderBand: { value: null }
         },
         vertexShader: vertexShader,
         fragmentShader: fragmentShader

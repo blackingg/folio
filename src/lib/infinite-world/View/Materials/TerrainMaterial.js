@@ -21,7 +21,11 @@ export default function TerrainMaterial()
             uDayCycleProgress: { value: 0 },
             uSeed_t: { value: 0 },
             uSeed_b: { value: 0 },
-            uOffset: { value: null }
+            uOffset: { value: null },
+            uBorderRadius: { value: null },
+            uBorderWobble: { value: null },
+            uBorderPhases: { value: null },
+            uBorderBand: { value: null }
         },
         vertexShader: vertexShader,
         fragmentShader: fragmentShader

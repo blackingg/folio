@@ -19,6 +19,10 @@ uniform float uFresnelScale;
 uniform float uFresnelPower;
 uniform vec3 uSunPosition;
 uniform float uDayCycleProgress;
+uniform float uBorderRadius;
+uniform vec3 uBorderWobble;
+uniform vec3 uBorderPhases;
+uniform float uBorderBand;
 
 attribute vec2 center;
 // attribute float tipness;
@@ -32,6 +36,7 @@ varying vec3 vColor;
 #include ../partials/getSunReflection.glsl;
 #include ../partials/getSunReflectionColor.glsl;
 #include ../partials/getGrassAttenuation.glsl;
+#include ../partials/getBorderBarren.glsl;
 #include ../partials/getRotatePivot2d.glsl;
 
 void main()
@@ -82,7 +87,8 @@ void main()
     float distanceScale = getGrassAttenuation(modelCenter.xz);
     float slopeScale = smoothstep(remap(slope, 0.4, 0.5, 1.0, 0.0), 0.0, 1.0);
     float waterScale = terrainData.a > 0.0 ? 1.0 : 0.0;
-    float scale = distanceScale * slopeScale * waterScale;
+    float borderScale = 1.0 - getBorderBarren(modelCenter.xz); // nothing grows near the wall
+    float scale = distanceScale * slopeScale * waterScale * borderScale;
     modelPosition.xyz = mix(modelCenter.xyz, modelPosition.xyz, scale);
 
     // Tipness

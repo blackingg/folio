@@ -6,7 +6,7 @@ import State from '../State/State.js'
 import Terrain from './Terrain.js'
 import TerrainGradient from './TerrainGradient.js'
 import TerrainMaterial from './Materials/TerrainMaterial.js'
-import { hashString } from '../worldGen.js'
+import { hashString, BORDER, TERRAIN_SEED, createBorder } from '../worldGen.js'
 
 export default class Terrains
 {
@@ -60,6 +60,13 @@ export default class Terrains
             this.state.terrains.iterationsOffsets[0][0],
             this.state.terrains.iterationsOffsets[0][1]
         );
+
+        // Barren band around the border wall (see getBorderBarren.glsl)
+        const border = createBorder(TERRAIN_SEED)
+        this.material.uniforms.uBorderRadius.value = BORDER.radius
+        this.material.uniforms.uBorderWobble.value = new Vector3(...BORDER.wobble)
+        this.material.uniforms.uBorderPhases.value = new Vector3(...border.phases)
+        this.material.uniforms.uBorderBand.value = BORDER.clearBand
 
         this.material.onBeforeRender = (renderer, scene, camera, geometry, mesh) =>
         {

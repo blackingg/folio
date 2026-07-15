@@ -13,6 +13,10 @@ uniform float uDayCycleProgress;
 uniform float uSeed_t;
 uniform float uSeed_b;
 uniform vec2 uOffset;
+uniform float uBorderRadius;
+uniform vec3 uBorderWobble;
+uniform vec3 uBorderPhases;
+uniform float uBorderBand;
 
 varying vec3 vColor;
 
@@ -24,6 +28,7 @@ varying vec3 vColor;
 #include ../partials/getSunReflectionColor.glsl;
 #include ../partials/getFogColor.glsl;
 #include ../partials/getGrassAttenuation.glsl;
+#include ../partials/getBorderBarren.glsl;
 #include ../partials/simplex.glsl
 
 void main()
@@ -82,6 +87,11 @@ void main()
     float tier1Fade = smoothstep(600.0, 1500.0, depth);
     vec3 forestTint = mix(color, forestColor, treeDensity * tier1Fade * slopeMask * 0.75);
     color = forestTint;
+
+    // Barren band along the border wall — the wall lets nothing grow near it
+    float borderBarren = getBorderBarren(modelPosition.xz);
+    vec3 barrenColor = vec3(0.34, 0.26, 0.14); // dead dirt
+    color = mix(color, barrenColor, borderBarren * 0.9);
 
     // Sun shade
     float sunShade = getSunShade(normal);

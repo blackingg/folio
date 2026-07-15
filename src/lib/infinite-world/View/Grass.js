@@ -4,6 +4,7 @@ import Game from '../Game.js'
 import View from './View.js'
 import State from '../State/State.js'
 import GrassMaterial from './Materials/GrassMaterial.js'
+import { BORDER, TERRAIN_SEED, createBorder } from '../worldGen.js'
 
 export default class Grass
 {
@@ -118,6 +119,13 @@ export default class Grass
         this.material.uniforms.uFresnelScale.value = 0.5
         this.material.uniforms.uFresnelPower.value = 2
         this.material.uniforms.uSunPosition.value = new Vector3(- 0.5, - 0.5, - 0.5)
+
+        // Barren band around the border wall (see getBorderBarren.glsl)
+        const border = createBorder(TERRAIN_SEED)
+        this.material.uniforms.uBorderRadius.value = BORDER.radius
+        this.material.uniforms.uBorderWobble.value = new Vector3(...BORDER.wobble)
+        this.material.uniforms.uBorderPhases.value = new Vector3(...border.phases)
+        this.material.uniforms.uBorderBand.value = BORDER.clearBand
         // this.material.wireframe = true
     }
 

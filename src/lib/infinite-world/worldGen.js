@@ -180,5 +180,6 @@ export function createBorder(seed) {
         return Math.abs(dAng) * radius
     }
 
-    return { radiusAt, gateArcDistance }
+    // phases feed the GLSL copy of radiusAt (getBorderBarren.glsl)
+    return { radiusAt, gateArcDistance, phases: [phaseA, phaseB, phaseC] }
 }
