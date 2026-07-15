@@ -25,7 +25,7 @@ export function BlogCard({
       href={`/blog/${slug}`}
       className="block h-full"
     >
-      <Card className="h-full overflow-hidden group hover:bg-muted/50 transition-all border-none shadow-none bg-transparent">
+      <Card className="h-full overflow-hidden group hover:bg-muted/80 transition-all border-none shadow-none bg-muted/40">
         <BlogImage
           src={image || undefined}
           alt={title}
