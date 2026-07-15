@@ -3,6 +3,7 @@ import { vec3 } from 'gl-matrix'
 import Game from '../Game.js'
 import State from './State.js'
 import Camera from './Camera.js'
+import { BORDER, TERRAIN_SEED, createBorder, wallCollisionHalfWidth } from '../worldGen.js'
 
 export default class Player
 {
@@ -22,6 +23,9 @@ export default class Player
         this.position.current = vec3.fromValues(10, 0, 1)
         this.position.previous = vec3.clone(this.position.current)
         this.position.delta = vec3.create()
+
+        this.border = createBorder(TERRAIN_SEED)
+        this.borderHalfWidth = wallCollisionHalfWidth()
 
         this.camera = new Camera(this)
     }
@@ -86,6 +90,29 @@ export default class Player
                         this.position.current[2] += (dz / dist) * push;
                     }
                 }
+            }
+        }
+
+        // Border wall collision — an analytic band around the coastline, so the
+        // wall holds even if a frame spike tunnels past the per-tree circles.
+        // The gate opening is the only place the band lets the player through.
+        {
+            const px = this.position.current[0]
+            const pz = this.position.current[2]
+            const dist = Math.hypot(px, pz)
+            const theta = Math.atan2(pz, px)
+            const wallRadius = this.border.radiusAt(theta)
+            const inGate = this.border.gateArcDistance(theta, wallRadius) < BORDER.gateWidth * 0.5
+
+            if (!inGate && dist > 0.0001 && Math.abs(dist - wallRadius) < this.borderHalfWidth) {
+                // Push back out on the side the player came from
+                const prevDist = Math.hypot(this.position.previous[0], this.position.previous[2])
+                const prevTheta = Math.atan2(this.position.previous[2], this.position.previous[0])
+                const side = Math.sign(prevDist - this.border.radiusAt(prevTheta)) || -1
+                const targetDist = wallRadius + side * this.borderHalfWidth
+
+                this.position.current[0] = (px / dist) * targetDist
+                this.position.current[2] = (pz / dist) * targetDist
             }
         }
 

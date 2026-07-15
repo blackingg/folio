@@ -524,10 +524,11 @@ onmessage = function(event)
         }
 
         /**
-         * Border wall — two staggered rows of blue trees along the coastline.
-         * Spacing 1.5 with per-tree collision radius 0.8 leaves no walkable gap,
-         * so the gate is genuinely the only way through. Half-open chunk bounds
-         * ensure each wall tree is emitted by exactly one chunk.
+         * Border wall — BORDER.wallRows staggered rows of blue trees along the
+         * coastline. The trees are the visual wall; the impassable barrier is
+         * the analytic collision band in State/Player.js, so nothing slips
+         * through between trunks. Half-open chunk bounds ensure each wall tree
+         * is emitted by exactly one chunk.
          */
         const chunkMinX = baseX - size * 0.5
         const chunkMaxX = baseX + size * 0.5
@@ -536,6 +537,8 @@ onmessage = function(event)
 
         // Quick reject: only walk the ring for chunks that can intersect it
         const maxWobble = BORDER.wobble[0] + BORDER.wobble[1] + BORDER.wobble[2]
+        const wallHalfExtent = ((BORDER.wallRows - 1) / 2) * BORDER.wallRowSpacing
+        const ringMargin = maxWobble + wallHalfExtent + 3
         const nearX = Math.max(chunkMinX, Math.min(0, chunkMaxX))
         const nearZ = Math.max(chunkMinZ, Math.min(0, chunkMaxZ))
         const chunkMinDist = Math.hypot(nearX, nearZ)
@@ -544,21 +547,22 @@ onmessage = function(event)
             for (const cz of [chunkMinZ, chunkMaxZ])
                 chunkMaxDist = Math.max(chunkMaxDist, Math.hypot(cx, cz))
 
-        if (chunkMaxDist >= BORDER.radius - maxWobble - 3 && chunkMinDist <= BORDER.radius + maxWobble + 3)
+        if (chunkMaxDist >= BORDER.radius - ringMargin && chunkMinDist <= BORDER.radius + ringMargin)
         {
-            const WALL_SPACING = 1.5
-            const WALL_ROW_OFFSET = 1.1
+            const WALL_SPACING = BORDER.wallTreeSpacing
+            const WALL_ROWS = BORDER.wallRows
+            const WALL_ROW_SPACING = BORDER.wallRowSpacing
 
             let theta = 0
             while (theta < Math.PI * 2)
             {
                 const r0 = borderRadiusAt(theta)
 
-                for (let row = 0; row < 2; row++)
+                for (let row = 0; row < WALL_ROWS; row++)
                 {
-                    // Stagger the outer row half a step along the arc
-                    const t = row === 0 ? theta : theta + (WALL_SPACING * 0.5) / r0
-                    const r = borderRadiusAt(t) + (row === 0 ? -WALL_ROW_OFFSET : WALL_ROW_OFFSET)
+                    // Stagger every other row half a step along the arc
+                    const t = theta + (row % 2) * (WALL_SPACING * 0.5) / r0
+                    const r = borderRadiusAt(t) + (row - (WALL_ROWS - 1) / 2) * WALL_ROW_SPACING
                     const wx = Math.cos(t) * r
                     const wz = Math.sin(t) * r
 

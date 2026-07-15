@@ -30,10 +30,20 @@ export const TERRAIN = {
 export const BORDER = {
     radius: 500,
     wobble: [60, 35, 18],    // sinusoid amplitudes (coastline feel)
-    clearBand: 8,            // keep random trees off the wall line
+    clearBand: 12,           // keep random trees off the wall line
     gateAngle: -Math.PI / 2, // north
     gateWidth: 12,           // opening through the wall, world units
     gateCorridor: 30,        // tree-free approach on both sides
+    wallRows: 4,             // staggered tree rows across the wall thickness
+    wallRowSpacing: 1.6,     // radial distance between rows
+    wallTreeSpacing: 1.5,    // arc distance between trees in a row
+    wallCollisionPadding: 1.5, // collision skin beyond the outermost rows
+}
+
+/** Half-thickness of the wall's collision band, wall centreline to edge */
+export function wallCollisionHalfWidth() {
+    return ((BORDER.wallRows - 1) / 2) * BORDER.wallRowSpacing
+        + BORDER.wallCollisionPadding
 }
 
 /**
