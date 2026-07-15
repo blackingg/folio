@@ -269,7 +269,7 @@ export const DATA = {
       active: true,
       featured: true,
       description:
-        "Shelf is a cross-platform e-library I founded to make it easier for Nigerian students and readers to discover, share, and preserve digital archives. It brings together textbooks, novels, magazines, comics, and school notes in one accessible, community-driven platform, with organized public and private folders, smart search, and a clean, responsive interface for seamless reading across devices. As the founder, I defined the project structure and roadmap, designed the entire user experience from scratch, and built the responsive frontend that powers content discovery and interaction. I also established the moderation and verification model that ensures authenticity and supports Shelf’s vision of an open, sustainable, community-led digital library.",
+        "Shelf is a digital library and resource-sharing platform I founded for Nigerian students and readers — textbooks, novels, comics, and school notes in one community-driven pool, organized into curated public and private folders with smart search and a custom EPUB/PDF reader. I built it end to end, from the shared-library architecture and responsive frontend to the moderation and vetting model that keeps the library authentic.",
       technologies: ["Next.js", "Typescript", "TailwindCSS", "Framer Motion"],
       links: [
         {
