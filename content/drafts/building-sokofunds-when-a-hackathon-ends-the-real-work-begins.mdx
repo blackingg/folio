@@ -1,0 +1,113 @@
+---
+title: "Building SokoFunds: When a Hackathon Ends, the Real Work Begins"
+publishedAt: "2026-07-15T21:25:30.292Z"
+summary: "A WHO hackathon team fell apart around a banking app for the DRC — so I took the frontend and pushed it to a functional, usable stage on my own. Expo, NativeWind, Zustand, and a frontend-first architecture that mocks real-world latency."
+image: "/sokofunds.png"
+keywords:
+  - "react-native"
+  - "expo"
+  - "zustand"
+  - "fintech"
+  - "hackathon"
+---
+
+Last year, a friend reached out to me with an exciting proposition: a **WHO hackathon**. The mission was ambitious: building a modern banking application tailored for users in the Democratic Republic of Congo (DRC). I joined the team as a Frontend Engineer, ready to tackle the unique challenges of fintech in a developing market.
+
+However, as many hackathon stories go, the reality didn't quite match the initial excitement.
+
+#### The Reality Check: Building Without a Foundation
+
+As we started, it became clear that we were missing critical pieces of the puzzle. Our team wasn't "assembled for success" from the jump.
+
+1. **The Backend Void**: We didn't have a Backend Engineer. The plan was to "pick one up along the way" — a strategy that rarely works in the high-stakes environment of a hackathon. Without a dedicated engineer, our infrastructure was theoretical at best.
+2. **Design Disconnect**: Our designer, while enthusiastic, struggled to meet the complex requirements of a fintech application. The gap between the vision and the hand-off was growing.
+3. **A Shift in Focus**: Eventually, the lack of a clear path to a backend and the mounting technical debt led the team to step away from the project.
+
+It would have been easy to walk away then. But I've always disliked leaving work unfinished. I saw the potential in what we were building — a financial tool that could actually make a difference.
+
+#### Turning Setbacks into Stacks
+
+I decided to take the frontend and push it to a functional, usable stage on my own. This wasn't just about finishing a project; it was about proving that I could adapt and build something premium even under real-world constraints.
+
+I leaned into a modern mobile stack to bring the vision to life:
+
+- **Expo & React Native**: For a high-performance, cross-platform experience.
+- **NativeWind**: To implement a sleek, Tailwind-powered design system.
+- **Zustand**: For lightweight and efficient state management.
+- **Reanimated**: To add those subtle glassmorphism-inspired micro-animations that make an app feel premium.
+
+#### Unexpected Wins: Beyond the Code
+
+While the hackathon didn't end with a trophy, it gave me something far more valuable. My friend and I, who had joined the team together, found our friendship evolving into a professional partnership. Working through the chaos and the subsequent solo development allowed us to build a level of professional trust that goes beyond just "knowing each other." We learned how to problem-solve as a unit, and that synergy is now one of my most prized takeaways from the experience.
+
+#### Nerd Talk & Under the Hood
+
+For those who want to see what's happening in the actual app, here's the technical breakdown of how I built SokoFunds to be a "UI demo" on the frontend.
+
+#### The Architecture: Frontend-First Engineering
+
+When the backend team evaporated, I didn't just build static screens. I built a **Frontend-First** architecture that mocks real-world latency and state persistence.
+
+One of the highlights is the **Bank State Management** built with **Zustand**. I chose Zustand over Redux because of its boilerplate-free simplicity, which was crucial for rapid solo development.
+
+```typescript
+// A snippet of the logic handling transactions and balances
+export const useBankStore = create<BankStore>((set) => ({
+  ...initialData,
+
+  sendMoney: (name: string, amount: number, logo: string) => {
+    const newTransaction: Transaction = {
+      id: Date.now(),
+      name,
+      time: new Date().toLocaleTimeString(),
+      amount: `-₦${amount.toLocaleString()}`,
+      logo,
+    };
+
+    set((state) => ({
+      balance: state.balance - amount,
+      transactions: [newTransaction, ...state.transactions],
+    }));
+  },
+
+  // … card freezing & top-up logic
+}));
+```
+
+#### Deep Dive: The Feature Set
+
+**1. Simulated API Latency (Account Resolution)**
+
+In a real banking app, you don't just send money to a number; you verify the name. In `SendPage.tsx`, I implemented a simulated account resolution hook. When a user types 10 digits and selects a bank, the app triggers a `useEffect` that mimics an API call with a 1.5s delay. This allowed me to design and test the UX for loading states (`ActivityIndicator`) and error handling before a single backend endpoint even existed.
+
+**2. Glassmorphism & UI System**
+
+Fintech apps live and die by their "trust factor," which is often conveyed through design. I used **NativeWind** (Tailwind CSS for React Native) to build a consistent design system.
+
+- **Glassmorphism**: Using `rgba` overlays and subtle borders to create depth.
+- **Iconography**: Integrated `react-native-solar-icons` using the `bold-duotone` type to give the app that "premium" digital-bank feel.
+
+**3. Complex Navigation Strategy**
+
+The app uses a hybrid navigation model:
+
+- **Bottom Tab Navigator**: For primary views (Home, Send, Invest, Cards).
+- **Native Stack Navigator**: For "deep" actions like `AddMoneyPage`, ensuring smooth transitions.
+
+#### Technical Challenges Overcome
+
+- **Keyboard Management**: Implementing `Keyboard.dismiss()` on forms to ensure the "Confirm Transfer" button is always accessible and the UX feels "native."
+- **Immutable State Updates**: Managing nested arrays (like the list of cards) in Zustand to ensure React properly re-renders when a user toggles a "Freeze Card" switch.
+
+#### 📦 The Tech Stack Recap
+
+- **Framework**: Expo (React Native)
+- **Styling**: NativeWind (Tailwind)
+- **State**: Zustand
+- **Icons**: Solar Icons (Premium Duotone)
+- **Navigation**: React Navigation (Tabs + Stack)
+- **Type Safety**: 100% TypeScript
+
+#### SokoFunds: The Result
+
+Check out the project on GitHub: [github.com/blackingg/SokoFunds](https://github.com/blackingg/SokoFunds)
