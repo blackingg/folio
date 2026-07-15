@@ -1,0 +1,103 @@
+---
+title: "The Mathematics of Prediction Markets: How Prices Become Probabilities"
+publishedAt: "2026-07-02T17:32:54.050Z"
+summary: "There is something almost paradoxical about how the world handles information. Experts write reports that few read. Analysts build models…"
+image: "/blog/the-mathematics-of-prediction-markets-how-prices-become-probabilities-f2ff121cab92/1-Gc4z-6y3X6-VRwVLwGhF7Q.png"
+mediumLink: "https://medium.com/@odetundemubarak/the-mathematics-of-prediction-markets-how-prices-become-probabilities-f2ff121cab92"
+---
+
+![](/blog/the-mathematics-of-prediction-markets-how-prices-become-probabilities-f2ff121cab92/1-Gc4z-6y3X6-VRwVLwGhF7Q.png)
+
+There is something almost paradoxical about how the world handles information. Experts write reports that few read. Analysts build models that few understand. Pundits make forecasts that nobody scores. And yet, when a group of strangers — each holding partial, imperfect knowledge is asked to put money on an outcome, the result is frequently more accurate than any individual expert’s opinion.
+
+That is the core idea behind prediction markets. And it is more powerful than it first appears.
+
+Most people who trade on prediction markets understand it on the surface: buy YES if you think something happens, buy NO if you don’t, collect ₦100 per share if you’re right. That’s enough to start trading.
+
+But underneath that interface is a surprisingly rigorous mathematical structure — one that connects financial incentives, information theory, and probability in a way that makes prediction markets genuinely different from any other forecasting mechanism. Understanding that structure makes you a better trader. It also explains why prediction markets keep outperforming experts, polls, and committees.
+
+### The Core Claim: Prices Are Probabilities
+
+The central insight of prediction markets is that the price of a binary contract is mathematically equivalent to a probability estimate.
+
+Here’s why.
+
+If a YES share on Bayse pays ₦100 when an event occurs and ₦0 when it doesn’t, a rational trader will pay at most what they believe the event is worth in expected value terms:
+
+Price = P(event) × ₦100 + (1 − P(event)) × ₦0
+
+Price = P(event) × ₦100
+
+So if you believe there’s a 65% chance the event resolves YES, you’re willing to pay up to ₦65 per share. If the market is trading at ₦60, you buy — because your expected value is ₦65 on a ₦60 investment. If it’s at ₦72, you either sell or pass.
+
+This is not a metaphor or an approximation. It is a direct derivation from expected utility theory. The equilibrium price of a binary prediction market contract _is_ the market’s consensus probability for that event.
+
+That’s why YES prices and NO prices on Bayse always sum to ₦100: one of the two outcomes has to occur, so together they represent 100% of the probability space.
+
+### Why Mispricing Corrects Itself: Arbitrage as Error Correction
+
+The mechanism that makes prediction markets accurate isn’t trust — it’s incentive.
+
+Suppose a market is asking: “Will the CBN raise the MPR this quarter?” and YES is trading at ₦40. You’ve read the MPC committee statement carefully, followed the inflation data, and believe the probability is closer to 70%. The market is significantly underpriced.
+
+Your expected value from buying one share:
+
+EV = 0.70 × ₦100 − ₦40 = ₦30 profit per share
+
+That’s a strong positive expected value. You buy. Other traders with similar information buy. Demand pushes the YES price up — towards ₦70, where the mispricing disappears and the price reflects true consensus.
+
+The reverse works identically. If you believe a market is overpriced, you sell NO at the current price. Selling pressure drives it down.
+
+This is arbitrage: the process of profiting from mispricing until the mispricing is eliminated. In prediction markets, arbitrage is not just profitable for individual traders — it is the mechanism by which the market becomes accurate. Every trade that exploits mispricing moves the price closer to reality.
+
+Unlike a survey, which aggregates opinion with no accountability, or a pundit’s forecast, which rewards confident narrative regardless of accuracy, prediction markets reward _calibration_. You are not paid for sounding right. You are paid for being right.
+
+### Information Aggregation: The Hayek Mechanism
+
+The mathematical elegance of prediction markets doesn’t fully explain why they’re accurate. For that, you need the information theory.
+
+In 1945, economist Friedrich Hayek published _The Use of Knowledge in Society_, one of the most important papers in the history of economics. His central argument being that the knowledge required to make good decisions is never held by any single person or institution. It is dispersed across millions of individuals — each with local, contextual, private knowledge that no central planner can access or aggregate.
+
+Hayek argued that the prices in a market are the mechanism by which this dispersed knowledge gets encoded into a single number. When a trader who knows something acts on that knowledge — buying or selling based on private information — the price moves. Other traders observe the price movement and update their beliefs, even without knowing the specific information that caused the move.
+
+In prediction markets, this mechanism is especially clean. Consider how information flows through a market:
+
+1.  A journalist working a source hears that a CBN rate decision is coming. She buys YES on “Will CBN devalue this quarter?” at ₦50.
+2.  The price moves to ₦55. Other traders notice.
+3.  Some of those traders have their own partial signals that were consistent with this — they buy too.
+4.  The price reaches ₦70. Now the market is encoding the collective belief of multiple partially-informed people.
+5.  When the official announcement drops, the price jumps to ₦95.
+
+This is the market running Bayesian inference at scale — each price movement a likelihood update, distributed simultaneously to every participant.
+
+None of those traders shared their information directly. The price did the aggregation.
+
+This is why prediction markets consistently outperform expert committees and polls. The Iowa Electronic Markets — running since 1988 — have beaten major polling organisations in forecasting US election outcomes in 74% of head-to-head comparisons over 15 years. Hewlett-Packard’s internal prediction markets outperformed their official sales forecasts 75% of the time. Modern forecasting platforms show calibration at a level rarely seen in public discourse: questions trading at 90% probability resolve correctly roughly 90% of the time.
+
+The market doesn’t require participants to be experts. It only requires that better-informed participants have a financial incentive to act — and they always do.
+
+### The Limits: Where Prediction Markets Break Down
+
+Prediction markets are not oracles. They fail in predictable, mathematically describable ways.
+
+**Thin markets:** The aggregation mechanism requires sufficient trading volume to function. When a market has only a handful of participants, a single trader can move the price significantly without genuine information advantage. The price becomes the belief of a handful of people, not a crowd. In a deep market, a bullish idiot and a bearish idiot cancel each other out — their errors offset, and the price gravitates toward the informed middle. In a thin market, those same idiots have outsized weight. There is no crowd to correct them. This is why volume is a reliable proxy for market quality.
+
+**Long-tail underpricing:** There is a persistent empirical finding across prediction markets: very low probability events tend to be overpriced, and very high probability events tend to be underpriced — a gradient that runs across the full range, most pronounced at the extremes. This is the favourite-longshot bias, and its primary driver is psychological: traders systematically misperceive small probabilities, genuinely overweighting them rather than making a rational calculation that the correction isn’t worth the effort. That rational argument exists — the profit from moving a 2% contract to its true value is modest relative to the research required — but it is secondary, and conflating the two obscures what is actually happening in the market.
+
+**Reflexive markets:** Some markets are vulnerable to a specific failure mode: when the market’s own price can influence the outcome it’s measuring. A contract asking “Will candidate X win the election?” could, in theory, be manipulated to create false public confidence or panic. This is more constrained for markets that resolve on objective verifiable data (a price level, a match score, an announced policy rate) and more concerning for markets where public perception is part of the outcome.
+
+**Correlated positions.** Sophisticated traders who take positions across multiple related markets can create artificial correlations. If you know you’re going to aggressively buy YES on “CBN raises rates,” you might first buy YES on “Naira weakens further” — establishing a position that benefits from the price movement your CBN trade will cause. This is a form of manipulation that’s detectable in aggregate but difficult to police at the individual trade level.
+
+Understanding these failure modes doesn’t make prediction markets less useful. It makes you a more precise consumer of what the price is actually telling you — and more aware of when to discount it.
+
+### Why This Matters for Nigeria Specifically
+
+The informational case for prediction markets is strongest where official information is delayed, local knowledge is genuinely valuable. And the gap between public narrative and on-the-ground reality is wide, and Nigeria and Africa at large fits all three conditions.
+
+CBN (financial institutions) policy signals leak before official announcements. Fuel supply disruptions are visible at filling stations before they appear in any press release. Election sentiment in specific states is known to people on the ground weeks before it shows up in any poll. Football team news travels through informal channels faster than official communications ever could.
+
+This is not a failure of these institutions so much as a feature of how information actually moves here — laterally, through networks, before it ever becomes official. And that is exactly the kind of environment where the Hayek mechanism doesn’t just work, it thrives. Every person sitting on local knowledge that hasn’t been priced in yet has a genuine, structural edge. The market rewards them for acting on it — and in doing so, converts private knowledge into a public signal.
+
+That is the technical argument on which prediction market work. Not merely as a trading product, but as information infrastructure — a mechanism for turning dispersed, privately-held, locally-relevant knowledge into something legible, financially-backed, and useful to everyone.
+
+The crowd knows things. The market listens.
