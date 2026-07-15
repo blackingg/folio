@@ -8,7 +8,7 @@ export const DATA = {
   location: "Lagos, Nigeria",
   locationLink: "https://goo.gl/maps/8Q1KZJ8v1Zz",
   description:
-    "Frontend dev | React/TypeScript/Three.js | Building 3D web experiences | Interested in building cool stuff.",
+    "Frontend dev | React/TypeScript/Three.js | Building interactive web experiences | Interested in building cool stuff.",
   summary:
     "Hi! I’m Mubarak, a Frontend Engineer passionate about building seamless, high-performance interfaces. I work with JavaScript, TypeScript, React, and Three.js to create engaging and interactive user experiences across platforms. With a strong eye for aesthetics and design, I take a design-first approach to development, ensuring every project I build is as visually stunning as it is functional.",
   avatarUrl: "/me.png",
