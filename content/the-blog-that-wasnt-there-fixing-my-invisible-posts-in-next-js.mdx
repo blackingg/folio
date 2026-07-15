@@ -1,0 +1,103 @@
+---
+title: "The Blog That Wasn't There: Fixing My Invisible Posts in Next.js"
+publishedAt: "2026-07-15T21:00:00.000Z"
+summary: "My blog rendered perfectly in the browser and didn't exist anywhere else. When an AI agent failed to read my own posts back to me, I spent an evening finding out why — and learned the difference between a page that renders and a page that can be found."
+keywords:
+  - "nextjs"
+  - "seo"
+  - "server-side-rendering"
+  - "web-development"
+  - "frontend"
+---
+
+At six in the evening, I asked an AI agent to reference one of my own blog posts. It told me it couldn't find my blog.
+
+I knew the post existed. I had written it, published it, and could open it in a browser without any trouble. But the agent wasn't wrong, and neither were the search engines that had quietly declined to index eight of my articles over the past year. From where they stood, my blog genuinely wasn't there.
+
+That contradiction — a site that renders perfectly and is invisible everywhere else — turned into a full evening of work, and it taught me a distinction I thought I already understood: **rendering in a browser and existing to machines are two different properties, and only one of them was ever being tested.**
+
+#### The diagnosis
+
+My first assumption was a gap in the usual SEO fundamentals, so I started with the checklist. The sitemap listed every post. Robots directives were open. Each article carried a proper title, canonical tag, Open Graph metadata, and JSON-LD structured data. Everything a crawler is supposed to want was in place.
+
+The actual cause was one component. My blog index rendered its post list through a paginated client component that read the current page from the URL:
+
+```javascript
+// blog/page.tsx
+<Suspense>
+  <BlogPostsPaginated posts={posts} /> {/* uses useSearchParams() */}
+</Suspense>
+```
+
+In Next.js, `useSearchParams` opts a component out of server rendering up to the nearest Suspense boundary. The server renders the fallback instead — and my fallback was empty. The HTML my server actually sent for `/blog` contained a heading that said "All Posts," followed by nothing. No titles. No links.
+
+A browser runs the JavaScript and fills the room in. But crawlers that don't execute JavaScript — which includes most AI agents and a meaningful share of search bots — receive only that initial HTML. The one page whose entire purpose was to link to my articles served zero links to anyone who couldn't run a React app. Every post was published; none were discoverable.
+
+The test that exposed it was almost insultingly simple: view source. Not the DOM in DevTools after hydration — the raw response. If your content isn't in that document, then to most of the machines that decide what gets found, it doesn't exist.
+
+#### The debt behind the door
+
+Fixing the index would have been enough to call it a night. But there was a second problem, and unlike the first, this one I couldn't claim to have just discovered.
+
+My posts were originally published on Medium, and my site pulled them in at runtime from Medium's RSS feed. I built that pipeline myself and understood its terms from the start:
+
+1. **The feed carries only the latest ~10 posts.** Publishing an eleventh article would silently remove the oldest from my own site — not archived, just gone.
+2. **Medium rejects requests from datacenter IPs.** The fetch that succeeded on my laptop failed routinely from Vercel's servers, which is the only place it mattered.
+3. **The canonical conflict.** Medium declares its copy of each post canonical. My site declared the same. When two pages claim to be the original, Google chooses one — usually the domain with more authority. Even a perfectly indexed post of mine would surface as a Medium result.
+
+I had known about that third one the longest. I could have explained it on a whiteboard at any point in the past year. But it failed silently, and silent failures never make it to the top of a to-do list on their own. Since I was already inside the blog's plumbing, this became the night it finally got paid down.
+
+#### Part one: put the links back in the HTML
+
+The crawlability fix was small and complete. Pagination moved to the server: the page reads `searchParams` directly, slices the post list before rendering, and the pagination controls became genuine anchor elements rather than buttons pushing router state.
+
+```javascript
+<Link href={page === 1 ? "/blog" : `/blog?page=${page}`}>
+  {page}
+</Link>
+```
+
+No client hook, no Suspense bailout. Fetch the blog with JavaScript disabled and every post title, link, and page of pagination is present in the raw HTML. A crawler can now walk from the index to every article without executing a single script.
+
+#### Part two: bring the content home
+
+The Medium dependency needed replacement, not repair. The goal was to invert the relationship: my repository becomes the source of truth, and Medium becomes a mirror.
+
+Medium provides a full account export — a ZIP of HTML files, one per story. I wrote a script to convert each published post into MDX with frontmatter, preserving the original slugs so no URL on my site changed, and downloading every image out of Medium's CDN into my own `public/` directory, since those CDN links live exactly as long as the account does.
+
+The fussiest part was code blocks. Medium exports them as pre-highlighted spans with `<br />` tags standing in for line breaks, which had to be flattened back into honest fenced blocks:
+
+```javascript
+turndown.addRule("mediumPre", {
+  filter: "pre",
+  replacement: (_content, node) => {
+    const lang = node.getAttribute("data-code-block-lang") || "";
+    const code = decodeEntities(
+      node.innerHTML
+        .replace(/<br\s*\/?>/gi, "\n")
+        .replace(/<[^>]+>/g, ""),
+    );
+    return `\n\n\`\`\`${lang}\n${code.trim()}\n\`\`\`\n\n`;
+  },
+});
+```
+
+Medium's CDN rate-limited the image downloads midway, so the script grew retries with exponential backoff before the evening was over. With all eight posts committed as MDX, I deleted the RSS pipeline entirely — the fetches, the cache files, the failure modes. The build is now deterministic: the posts in the repository are the posts on the site.
+
+#### Part three: the paper trail
+
+With ownership settled, the supporting infrastructure followed. The site now serves its own RSS feed with autodiscovery links on every page, the sitemap covers the index and section pages rather than only the articles, and the pages that were missing canonical or Open Graph tags have them.
+
+The publishing workflow inverts to match. New posts are written here first, then imported into Medium through its import tool, which marks my site as the canonical source automatically. I would have automated the cross-posting, but Medium stopped issuing API tokens in January 2025; a thirty-second manual import per post is the remaining tax.
+
+#### What I'm keeping from this
+
+Three things earned a permanent place in how I work.
+
+**View source is the test that matters.** Lighthouse scores, DevTools, and a green build all validated a blog that didn't exist. The raw server response is the only honest witness for discoverability, and it takes five seconds to check.
+
+**Content must survive JavaScript being off.** Anything that only exists after hydration — post lists behind `useSearchParams`, content gated on client fetches — is invisible to most of the systems that route readers to you. If it matters, it belongs in the initial HTML.
+
+**Known debt doesn't get cheaper by being known.** I understood the canonical problem for a year, and understanding it fixed nothing while another domain collected credit for my writing. Your words should live at your own address; everything else is a mirror.
+
+It started at six with an agent that couldn't read my blog. It's well past dark now, and for the first time since I started writing, everything that goes looking for my posts can actually find them.
