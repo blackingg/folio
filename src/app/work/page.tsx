@@ -2,7 +2,8 @@ import BlurFade from "@/components/magicui/blur-fade";
 import { DATA } from "@/data/resume";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
-import { WorkExperienceScroller } from "@/components/work-experience-scroller";
+import { HorizontalScroller } from "@/components/horizontal-scroller";
+import { WorkExperienceItem } from "@/components/work-experience-item";
 
 export const metadata = {
   title: "Work Experience | " + DATA.name,
@@ -46,7 +47,15 @@ export default function WorkPage() {
         </section>
 
         <section id="work-list">
-          <WorkExperienceScroller works={DATA.work as any} />
+          <HorizontalScroller panelClassName="overflow-y-auto rounded-2xl border bg-background p-6 shadow-sm min-h-[35svh] sm:p-10">
+            {DATA.work.map((work, i) => (
+              <WorkExperienceItem
+                key={work.company + work.title}
+                work={work as any}
+                index={i}
+              />
+            ))}
+          </HorizontalScroller>
         </section>
 
         <section id="contact">
