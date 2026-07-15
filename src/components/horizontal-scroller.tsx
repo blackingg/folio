@@ -7,25 +7,25 @@ import {
   useMotionValueEvent,
   MotionValue,
 } from "framer-motion";
-import { useEffect, useRef, useState } from "react";
-import { WorkExperienceItem } from "@/components/work-experience-item";
-
-type Work = Parameters<typeof WorkExperienceItem>[0]["work"];
+import { Children, useEffect, useRef, useState } from "react";
+import { cn } from "@/lib/utils";
 
 const PANEL_FRACTION = 0.9;
 
 function Panel({
-  work,
+  children,
   index,
   total,
   progress,
+  className,
 }: {
-  work: Work;
+  children: React.ReactNode;
   index: number;
   total: number;
   progress: MotionValue<number>;
+  className?: string;
 }) {
-  const step = 1 / (total - 1);
+  const step = total > 1 ? 1 / (total - 1) : 1;
   const center = index * step;
   const scale = useTransform(
     progress,
@@ -43,17 +43,23 @@ function Panel({
       style={{ scale, opacity }}
       className="w-[90%] shrink-0 pr-4 sm:pr-8"
     >
-      <div className="overflow-y-auto rounded-2xl border bg-background p-6 shadow-sm min-h-[35svh] sm:p-10">
-        <WorkExperienceItem
-          work={work}
-          index={index}
-        />
-      </div>
+      <div className={cn("h-full", className)}>{children}</div>
     </motion.div>
   );
 }
 
-export function WorkExperienceScroller({ works }: { works: Work[] }) {
+export function HorizontalScroller({
+  children,
+  panelClassName,
+  footer,
+}: {
+  children: React.ReactNode;
+  panelClassName?: string;
+  footer?: React.ReactNode;
+}) {
+  const panels = Children.toArray(children);
+  const total = panels.length;
+
   const targetRef = useRef<HTMLElement>(null);
   const { scrollYProgress } = useScroll({ target: targetRef });
   // 0 when the section enters the viewport, 1 once it pins to the top.
@@ -76,7 +82,6 @@ export function WorkExperienceScroller({ works }: { works: Work[] }) {
   );
   const [current, setCurrent] = useState(0);
 
-  const total = works.length;
   // Panels are 90% of the viewport wide, so the track spans (0.9 * total) viewports.
   // The x percentage is relative to the viewport-wide container, so slide by
   // (track width - one viewport) to end with the last panel flush right.
@@ -174,23 +179,27 @@ export function WorkExperienceScroller({ works }: { works: Work[] }) {
 
           <motion.div
             style={{ x }}
-            className="flex"
+            className="flex items-stretch"
           >
-            {works.map((work, i) => (
+            {panels.map((child, i) => (
               <Panel
-                key={work.company + work.title}
-                work={work}
+                key={i}
                 index={i}
                 total={total}
                 progress={scrollYProgress}
-              />
+                className={panelClassName}
+              >
+                {child}
+              </Panel>
             ))}
           </motion.div>
 
           <motion.div
             style={{ scaleX: scrollYProgress }}
-            className="mt-6 h-0.5 origin-left rounded-full bg-[hsl(var(--neon))] shadow-[0_0_8px_hsl(var(--neon))]"
+            className="mt-6 h-0.5 origin-left rounded-full bg-neon shadow-[0_0_8px_hsl(var(--neon))]"
           />
+
+          {footer && <div className="mt-4">{footer}</div>}
         </motion.div>
       </div>
     </section>
