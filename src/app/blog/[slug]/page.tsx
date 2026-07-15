@@ -34,6 +34,7 @@ export async function generateMetadata({
   let {
     title,
     publishedAt: publishedTime,
+    updatedAt,
     summary: description,
     image,
     keywords,
@@ -52,12 +53,16 @@ export async function generateMetadata({
     authors: [{ name: DATA.name }],
     alternates: {
       canonical: `${baseUrl}/blog/${post.slug}`,
+      types: {
+        "application/rss+xml": "/rss.xml",
+      },
     },
     openGraph: {
       title,
       description,
       type: "article",
       publishedTime,
+      modifiedTime: updatedAt || publishedTime,
       url: `${baseUrl}/blog/${post.slug}`,
       images: [
         {
@@ -102,7 +107,8 @@ export default async function Blog({
             "@type": "BlogPosting",
             headline: post.metadata.title,
             datePublished: post.metadata.publishedAt,
-            dateModified: post.metadata.publishedAt,
+            dateModified:
+              post.metadata.updatedAt || post.metadata.publishedAt,
             description: post.metadata.summary,
             image: post.metadata.image
               ? post.metadata.image.startsWith("http")

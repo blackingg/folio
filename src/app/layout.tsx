@@ -34,6 +34,11 @@ export const metadata: Metadata = {
     ],
   },
   description: `Professional portfolio of ${DATA.name}, a Frontend Engineer specializing in React, TypeScript, and Three.js. Discover projects, experience, and insights on web development.`,
+  alternates: {
+    types: {
+      "application/rss+xml": "/rss.xml",
+    },
+  },
   openGraph: {
     title: `${DATA.name} | Frontend Engineer`,
     description: `Professional portfolio of ${DATA.name}, a Frontend Engineer specializing in React, TypeScript, and Three.js.`,

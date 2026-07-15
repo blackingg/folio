@@ -27,6 +27,18 @@ export async function generateMetadata({
   return {
     title: playlist.title,
     description: playlist.description,
+    alternates: {
+      canonical: `/blog/playlist/${playlist.slug}`,
+      types: {
+        "application/rss+xml": "/rss.xml",
+      },
+    },
+    openGraph: {
+      title: playlist.title,
+      description: playlist.description,
+      url: `/blog/playlist/${playlist.slug}`,
+      type: "website",
+    },
   };
 }
 

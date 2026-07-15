@@ -1,15 +1,21 @@
-import { getBlogPosts } from "@/data/blog";
+import { getBlogPosts, getPlaylistsWithPosts } from "@/data/blog";
+import { DATA } from "@/data/resume";
 import { NextResponse } from "next/server";
 export const dynamic = "force-static";
 export const revalidate = 86400;
 export async function GET() {
-  const baseUrl = "https://www.whoisblxck.xyz";
+  const baseUrl = DATA.url.replace(/\/$/, "");
   let posts: Awaited<ReturnType<typeof getBlogPosts>> = [];
+  let playlists: Awaited<ReturnType<typeof getPlaylistsWithPosts>> = [];
   try {
     posts = await getBlogPosts();
+    playlists = await getPlaylistsWithPosts();
   } catch (e) {
-    console.error("Sitemap: failed to fetch posts", e);
+    console.error("Sitemap: failed to read posts", e);
   }
+  const newestPostDate = posts.length
+    ? new Date(posts[0].updatedAt || posts[0].publishedAt).toISOString()
+    : new Date().toISOString();
   const urls = [
     {
       url: baseUrl,
@@ -18,14 +24,38 @@ export async function GET() {
       priority: 1,
     },
     {
+      url: `${baseUrl}/blog`,
+      lastModified: newestPostDate,
+      changeFrequency: "weekly",
+      priority: 0.9,
+    },
+    {
       url: `${baseUrl}/3d`,
       lastModified: new Date().toISOString(),
       changeFrequency: "weekly",
       priority: 0.9,
     },
+    {
+      url: `${baseUrl}/projects`,
+      lastModified: new Date().toISOString(),
+      changeFrequency: "monthly",
+      priority: 0.8,
+    },
+    {
+      url: `${baseUrl}/work`,
+      lastModified: new Date().toISOString(),
+      changeFrequency: "monthly",
+      priority: 0.8,
+    },
+    ...playlists.map((playlist) => ({
+      url: `${baseUrl}/blog/playlist/${playlist.slug}`,
+      lastModified: newestPostDate,
+      changeFrequency: "weekly",
+      priority: 0.6,
+    })),
     ...posts.map((post) => ({
       url: `${baseUrl}/blog/${post.slug}`,
-      lastModified: new Date(post.publishedAt).toISOString(),
+      lastModified: new Date(post.updatedAt || post.publishedAt).toISOString(),
       changeFrequency: "weekly",
       priority: 0.7,
     })),
