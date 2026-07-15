@@ -2,20 +2,38 @@ import BlurFade from "@/components/magicui/blur-fade";
 import { getBlogPosts, getPlaylistsWithPosts } from "@/data/blog";
 import { BlogPostsPaginated } from "@/components/blog-posts-paginated";
 import { PlaylistCard } from "@/components/playlist-card";
-import { Suspense } from "react";
 
 export const metadata = {
   title: "Blog",
   description: "My thoughts on software development, life, and more.",
+  alternates: {
+    canonical: "/blog",
+    types: {
+      "application/rss+xml": "/rss.xml",
+    },
+  },
+  openGraph: {
+    title: "Blog",
+    description: "My thoughts on software development, life, and more.",
+    url: "/blog",
+    type: "website",
+  },
 };
 
 export const revalidate = 3600;
 
 const BLUR_FADE_DELAY = 0.04;
 
-export default async function BlogPage() {
+export default async function BlogPage({
+  searchParams,
+}: {
+  searchParams?: { page?: string };
+}) {
   const posts = await getBlogPosts();
   const playlists = await getPlaylistsWithPosts();
+
+  const rawPage = parseInt(searchParams?.page ?? "1", 10);
+  const page = Number.isNaN(rawPage) ? 1 : rawPage;
 
   return (
     <section>
@@ -61,12 +79,11 @@ export default async function BlogPage() {
           No blog posts available at the moment.
         </p>
       ) : (
-        <Suspense>
-          <BlogPostsPaginated
-            posts={posts}
-            initialDelay={BLUR_FADE_DELAY * 2 + playlists.length * 0.05}
-          />
-        </Suspense>
+        <BlogPostsPaginated
+          posts={posts}
+          page={page}
+          initialDelay={BLUR_FADE_DELAY * 2 + playlists.length * 0.05}
+        />
       )}
     </section>
   );

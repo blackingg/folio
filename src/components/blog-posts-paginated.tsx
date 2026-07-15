@@ -1,11 +1,8 @@
-"use client";
-
 import BlurFade from "@/components/magicui/blur-fade";
 import { BlogCard } from "@/components/blog-card";
 import { cn } from "@/lib/utils";
 import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { useRef } from "react";
+import Link from "next/link";
 
 const POSTS_PER_PAGE = 6;
 const BLUR_FADE_DELAY = 0.04;
@@ -21,36 +18,32 @@ interface Post {
 
 interface Props {
   posts: Post[];
+  page?: number;
   initialDelay?: number;
 }
 
-export function BlogPostsPaginated({ posts, initialDelay = 0 }: Props) {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const listRef = useRef<HTMLDivElement>(null);
+function pageHref(n: number) {
+  return n === 1 ? "/blog" : `/blog?page=${n}`;
+}
 
+export function BlogPostsPaginated({ posts, page = 1, initialDelay = 0 }: Props) {
   const totalPages = Math.max(1, Math.ceil(posts.length / POSTS_PER_PAGE));
-  const rawPage = parseInt(searchParams.get("page") ?? "1", 10);
-  const page = Math.min(Math.max(Number.isNaN(rawPage) ? 1 : rawPage, 1), totalPages);
+  const currentPage = Math.min(Math.max(page, 1), totalPages);
 
-  const start = (page - 1) * POSTS_PER_PAGE;
+  const start = (currentPage - 1) * POSTS_PER_PAGE;
   const visiblePosts = posts.slice(start, start + POSTS_PER_PAGE);
 
-  const goToPage = (target: number) => {
-    if (target === page || target < 1 || target > totalPages) return;
-    router.push(target === 1 ? "/blog" : `/blog?page=${target}`, {
-      scroll: false,
-    });
-    listRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-  };
-
   return (
-    <div ref={listRef} className="scroll-mt-24">
+    <div className="scroll-mt-24">
       <div className="grid gap-10">
         {visiblePosts.map((post, id) => (
           <BlurFade
-            delay={(page === 1 ? initialDelay : 0) + BLUR_FADE_DELAY + id * 0.05}
-            key={`${page}-${post.slug}`}
+            delay={
+              (currentPage === 1 ? initialDelay : 0) +
+              BLUR_FADE_DELAY +
+              id * 0.05
+            }
+            key={`${currentPage}-${post.slug}`}
           >
             <BlogCard
               title={post.title}
@@ -69,39 +62,55 @@ export function BlogPostsPaginated({ posts, initialDelay = 0 }: Props) {
           aria-label="Blog pagination"
           className="mt-12 flex items-center justify-center gap-1"
         >
-          <button
-            onClick={() => goToPage(page - 1)}
-            disabled={page === 1}
-            aria-label="Previous page"
-            className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:pointer-events-none disabled:opacity-40"
-          >
-            <ChevronLeftIcon className="size-4" />
-          </button>
+          {currentPage === 1 ? (
+            <span
+              aria-disabled="true"
+              className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground opacity-40"
+            >
+              <ChevronLeftIcon className="size-4" />
+            </span>
+          ) : (
+            <Link
+              href={pageHref(currentPage - 1)}
+              aria-label="Previous page"
+              className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            >
+              <ChevronLeftIcon className="size-4" />
+            </Link>
+          )}
 
           {Array.from({ length: totalPages }, (_, i) => i + 1).map((n) => (
-            <button
+            <Link
               key={n}
-              onClick={() => goToPage(n)}
-              aria-current={n === page ? "page" : undefined}
+              href={pageHref(n)}
+              aria-current={n === currentPage ? "page" : undefined}
               className={cn(
                 "inline-flex size-8 items-center justify-center rounded-md text-sm transition-colors",
-                n === page
+                n === currentPage
                   ? "bg-muted font-medium text-foreground"
                   : "text-muted-foreground hover:bg-muted hover:text-foreground",
               )}
             >
               {n}
-            </button>
+            </Link>
           ))}
 
-          <button
-            onClick={() => goToPage(page + 1)}
-            disabled={page === totalPages}
-            aria-label="Next page"
-            className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:pointer-events-none disabled:opacity-40"
-          >
-            <ChevronRightIcon className="size-4" />
-          </button>
+          {currentPage === totalPages ? (
+            <span
+              aria-disabled="true"
+              className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground opacity-40"
+            >
+              <ChevronRightIcon className="size-4" />
+            </span>
+          ) : (
+            <Link
+              href={pageHref(currentPage + 1)}
+              aria-label="Next page"
+              className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            >
+              <ChevronRightIcon className="size-4" />
+            </Link>
+          )}
         </nav>
       )}
     </div>
