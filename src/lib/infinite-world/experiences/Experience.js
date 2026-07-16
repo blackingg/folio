@@ -45,6 +45,15 @@ export default class Experience {
     }
 
     /**
+     * Called every frame while the experience is loaded, active or not.
+     * Use for ambient visuals that should run before the player enters
+     * (e.g. The God's Palm's light pillar).
+     */
+    passiveUpdate() {
+        // Implementation provided by subclasses
+    }
+
+    /**
      * Called when the player leaves the trigger radius.
      */
     onExit() {

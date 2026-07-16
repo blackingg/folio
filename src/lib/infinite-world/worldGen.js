@@ -51,35 +51,53 @@ export function wallCollisionHalfWidth() {
  * the ExperienceManager registry; label/emoji/description drive the HUD map.
  */
 export const EXPERIENCES = [
-    {
-        id: 'basketball_court',
-        label: 'Basketball Court',
-        emoji: '🏀',
-        description:
-            'A flat court zone where you can shoot hoops and explore the basketball experience.',
-        x: 150,
-        z: 150,
-        triggerRadius: 20,
-        preloadRadius: 100,
-        flattenRadius: 30,
-        targetHeight: 5,
-        gltfPaths: ['/models/court.glb'],
-    },
-    {
-        id: 'village',
-        label: 'Village',
-        emoji: '🏘️',
-        description:
-            'A hillside village with buildings to wander through and discover.',
-        x: -200,
-        z: -200,
-        triggerRadius: 40,
-        preloadRadius: 150,
-        flattenRadius: 60,
-        targetHeight: 12,
-        gltfPaths: ['/models/village.glb'],
-    },
-]
+  {
+    id: "basketball_court",
+    label: "Basketball Court",
+    emoji: "🏀",
+    description:
+      "A flat court zone where you can shoot hoops and explore the basketball experience.",
+    x: 150,
+    z: 150,
+    triggerRadius: 20,
+    preloadRadius: 100,
+    flattenRadius: 30,
+    targetHeight: 5,
+    gltfPaths: ["/models/court.glb"],
+  },
+  {
+    id: "village",
+    label: "Village",
+    emoji: "🏘️",
+    description:
+      "A hillside village with buildings to wander through and discover.",
+    x: -200,
+    z: -200,
+    triggerRadius: 40,
+    preloadRadius: 150,
+    flattenRadius: 60,
+    targetHeight: 12,
+    gltfPaths: ["/models/village.glb"],
+  },
+  {
+    id: "gods_palm",
+    label: "God's Palm",
+    emoji: "🗿",
+    description:
+      "The worship grounds of an old god, high on a plateau ringed by orange trees. Step into the pillar of light and be lifted skyward.",
+    x: 280,
+    z: -60,
+    triggerRadius: 30,
+    preloadRadius: 1000, // load() only builds the light pillar — cheap, so it exists from anywhere inside the border, a landmark drawing the eye
+    flattenRadius: 45,
+    targetHeight: 18,
+    gltfPaths: [],
+    loadingOrb: false, // light experience
+    floatRadius: 8, // worship circle — the light pillar; standing inside lifts the character
+    treeRingRadius: 18, // circle of orange trees around the worship circle
+    treeClearRadius: 45, // keep random trees off the plateau
+  },
+];
 
 export function hashString(str) {
     let hash = 0

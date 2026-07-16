@@ -4,11 +4,13 @@ import State from './State.js';
 import View from '../View/View.js';
 import Basketball from '../experiences/Basketball.js';
 import Village from '../experiences/Village.js';
+import GodsPalm from '../experiences/GodsPalm.js';
 import { EXPERIENCES } from '../worldGen.js';
 
 const EXPERIENCE_CLASSES = {
     basketball_court: Basketball,
     village: Village,
+    gods_palm: GodsPalm,
 };
 
 let instance = null;
@@ -34,7 +36,9 @@ export default class ExperienceManager {
                 preloadRadius: def.preloadRadius,
                 flattenRadius: def.flattenRadius,
                 targetHeight: def.targetHeight,
+                floatRadius: def.floatRadius,
                 gltfPaths: def.gltfPaths,
+                loadingOrb: def.loadingOrb !== false, // opt-out; heavy zones keep the mist orb
                 overridesControls: false
             });
         });
@@ -56,6 +60,8 @@ export default class ExperienceManager {
         const scene = this.view.scene;
         
         this.registry.forEach(exp => {
+            if (!exp.config.loadingOrb) return;
+
             const markerGroup = new THREE.Group();
             
             // thetaLength is stretched past Math.PI / 2 to extend the dome down into the terrain
@@ -161,6 +167,13 @@ export default class ExperienceManager {
                 if (exp.isLoaded) {
                     exp.dispose();
                 }
+            }
+        });
+
+        // Ambient per-frame hook for every loaded experience, active or not
+        this.registry.forEach(exp => {
+            if (exp.isLoaded) {
+                exp.passiveUpdate(this.state.time.delta);
             }
         });
 

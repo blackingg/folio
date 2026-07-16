@@ -5,6 +5,7 @@ import {
     getElevation as computeElevation,
     createBorder,
     BORDER,
+    EXPERIENCES,
     hashString,
     linearStep,
 } from '../worldGen.js'
@@ -434,6 +435,9 @@ onmessage = function(event)
         const GATE_WIDTH = BORDER.gateWidth
         const GATE_CORRIDOR = BORDER.gateCorridor
 
+        // Experience zones that keep random trees off their ground
+        const treeClearZones = EXPERIENCES.filter((def) => def.treeClearRadius)
+
         for(let iZ = 0; iZ < segments; iZ++)
         {
             for(let iX = 0; iX < segments; iX++)
@@ -505,12 +509,22 @@ onmessage = function(event)
                         if (wallOffset < BORDER_CLEAR_BAND) continue
                         if (wallOffset < GATE_CORRIDOR && gateDistanceAt(treeTheta, wallRadius) < GATE_WIDTH) continue
 
+                        // Keep experience clear zones free of random trees
+                        let inClearZone = false
+                        for (const zone of treeClearZones) {
+                            if (Math.hypot(finalX - zone.x, finalZ - zone.z) < zone.treeClearRadius) {
+                                inClearZone = true
+                                break
+                            }
+                        }
+                        if (inClearZone) continue
+
                         // Inside the map, blue is reserved for the border wall
                         if (typeIndex >= 8 && typeIndex <= 15 && treeDist < wallRadius) {
                             typeIndex -= 8
                         }
 
-                        const finalY = getElevation(finalX, finalZ, lacunarity, persistence, iterations, baseFrequency, baseAmplitude, power, elevationOffset, iterationsOffsets)
+                        const finalY = getElevation(finalX, finalZ, lacunarity, persistence, iterations, baseFrequency, baseAmplitude, power, elevationOffset, iterationsOffsets, experiences)
 
                         trees.push({
                             position: [finalX, finalY, finalZ],
@@ -572,7 +586,7 @@ onmessage = function(event)
                     const r1 = pseudoRandom(wx, wz)
                     const r2 = pseudoRandom(wx + 1, wz)
                     const r3 = pseudoRandom(wx, wz + 1)
-                    const wy = getElevation(wx, wz, lacunarity, persistence, iterations, baseFrequency, baseAmplitude, power, elevationOffset, iterationsOffsets)
+                    const wy = getElevation(wx, wz, lacunarity, persistence, iterations, baseFrequency, baseAmplitude, power, elevationOffset, iterationsOffsets, experiences)
 
                     trees.push({
                         position: [wx, wy, wz],
@@ -583,6 +597,47 @@ onmessage = function(event)
                 }
 
                 theta += WALL_SPACING / r0
+            }
+        }
+
+        /**
+         * Experience tree rings — opt-in: only definitions that declare
+         * treeRingRadius get a circle of orange trees around their centre
+         * (currently just The God's Palm). The worker stays agnostic of
+         * specific experiences and only honours declared fields. Half-open
+         * chunk bounds ensure each ring tree is emitted by exactly one chunk.
+         */
+        for (const def of EXPERIENCES)
+        {
+            if (!def.treeRingRadius) continue
+
+            // Quick reject: only walk the ring for chunks that can intersect it
+            const nearestX = Math.max(chunkMinX, Math.min(def.x, chunkMaxX))
+            const nearestZ = Math.max(chunkMinZ, Math.min(def.z, chunkMaxZ))
+            if (Math.hypot(nearestX - def.x, nearestZ - def.z) > def.treeRingRadius + 2) continue
+
+            const RING_SPACING = 2.2
+
+            let theta = 0
+            while (theta < Math.PI * 2)
+            {
+                const wx = def.x + Math.cos(theta) * def.treeRingRadius
+                const wz = def.z + Math.sin(theta) * def.treeRingRadius
+                theta += RING_SPACING / def.treeRingRadius
+
+                if (wx < chunkMinX || wx >= chunkMaxX || wz < chunkMinZ || wz >= chunkMaxZ) continue
+
+                const r1 = pseudoRandom(wx, wz)
+                const r2 = pseudoRandom(wx + 1, wz)
+                const r3 = pseudoRandom(wx, wz + 1)
+                const wy = getElevation(wx, wz, lacunarity, persistence, iterations, baseFrequency, baseAmplitude, power, elevationOffset, iterationsOffsets, experiences)
+
+                trees.push({
+                    position: [wx, wy, wz],
+                    type: 16 + Math.floor(r1 * 8) % 8, // orange grove types
+                    scale: 1.1 + r2 * 0.4,
+                    rotation: r3 * Math.PI * 2
+                })
             }
         }
     }
