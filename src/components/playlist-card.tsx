@@ -27,14 +27,13 @@ export function PlaylistCard({
           {images.slice(0, 3).map((src, i) => (
             <div
               key={i}
-              className={`absolute w-[80%] aspect-[4/3] rounded-lg shadow-md transition-all duration-300 origin-bottom
+              className={`absolute w-[80%] aspect-[4/3] rounded-lg overflow-hidden shadow-md transition-all duration-300 origin-bottom
                   ${i === 0 ? "group-hover:-translate-y-2" : ""}
-                  ${i === 1 ? "group-hover:-translate-y-6 group-hover:rotate-6" : ""}
-                  ${i === 2 ? "group-hover:-translate-y-8 group-hover:-rotate-6" : ""}
+                  ${i === 1 ? "rotate-3 group-hover:-translate-y-6 group-hover:rotate-6" : ""}
+                  ${i === 2 ? "-rotate-3 group-hover:-translate-y-8 group-hover:-rotate-6" : ""}
                 `}
               style={{
                 zIndex: images.length - i,
-                top: `${i * 8}px`,
               }}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
