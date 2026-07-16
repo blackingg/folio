@@ -1,0 +1,252 @@
+---
+title: "Why I Choose Providers Over Redux (Most of the Time)"
+publishedAt: "2025-09-05T10:00:57.348Z"
+summary: "As a frontend developer who’s worked on everything from responsive landing pages to complex 3D web applications, I’ve had my fair share of battles with state management. Recently, while reflecting on my experience working with Redux at Onetro versus "
+image: "/blog/why-i-choose-providers-over-redux-most-of-the-time-5d64615cc60f/1-x-Jkz3anUDvIb6jE-r7zJg.png"
+mediumLink: "https://medium.com/@odetundemubarak/why-i-choose-providers-over-redux-most-of-the-time-5d64615cc60f"
+---
+
+![](/blog/why-i-choose-providers-over-redux-most-of-the-time-5d64615cc60f/1-x-Jkz3anUDvIb6jE-r7zJg.png)
+
+As a frontend developer who’s worked on everything from responsive landing pages to complex 3D web applications, I’ve had my fair share of battles with state management. Recently, while reflecting on my experience working with Redux at Onetro versus my usual go-to approach with React Context providers, I realized something profound: **we might be over-engineering our solutions.**
+
+### What Are Providers, Really?
+
+Before diving into my Redux revelation, let me explain what I mean by “providers.” When I talk about providers, I’m referring to React’s built-in Context API combined with custom hooks. It’s essentially React’s native way of sharing state across your component tree without prop drilling.
+
+Here’s a simple example of how I typically structure a provider:
+
+```javascript
+// UserProvider.js
+const UserContext = createContext();
+
+export const UserProvider = ({ children }) => {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const login = async (credentials) => {
+    setLoading(true);
+    try {
+      const userData = await authService.login(credentials);
+      setUser(userData);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const logout = () => {
+    setUser(null);
+    localStorage.removeItem('token');
+  };
+
+  return (
+    <UserContext.Provider 
+      value={{ user, login, logout, loading, error }}
+    >
+      {children}
+    </UserContext.Provider>
+  );
+};
+
+export const useUser = () => {
+  const context = useContext(UserContext);
+  if (!context) {
+    throw new Error('useUser must be used within UserProvider');
+  }
+  return context;
+};
+```
+
+This approach has been my default for years. It’s clean, it’s built into React, and it requires zero external dependencies.
+
+### My Redux Experience at Onetro
+
+Working as a Frontend Developer at Onetro was my first real encounter with Redux in a production environment. The project was complex — we had booking systems for both one-on-one and group sessions, user authentication flows, a 3D customizable Onetro Card, and multiple dashboards. The existing architecture was already built around Redux, and I had to work within that system.
+
+At first, I’ll admit, Redux felt like overkill. Here I was, installing redux, react-redux, redux-thunk (or redux-toolkit), and setting up stores, actions, reducers, and selectors for what felt like simple state updates. The boilerplate was overwhelming:
+
+```dart
+// Actions
+const SET_USER = 'SET_USER';
+const SET_LOADING = 'SET_LOADING';
+
+export const setUser = (user) => ({
+  type: SET_USER,
+  payload: user
+});
+
+// Reducers
+const userReducer = (state = initialState, action) => {
+  switch (action.type) {
+    case SET_USER:
+      return { ...state, user: action.payload };
+    default:
+      return state;
+  }
+};
+
+// Component usage
+const dispatch = useDispatch();
+const user = useSelector(state => state.user);
+```
+
+Compare that to my provider approach where the same functionality would be:
+
+```typescript
+const { user, setUser } = useUser();
+```
+
+### The “Why Do People Install Libraries for Everything?” Moment
+
+As I integrated backend APIs, fixed the booking system, and implemented Google authentication at Onetro, I kept asking myself: **Why do people install libraries for everything?**
+
+React already gives us everything we need for state management:
+
+-   `useState` for local state
+-   `useContext` for global state
+-   `useReducer` for complex state logic
+-   Custom hooks for reusable stateful logic
+
+Why add another layer of abstraction? Why increase bundle size? Why add more dependencies to maintain and potentially break with updates?
+
+This philosophy extends beyond just Redux. Throughout my career — from working at Brillstack to creating 30+ mini web games at Aural Space — I’ve consistently chosen built-in solutions over external libraries whenever possible. Need animations? CSS transitions and keyframes. Need HTTP requests? The Fetch API. Need state management? Context and hooks.
+
+### But I Understand the Need for Redux
+
+Here’s where my perspective evolved during the Onetro project. While working with the existing Redux architecture, I started to understand **why** the previous developers chose it:
+
+1.  **Predictable State Updates**
+
+Redux’s unidirectional data flow made debugging complex booking flows much easier. When a group session booking failed, I could trace exactly what actions were dispatched and how the state changed.
+
+2\. **Time-Travel Debugging**
+
+Redux DevTools became invaluable when fixing edge cases in the booking system. Being able to replay actions and inspect state at any point in time saved hours of debugging.
+
+3\. **Complex Async Logic**
+
+Managing multiple concurrent booking requests, user authentication, and real-time updates was genuinely easier with Redux middleware than trying to orchestrate multiple providers.
+
+4\. **Team Consistency**
+
+With multiple developers working on different features, Redux provided a consistent pattern everyone could follow. No debates about how to structure providers or where to put business logic.
+
+### When I Use Providers vs. When I Reach for Redux
+
+After my Onetro experience, here’s my current decision framework:
+
+### Use Providers When:
+
+-   State logic is straightforward and doesn’t require complex async orchestration
+-   Team is small or you’re working solo
+-   Performance requirements are moderate
+-   Bundle size matters significantly
+
+### Consider Redux When:
+
+-   Complex async workflows (like Onetro’s booking system)
+-   Need for sophisticated debugging tools
+-   Large team requiring consistent patterns
+-   State updates have complex interdependencies
+-   App will scale significantly over time
+
+### The Middle Ground: Enhanced Providers
+
+For most projects, I’ve found that enhanced providers strike the perfect balance. Here’s how I approach complex state logic like pagination using useReducer with providers:
+
+```php
+const paginationReducer = (state, action) => {
+  switch (action.type) {
+    case 'FETCH_START':
+      return { ...state, loading: true, error: null };
+    case 'FETCH_SUCCESS':
+      return {
+        ...state,
+        loading: false,
+        data: action.payload.data,
+        currentPage: action.payload.page,
+        totalPages: action.payload.totalPages,
+        totalItems: action.payload.totalItems
+      };
+    case 'FETCH_ERROR':
+      return { ...state, loading: false, error: action.payload };
+    case 'SET_PAGE':
+      return { ...state, currentPage: action.payload };
+    case 'SET_PAGE_SIZE':
+      return { ...state, pageSize: action.payload, currentPage: 1 };
+    default:
+      return state;
+  }
+};
+
+const usePaginationProvider = () => {
+  const [state, dispatch] = useReducer(paginationReducer, {
+    data: [],
+    loading: false,
+    error: null,
+    currentPage: 1,
+    pageSize: 10,
+    totalPages: 0,
+    totalItems: 0
+  });
+  
+  const fetchPage = useCallback(async (page = state.currentPage) => {
+    dispatch({ type: 'FETCH_START' });
+    try {
+      const result = await api.getData({
+        page,
+        limit: state.pageSize
+      });
+      dispatch({ 
+        type: 'FETCH_SUCCESS', 
+        payload: {
+          data: result.data,
+          page: page,
+          totalPages: result.totalPages,
+          totalItems: result.totalItems
+        }
+      });
+    } catch (error) {
+      dispatch({ type: 'FETCH_ERROR', payload: error.message });
+    }
+  }, [state.currentPage, state.pageSize]);
+
+  const goToPage = useCallback((page) => {
+    dispatch({ type: 'SET_PAGE', payload: page });
+    fetchPage(page);
+  }, [fetchPage]);
+
+  const changePageSize = useCallback((newSize) => {
+    dispatch({ type: 'SET_PAGE_SIZE', payload: newSize });
+    fetchPage(1);
+  }, [fetchPage]);
+
+  return { 
+    ...state, 
+    fetchPage, 
+    goToPage, 
+    changePageSize 
+  };
+};
+```
+
+This gives me Redux-like predictability with provider simplicity — complex state transitions are handled cleanly, async operations are managed properly, and I get all the benefits without the external dependency.
+
+### Conclusion: Choose Your Battles Wisely
+
+My journey from provider purist to Redux appreciator taught me an important lesson: **the best tool is the one that solves your specific problem with the least complexity.**
+
+Providers aren’t just an alternative to Redux — they’re often the better choice for many applications. But Redux isn’t just bloated complexity — it’s a powerful tool when you actually need its capabilities.
+
+As developers, especially in an ecosystem where there’s a library for everything, we should ask ourselves: “Do I need this complexity, or am I adding it because it’s what everyone else does?”
+
+More often than not, React’s built-in solutions are enough. But when they’re not, don’t be afraid to reach for the right tool — even if it means adding another dependency to your package.json.
+
+The key is intentional choice, not default acceptance.
+
+* * *
+
+Mubarak Odetunde is a Frontend Developer specializing in React, Next.js, and 3D web experiences. Connect with him on [GitHub](https://github.com/blackingg) or [LinkedIn](https://linkedin.com/in/mubarak-odetunde-258494236).

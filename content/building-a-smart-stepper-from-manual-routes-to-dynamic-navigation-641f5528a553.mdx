@@ -1,0 +1,259 @@
+---
+title: "Building a Smart Stepper: From Manual Routes to Dynamic Navigation"
+publishedAt: "2026-02-09T14:12:02.988Z"
+summary: "I recently joined a project with a complex multi-step form flow. The kind where users fill out information across multiple sections , think onboarding wizards, application forms, or any process with several stages."
+image: "/blog/building-a-smart-stepper-from-manual-routes-to-dynamic-navigation-641f5528a553/1-wYsDXgfEKwxYWPgZqJ9qmA.png"
+mediumLink: "https://medium.com/@odetundemubarak/building-a-smart-stepper-from-manual-routes-to-dynamic-navigation-641f5528a553"
+---
+
+![](/blog/building-a-smart-stepper-from-manual-routes-to-dynamic-navigation-641f5528a553/1-wYsDXgfEKwxYWPgZqJ9qmA.png)
+
+### The Situation I Inherited
+
+I recently joined a project with a complex multi-step form flow. The kind where users fill out information across multiple sections , think onboarding wizards, application forms, or any process with several stages.
+
+When I opened the codebase, I found this pattern everywhere:
+
+```javascript
+// What I inherited
+const handleContinue = () => {
+  navigate("/step-2"); // Hardcoded. Always.
+};
+```
+
+Every “Continue” button had a predetermined destination. The problem? Users were being sent to pages they’d already completed. Required sections were getting skipped. The flow was rigid and frustrating.
+
+I knew there had to be a better way.
+
+### The Solution: Let the Backend Decide
+
+Instead of the frontend guessing where users should go, I proposed a simple idea:
+
+> “what if the backend told us exactly what the user still needs to complete?”
+
+We already had an endpoint returning user data. I worked with the backend team to include a \`sectionStatus\` object that tracked:  
+\- Which sections are complete  
+\- Which sections are required for this specific user  
+\- Exactly which fields are still missing
+
+### How I Built It
+
+Note: Due to NDA restrictions, I can’t share the exact implementation from my project. The code below is a simplified, generic version that demonstrates the same pattern I used.
+
+### The Metadata Structure
+
+The API now returns something like this:
+
+```json
+{
+  "sectionStatus": {
+    "profile": {
+      "isComplete": true,
+      "isRequired": true,
+      "missingFields": [],
+      "data": {
+        "username": "johndoe",
+        "email": "john@example.com",
+        "firstName": "John",
+        "lastName": "Doe"
+      },
+      "totalFields": 4,
+      "completedFields": 4
+    },
+    "preferences": {
+      "isComplete": false,
+      "isRequired": true,
+      "missingFields": [
+        { "field": "timezone", "label": "Timezone" },
+        { "field": "currency", "label": "Preferred Currency" }
+      ],
+      "data": {
+        "language": "en",
+        "dateFormat": "MM/DD/YYYY"
+      },
+      "totalFields": 4,
+      "completedFields": 2
+    },
+    "settings": {
+      "isComplete": false,
+      "isRequired": true,
+      "missingFields": [
+        { "field": "notifications", "label": "Notification Preferences" }
+      ],
+      "data": {
+        "theme": "dark",
+        "privacy": "friends-only"
+      },
+      "totalFields": 4,
+      "completedFields": 2
+    },
+    "billing": {
+      "isComplete": false,
+      "isRequired": false,
+      "missingFields": [
+        { "field": "paymentMethod", "label": "Payment Method" },
+        { "field": "billingAddress", "label": "Billing Address" }
+      ],
+      "data": {},
+      "totalFields": 3,
+      "completedFields": 0
+    }
+  },
+  "overallProgress": 55,
+  "isFullyComplete": false
+}
+```
+
+#### Step 1: Define the Flow Order
+
+```javascript
+const SECTION_ORDER = [
+  "profile",
+  "preferences", 
+  "settings",
+  "billing",
+  "review"
+];
+```
+
+#### Step 2: Map Fields to Their Pages
+
+Each possible missing field maps to its corresponding input page:
+
+```javascript
+const FIELD_ROUTES = {
+  // Profile section
+  username: "/onboarding/profile",
+  email: "/onboarding/profile",
+  firstName: "/onboarding/profile",
+  lastName: "/onboarding/profile",
+  avatar: "/onboarding/profile/avatar",
+  
+  // Preferences section
+  timezone: "/onboarding/preferences",
+  language: "/onboarding/preferences",
+  currency: "/onboarding/preferences",
+  dateFormat: "/onboarding/preferences",
+  
+  // Settings section
+  theme: "/onboarding/settings",
+  notifications: "/onboarding/settings/notifications",
+  privacy: "/onboarding/settings/privacy",
+  twoFactorAuth: "/onboarding/settings/security",
+  
+  // Billing section
+  paymentMethod: "/onboarding/billing",
+  billingAddress: "/onboarding/billing/address",
+  invoiceEmail: "/onboarding/billing",
+};
+
+const DEFAULT_ROUTES = {
+  profile: "/onboarding/profile",
+  preferences: "/onboarding/preferences",
+  settings: "/onboarding/settings",
+  billing: "/onboarding/billing",
+  review: "/onboarding/review",
+};
+```
+
+#### Step 3: The Custom Hook
+
+```kotlin
+const useStepper = () => {
+  const sectionStatus = useSelector(state => state.metadata?.sectionStatus ?? {});
+
+  const getNextPath = useMemo(() => {
+    for (const section of SECTION_ORDER) {
+      const status = sectionStatus[section];
+      
+      if (!status || status.isComplete) continue;
+      if (!status.isRequired) continue;
+
+      // Route to the specific missing field's page
+      if (status.missingFields?.length > 0) {
+        const field = status.missingFields[0].field;
+        return FIELD_ROUTES[field] || DEFAULT_ROUTES[section];
+      }
+      
+      return DEFAULT_ROUTES[section];
+    }
+    return "/complete";
+  }, [sectionStatus]);
+
+  const getNextAfterSection = (currentSection) => {
+    const currentIndex = SECTION_ORDER.indexOf(currentSection);
+    
+    // First: check if current section still has missing fields
+    const current = sectionStatus[currentSection];
+    if (current?.missingFields?.length > 0 && !current.isComplete) {
+      return FIELD_ROUTES[current.missingFields[0].field];
+    }
+
+    // Then: find the next incomplete required section
+    for (let i = currentIndex + 1; i < SECTION_ORDER.length; i++) {
+      const section = SECTION_ORDER[i];
+      const status = sectionStatus[section];
+      
+      if (status?.isRequired && !status.isComplete) {
+        return status.missingFields?.length > 0
+          ? FIELD_ROUTES[status.missingFields[0].field]
+          : DEFAULT_ROUTES[section];
+      }
+    }
+    return "/complete";
+  };
+
+  return { getNextPath, getNextAfterSection };
+};
+```
+
+#### Step 4: Keep the Data Fresh
+
+Every time a user saves, we invalidate the query so the stepper always has the latest state:
+
+```javascript
+const useSaveMutation = (saveFn) => {
+  const queryClient = useQueryClient();
+  
+  return useMutation(saveFn, {
+    onSuccess: () => queryClient.invalidateQueries(["user"]),
+  });
+};
+```
+
+#### The Result
+
+```javascript
+// What it looks like now
+const StepComplete = ({ currentSection }) => {
+  const { getNextAfterSection } = useStepper();
+
+  return (
+    <button onClick={() => navigate(getNextAfterSection(currentSection))}>
+      Continue
+    </button>
+  );
+};
+```
+
+Clean. Dynamic. Personalized.
+
+### What I Learned
+
+1\. The backend should be the source of truth: Don’t make the frontend guess what’s complete.
+
+2\. Metadata-driven UX scales: Adding new sections doesn’t require touching navigation logic.
+
+3\. Small changes, big impact: This wasn’t a huge refactor, but it transformed the user experience.
+
+4\. Fight the urge to hardcode: It’s faster in the moment, but you’ll pay for it later.
+
+### Key Takeaway
+
+If you’re building any kind of multi-step flow, stop and ask:
+
+> ”Does my frontend know what the user actually needs to do?”
+
+If the answer involves hardcoded routes, there’s a better way.
+
+The best forms feel like they’re reading your mind. In reality, they’re just reading metadata.

@@ -1,0 +1,155 @@
+---
+title: "Zero-Flicker Authentication in Next.js: Migrating from LocalStorage to Secure Cookies"
+publishedAt: "2026-05-14T11:20:39.850Z"
+summary: "If you’ve built a Next.js app with authentication, you’ve likely run into the hydration mismatch problem — you store your JWT in localStorage, but since the server can’t see localStorage, it renders a logged-out state. Then, the client mounts, sees t"
+mediumLink: "https://medium.com/@odetundemubarak/zero-flicker-authentication-in-next-js-migrating-from-localstorage-to-secure-cookies-17cb584fb56d"
+---
+
+If you’ve built a Next.js app with authentication, you’ve likely run into the hydration mismatch problem — you store your JWT in \`localStorage\`, but since the server can’t see \`localStorage\`, it renders a logged-out state. Then, the client mounts, sees the token, and suddenly flips to a logged-in state.
+
+To fix this, we often resort to “Hydration Guards” — loading screens that stay up until the client confirms the user’s identity. It works, but it feels clunky, adds bundle weight, and creates a sub-optimal user experience.
+
+#### The fix: Inspiration from Bayse Markets
+
+Recently, while working at [**Bayse Markets**](http://www.bayse.markets), I noticed a much cleaner approach to managing session state. Instead of relying on the client to “tell” the server who the user is after the page loads, we used **Server-Side Cookies**.
+
+I realized that by moving the source of truth to cookies, the server knows exactly who the user is before the first byte of HTML is even sent. No flickers, no guards, just instant, authenticated UI.
+
+I decided to bring this “Zero-Flicker” architecture to my project, [**Shelf**](http://www.shelf.ng).
+
+#### The Legacy Stack: Redux and LocalStorage
+
+Before the migration, Shelf’s auth looked like this:  
+1\. Storage: \`localStorage\` held the tokens.  
+2\. State Management: Redux mirrored the token state.  
+3\. Guardians: \`AuthHydrator\` (syncing storage to Redux) and \`HydrationGuard\` (blocking the UI with a spinner).  
+4\. Security: Tokens were accessible to JS, making them vulnerable to XSS.
+
+It was functional, but heavy. We were shipping Redux just to track a user object, and our layouts were wrapped in five layers of “guards.”
+
+#### The Goal: A Proxy-Based Cookie Architecture
+
+Since I didn’t have direct control over the remote backend API, I couldn’t just tell it to “start sending Set-Cookie headers.” Instead, I used Next.js API Routes as a Proxy.
+
+The plan was simple:  
+1\. The frontend talks to \`/api/auth/login\`.  
+2\. The Next.js server forwards that to the backend.  
+3\. The server intercepts the response, strips the tokens, and sets them as \`httpOnly\` and \`Secure\` cookies.  
+4\. The server sends only the \`user\` object back to the client.
+
+#### The Execution: A 3-Phase Migration
+
+#### Phase 1: Building the Infrastructure
+
+We started by creating a dedicated cookie utility and the proxy routes.   
+**Access Token**: Stored as a regular cookie so the client \`fetcher\` can still read it for the \`Authorization: Bearer\` header.  
+**Refresh Token**: Stored as an \`httpOnly\` cookie. This is the “magic” part — the client JS can’t see it, but our \`/api/auth/refresh\` proxy can.
+
+```javascript
+// app/api/auth/_helpers/cookies.ts
+export function setAuthCookies(response: NextResponse, accessToken: string, refreshToken: string) {
+  // Client can read this for Authorization headers
+  response.cookies.set("accessToken", accessToken, {
+    httpOnly: false, 
+    secure: process.env.NODE_ENV === "production",
+    maxAge: 3600,
+  });
+
+  // Client CANNOT read this; only our proxy routes can
+  response.cookies.set("refreshToken", refreshToken, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    maxAge: 7 * 24 * 60 * 60, // 7 days
+  });
+}
+```
+
+We then implemented Next.js Middleware.
+
+```javascript
+// app/api/auth/login/route.ts
+export async function POST(req: NextRequest) {
+  const body = await req.json();
+  const backendRes = await fetch(`${API_BASE}/auth/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+
+  const data = await backendRes.json();
+  if (!backendRes.ok) return NextResponse.json(data, { status: backendRes.status });
+
+  // Set cookies with tokens, return only user to browser
+  const response = NextResponse.json({ user: data.user });
+  setAuthCookies(response, data.tokens.accessToken, data.tokens.refreshToken);
+
+  return response;
+}
+```
+
+This runs on the edge, checking the cookie before the React tree even starts to render. If you aren’t logged in, it redirects you. No more \`ProtectedRoute\` components.
+
+#### Phase 2: The Cutover
+
+Next, we updated our API fetcher. We swapped out the Redux store for \`js-cookie\`. The fetcher now automatically looks for the cookie and, if it receives a 401, triggers a background refresh via our proxy — all without the UI knowing anything happened.
+
+```javascript
+// app/lib/api/fetcher.ts
+axiosInstance.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
+
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+
+      // Call our LOCAL proxy refresh route
+      const refreshRes = await fetch("/api/auth/refresh", { method: "POST" });
+
+      if (refreshRes.ok) {
+        return axiosInstance(originalRequest); // Instant retry with new cookie
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+```
+
+We refactored our \`useUser\` and \`useAuthActions\` hooks to point to these local proxies. Suddenly, \`isAuthenticated\` became a simple check: \`!!user\`.
+
+```javascript
+// app/services/user/hooks.ts
+export const useUser = () => {
+  const hasToken = !!Cookies.get("accessToken");
+
+  const { data: me, isLoading } = useQuery({
+    queryKey: ["user", "me"],
+    queryFn: () => api.get("/users/me"),
+    enabled: hasToken,
+  });
+
+  return {
+    me,
+    isAuthenticated: !!me,
+    isHydrated: !isLoading || !hasToken, // The Zero-Flicker Logic
+  };
+};
+```
+
+#### Phase 3: The Cleanup (The Best Part)
+
+With the new system stable, we deleted the Redux store entirely.   
+1\. Bundle size dropped by ~15KB.  
+2\. Layouts simplified\*\* from 6 wrapper layers down to 3.  
+3\. Deleted 7 files including the \`HydrationGuard\`, \`AuthHydrator\`, and \`authSlice\`.
+
+#### The Result: Performance & Security
+
+The difference is night and day. When you refresh the page on Shelf now, the loading screen is gone. The header shows your avatar immediately. The sidebar shows your library immediately.
+
+By taking the approach I noticed at [Bayse Markets](http://www.bayse.markets) and leveraging Next.js proxies, we achieved:  
+1\. SSR Support: The server finally knows who you are.  
+2\. XSS Protection: Refresh tokens are now invisible to malicious scripts.  
+3\. Zero-Flicker UI: No more hydration mismatches or layout shifts.
+
+Sometimes the best way to improve a frontend is to move the logic back to the server.

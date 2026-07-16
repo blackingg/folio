@@ -1,0 +1,326 @@
+---
+title: "Building Interactive Digital Business Cards: My Second Week Deep in Onetro’s Architecture"
+publishedAt: "2025-08-15T11:44:37.151Z"
+summary: "Integrating a complex new feature into an already existing system. The challenges, discoveries, and wins"
+image: "/blog/building-interactive-digital-business-cards-my-second-week-deep-in-onetros-architecture-32728d60718e/1-2I5Puk7uwI8hAmVQHACyVQ.png"
+keywords:
+  - "frontend-development"
+  - "product-engineering"
+  - "react"
+  - "software-development"
+mediumLink: "https://medium.com/@odetundemubarak/building-interactive-digital-business-cards-my-second-week-deep-in-onetros-architecture-32728d60718e"
+---
+
+![](/blog/building-interactive-digital-business-cards-my-second-week-deep-in-onetros-architecture-32728d60718e/1-2I5Puk7uwI8hAmVQHACyVQ.png)
+
+_Integrating a complex new feature into an already existing system. The challenges, discoveries, and wins_
+
+This week, I dove headfirst into building one of the most intricate features I’ve worked on at Onetro: interactive digital business cards. What started as a seemingly straightforward card component quickly evolved into a sophisticated system that had to seamlessly integrate with our existing architecture while pushing the boundaries of what’s possible with web interactions.
+
+Working within an established codebase is a different beast entirely from greenfield development. You’re not just building a feature . You’re extending an ecosystem, respecting existing patterns, and finding creative ways to implement ambitious ideas within existing constraints.
+
+### **The Challenge: Building Within Boundaries**
+
+Onetro already had a robust foundation: React with TypeScript, Material-UI components, RTK Query for state management, and a well-defined API architecture. My task was to build interactive business cards that would feel native to the platform while introducing entirely new interaction patterns.
+
+The requirements were ambitious:
+
+-   **3D flip interactions** that work seamlessly across devices
+-   **Real-time editing** with immediate visual feedback
+-   **Deep integration** with existing user sessions and profile data
+-   **Public card pages** that load independently but share design language
+-   **Mobile-first responsive design** that doesn’t compromise on desktop
+
+### Architecture Analysis and Planning
+
+Before writing a single line of code, I spent time understanding the existing patterns. Onetro’s component structure follows clear conventions:
+
+```bash
+// Existing pattern: Feature-based organization
+/store
+  /auth - User authentication state
+  /sessions - Session management  
+  /onetrocard - New API layer I needed to create
+
+/components
+  /inputs - Standardized form components
+  /toast - Custom notification system
+```
+
+The beauty of working within established architecture is that so much is already solved. Custom input components, toast notifications, loading states. All ready to use. The challenge is making your new feature feel like it was always part of the system.
+
+### The Core Component Challenge
+
+Building the main `OnetroCard` component meant juggling multiple concerns:
+
+#### Data Flow Integration
+
+The existing RTK Query setup made API integration smooth, but I had to create new endpoints while respecting existing patterns:
+
+```typescript
+export const onetroApi = createApi({
+  reducerPath: "onetroApi",
+  baseQuery: axiosBaseQuery({ baseUrl: `${API_URL}/` }),
+  tagTypes: ["OnetroCard"],
+  endpoints: (builder) => ({
+    updateOnetroCard: builder.mutation<any, UpdateOnetroCardPayload>({
+      query: (payload) => ({
+        url: "user/update-onetro-card",
+        method: "PATCH",
+        body: payload,
+      }),
+      invalidatesTags: ["OnetroCard"],
+    }),
+    getOnetroCard: builder.query<GetOnetroCardResponse, string>({
+      query: (userSlug) => ({
+        url: `user/onetro-card/${userSlug}`,
+        method: "GET",
+      }),
+      providesTags: ["OnetroCard"],
+    }),
+  }),
+});
+
+export const { useUpdateOnetroCardMutation, useGetOnetroCardQuery } = onetroApi;
+```
+
+#### Component State Harmony
+
+The trickiest part was managing local component state while staying synchronized with global state. The card needs to:
+
+-   Display current user data from the auth store
+-   Fetch and cache card-specific data
+-   Handle optimistic updates during editing
+-   Gracefully handle loading and error states
+
+### Respecting Design Language
+
+When I joined the project about 2 weeks ago, I had little to no experience with Material-UI. Over the past few days, I’ve been learning it directly in the codebase, figuring out how the theme and breakpoint system work. For this, I needed to customize a card component so it felt cohesive with the rest of the design. I ended up creating styled components that extended the existing Material-UI theme, using the breakpoint system to keep it responsive.
+
+```typescript
+const FlipCardInner = styled(Box)<{ flipped: boolean }>(
+  ({ flipped, theme }) => ({
+    position: "relative",
+    width: "100%",
+    height: "100%",
+    textAlign: "center",
+    transition: "transform 0.8s",
+    transformStyle: "preserve-3d",
+    transform: flipped ? "rotateY(180deg)" : "rotateY(0deg)",
+  })
+);
+
+const ActionButton = styled(Button)(({ theme }) => ({
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "flex-start",
+  gap: "12px",
+  width: "100%",
+  padding: "12px 16px",
+  borderBottom: "1px solid #e9ecef",
+  textTransform: "none",
+  color: "#495057",
+  marginBottom: "8px",
+}));The Modal System Deep Dive
+```
+
+The editing experience required a sophisticated modal system with multiple views. This meant extending the existing modal patterns while introducing new interaction paradigms:
+
+```typescript
+const [externalLinks, setExternalLinks] = useState<ExternalLink[]>(() => {
+  if (initialData?.moreLink && initialData.moreLink.length > 0) {
+    return initialData.moreLink.map((link, index) => ({
+      id: `link-${index}`,
+      label: link.platform,
+      url: link.url,
+    }));
+  }
+  return [];
+});
+
+const [sessionsMode, setSessionsMode] = useState<"ALL" | "SELECTED">(
+  initialData?.sessionsMode || "ALL"
+);
+const [selectedSessions, setSelectedSessions] = useState<string[]>(
+  initialData?.selectedSessions || []
+);
+const [editingTitleId, setEditingTitleId] = useState<string | null>(null);
+```
+
+Each view needed its own logic while sharing data seamlessly. The session selection view particularly challenged me. Integrating with the existing session API while providing search, filtering, and bulk selection.
+
+#### Inline Editing Magic
+
+One of my proudest achievements was the inline title editing system. Users can click any link title and edit it in place — no modal popups or jarring transitions:
+
+```typescript
+const renderLinkTitle = (link: ExternalLink, index: number) => {
+  const defaultLabel = `Link ${index + 1}`;
+  const displayLabel = link.label || defaultLabel;
+
+  if (editingTitleId === link.id) {
+    return (
+      <TextField
+        value={link.label}
+        onChange={(e) => handleLinkChange(link.id, "label", e.target.value)}
+        onBlur={handleTitleEditBlur}
+        onKeyPress={handleTitleKeyPress}
+        placeholder={defaultLabel}
+        size="small"
+        autoFocus
+        sx={{
+          "& .MuiOutlinedInput-root": {
+            fontSize: "14px",
+            fontWeight: 500,
+            height: "28px",
+          },
+        }}
+      />
+    );
+  }
+
+  return (
+    <EditableTitle
+      onClick={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        handleTitleEditClick(link.id);
+      }}
+    >
+      <Typography
+        sx={{
+          fontSize: "14px",
+          color: "#111827",
+          fontWeight: 500,
+        }}
+      >
+        {displayLabel}
+      </Typography>
+      <EditIcon style={{ width: 16, height: 16, color: "#6b7280" }} />
+    </EditableTitle>
+  );
+};
+```
+
+#### The 3D Interaction Challenge
+
+Implementing 3D flip cards that work consistently across devices was the week’s biggest technical challenge. CSS 3D transforms are powerful but finicky:
+
+```typescript
+const FlipCardInner = styled(Box)<{ flipped: boolean }>(({ flipped }) => ({
+  position: "relative",
+  width: "100%",
+  height: "100%",
+  transition: "transform 0.8s",
+  transformStyle: "preserve-3d",
+  transform: flipped ? "rotateY(180deg)" : "rotateY(0deg)",
+}));
+```
+
+The real challenge was making it work within Onetro’s responsive framework. Desktop users get the full 3D experience, while mobile users get the same visual result with touch-optimized interactions.
+
+### Integration Wins and Surprises
+
+#### Leveraging Existing Infrastructure
+
+Working within established architecture had unexpected benefits:
+
+-   **Toast system integration**: Custom success and error messages that match the app’s style
+-   **Authentication flow**: Seamless user context without additional setup
+-   **API patterns**: Consistent loading states and error handling across the feature
+-   **Design tokens**: Colors, typography, and spacing that automatically match the brand
+
+#### Performance Optimizations
+
+The existing RTK Query cache system meant my new API calls automatically benefited from:
+
+-   Request deduplication
+-   Background refetching
+-   Optimistic updates
+-   Intelligent cache invalidation
+
+#### Code Architecture Highlights
+
+**Component Composition**
+
+```javascript
+export const OnetroCard: React.FC<OnetroCardProps> = ({
+  onEdit,
+  onPreview,
+}) => {
+  const { user } = useAuth(); // Existing auth context
+  const { data, isLoading } = useGetOnetroCardQuery(userSlug);
+  
+  // Component logic that respects existing patterns
+  return (
+    <CardContainer>
+      {/* Card content */}
+      <OnetroEditModal 
+        open={editModalOpen}
+        onClose={handleEditModalClose}
+        onSave={handleEditModalSave}
+      />
+    </CardContainer>
+  );
+};
+```
+
+#### Error Handling Integration
+
+Instead of building new error systems, I leveraged existing toast notifications:
+
+```javascript
+toast.success(
+  <CustomToast
+    title="Success"
+    message="Onetro Card updated successfully"
+    color="success"
+  />,
+  { pauseOnHover: false }
+);
+```
+
+### The Public Card Innovation
+
+Creating public card pages meant building within Onetro’s routing architecture while creating standalone experiences. Each card gets its own URL and loads independently, but shares design DNA with the main application.
+
+The 3D flip interaction on public cards creates genuine “wow” moments. Users instinctively try to flip the card, and when it actually works, it creates an emotional connection with the platform.
+
+#### Lessons from Working Within Existing Architecture
+
+1\. Constraints Breed Creativity
+
+Working within established patterns forced me to find elegant solutions rather than brute-forcing new approaches. The result is code that feels native to the platform.
+
+2\. Existing Infrastructure is Your Friend
+
+Authentication, API patterns, design systems — so much infrastructure was already battle-tested and ready to use. This let me focus on the unique challenges of the feature itself.
+
+3\. Consistency Compounds Value
+
+By respecting existing patterns, the new feature immediately felt like part of Onetro rather than a bolted-on addition. Users didn’t need to learn new interaction patterns.
+
+4\. Performance Comes Free
+
+Leveraging existing optimization patterns (memoization, query caching, component optimization) meant my feature inherited performance benefits without additional work.
+
+### The Technical Satisfaction
+
+There’s something deeply satisfying about building within established architecture. You’re not just creating . You’re extending, enhancing, and evolving a living system. Every design decision has context, every pattern has history, and every integration point teaches you something new about the platform.
+
+The OnetroCard feature now feels like it was always part of the platform. New users discover it naturally, existing patterns support it seamlessly, and the code integrates cleanly with the broader ecosystem.
+
+#### What This Means for Onetro
+
+This feature represents more than just digital business cards. It’s a new interaction paradigm for professional networking within Onetro’s ecosystem. Users can now:
+
+-   Create dynamic, interactive representations of their professional identity
+-   Seamlessly integrate their existing sessions and content
+-   Share engaging experiences that drive meaningful connections
+-   Maintain their professional brand within Onetro’s growing platform
+
+### The Developer Perspective
+
+Building within an existing system can be both rewarding and frustrating. A solid, well-architected foundation gives you constraints that often lead to better solutions, but not every part of that foundation is perfect. Sometimes, especially with new features, you have to work around architecture that wasn’t designed for what you’re building. And in the real world, when deadlines loom and people want things yesterday, we often take the fastest path to “done,” even if it’s not the most elegant long-term choice.
+
+Still, this week reminded me why I enjoy working on established platforms: when the infrastructure is strong enough, it lets you focus on delivering value where it counts. The interactive business card feature is now live internally, and early feedback suggests we’ve made something genuinely useful. It’s a reminder that innovation doesn’t always mean starting from scratch, sometimes it’s about extending what exists, even when you have to wrestle with its quirks.

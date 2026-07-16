@@ -284,7 +284,7 @@ export default async function Page() {
         <ScrollFadeSection className="grid min-h-[calc(100svh-5rem)] sm:min-h-[calc(100svh-8rem)] items-center justify-center gap-4 px-4 text-center md:px-6 w-full py-12">
           <BlurFade inView>
             <div className="space-y-3">
-              <ContactIllustration className="mx-auto size-40 sm:size-48" />
+              <ContactIllustration className="mx-auto size-40 sm:size-48 lg:size-64" />
               <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">
                 Get in Touch
               </h2>

@@ -1,0 +1,119 @@
+---
+title: "Embedding Bruno Simon’s Infinite Terrain Into My Portfolio (Work in Progress)"
+publishedAt: "2026-06-16T23:25:50.189Z"
+summary: "I’ve been a fan of Bruno Simon’s work for a while. If you don’t know him, he’s the developer behind bruno-simon.com — the portfolio site…"
+image: "/blog/embedding-bruno-simons-infinite-terrain-into-my-portfolio-work-in-progress-fc9e16c318d3/1--XLDPuoImtvnD0qy0lyLTA.png"
+keywords:
+  - "frontend-development"
+  - "creative-development"
+  - "threejs"
+mediumLink: "https://medium.com/@odetundemubarak/embedding-bruno-simons-infinite-terrain-into-my-portfolio-work-in-progress-fc9e16c318d3"
+---
+
+![](/blog/embedding-bruno-simons-infinite-terrain-into-my-portfolio-work-in-progress-fc9e16c318d3/1--XLDPuoImtvnD0qy0lyLTA.png)
+
+I’ve been a fan of Bruno Simon’s work for a while. If you don’t know him, he’s the developer behind [bruno-simon.com](http://bruno-simon.com) — the portfolio site where you drive a little car around and knock things over. It went viral a few years ago and for good reason: it’s one of those projects that makes you rethink what a personal website can even be.
+
+I’ve been spending time with his infinite-world repo lately — just playing around, reading the code, understanding how it’s put together. It’s a procedurally generated terrain engine built in vanilla Three.js. Infinite scrolling terrain, a day/night cycle, instanced grass, a sky dome with stars, web workers handling terrain generation off the main thread. The kind of codebase where you keep opening files and finding more thoughtful decisions.
+
+At some point I started thinking: what if I put this in my portfolio?
+
+#### The idea
+
+My portfolio has a [/3d](https://www.whoisblxck.xyz/3d) page. What’s actually live right now is a placeholder — an “Under Construction” screen with a morphing 3D shape you can click to change. It’s fine for what it is. A little something while I figure out what the page should actually become.
+
+I had been working on replacing it with a React Three Fiber scene — GLTF models inside portals, proper lighting, the works. That was coming along. But the further I got into it, the more I felt like it was still just… a showcase. Three objects in a room. Technically interesting to build, but not an experience.
+
+The infinite world is an experience.
+
+So I shelved the portal gallery and started figuring out how to get Bruno’s engine running inside my Next.js app instead. This is my journal of what that involved. I haven’t pushed anything to main yet — the placeholder is still live — but I wanted to write down what I’ve worked through so far.
+
+#### The first question: rewrite or embed?
+
+My first instinct was to rewrite it in React Three Fiber, which is what the rest of my 3D work uses. That thought lasted about ten minutes.  
+Bruno’s engine is 40+ files. It has its own game loop, its own singleton pattern, a web worker for terrain generation, eight custom GLSL shader sets, a quadtree LOD system for chunk management, custom camera modes, delta-time tracking — it’s a full game engine. Rewriting all of that in R3F would’ve taken forever and I’d almost certainly have broken things in the process.
+
+The cleaner move was to just embed it. Let React own the page and the lifecycle, and let the engine own everything inside the canvas. Concretely:
+
+```javascript
+useEffect(() => {
+ const game = new Game({ container: containerRef.current });
+ return () => game.destroy();
+}, []);
+```
+
+React mounts a div. The engine appends its renderer into that div. On unmount, game.destroy() cleans everything up. That’s the core of it. The tricky parts were all in the plumbing.
+
+#### Problem 1: Shaders
+
+Bruno’s original project was built with Vite, which has a plugin called vite-plugin-glsl. It does two things: lets you import .glsl files as strings, and resolves #include directives so shaders can pull in shared chunks of GLSL (noise functions, lighting calculations, that kind of thing).  
+My portfolio uses Next.js, which uses webpack. There’s no equivalent plugin.
+
+I ended up writing a small custom webpack loader — about 25 lines — that recursively resolves #include directives and exports the result as a string:
+
+```javascript
+// loaders/glsl-loader.cjs
+function resolveIncludes(source, filePath) {
+ return source.replace(/#include\s+"(.+)"/g, (_, includePath) => {
+ const fullPath = path.resolve(path.dirname(filePath), includePath);
+ const content = fs.readFileSync(fullPath, 'utf8');
+ return resolveIncludes(content, fullPath);
+ });
+}
+
+module.exports = function glslLoader(source) {
+ const resolved = resolveIncludes(source, this.resourcePath);
+ return `export default ${JSON.stringify(resolved)};`;
+};
+```
+
+When the build finally compiled without errors for the first time, I felt way more accomplished than I probably should have for writing 25 lines of code.
+
+#### Problem 2: Web Workers
+
+Vite has a neat syntax for bundling web workers: import Worker from ‘./Terrain.js?worker’. Webpack doesn’t understand the ?worker query parameter.
+
+The fix is straightforward once you know it — webpack and Next.js both understand this pattern instead:
+
+```go
+const worker = new Worker(
+ new URL('./Workers/Terrain.js', import.meta.url)
+);
+```
+
+The annoying part is this error only shows up at runtime, not during the build. So the build succeeds, you open the browser, and the terrain just doesn’t generate. Took me a bit to track down.
+
+#### Problem 3: The loading screen
+
+The original engine had a Loading.js that queried the DOM directly for a .loading-screen element and updated it. That doesn’t work inside a React component — you can’t guarantee the element is there or when React will have painted it.
+
+I stripped Loading.js out and instead gave Game.js two callback props:
+
+```javascript
+class Game {
+ constructor({ container, onLoadProgress, onLoadComplete } = {}) {
+ this.onLoadProgress = onLoadProgress ?? (() => {});
+ this.onLoadComplete = onLoadComplete ?? (() => {});
+ }
+}
+```
+
+The React wrapper passes down state setters, and the loading overlay is just a regular React component. That part actually felt good to solve — cleaner than the original honestly.
+
+#### Where it’s at now
+
+It runs. You load into [/3d](https://www.whoisblxck.xyz/3d) and you’re in a procedurally generated world — rolling terrain, sky shifting through the day/night cycle, grass blowing in the wind. WASD to move, mouse to look around, V to switch between third-person and fly camera.
+
+The portal gallery I had been building locally — the GLTF models, the R3F setup, @react-three/fiber, @react-three/drei, about 2.7 MB of model files — all of that got scrapped in favor of this. No regrets.
+
+I also kept Bruno’s debug mode — a lil-gui panel with terrain controls and an FPS counter — that was gated behind a #debug URL hash rather than a keypress. Feels like the right call for a portfolio; it’s there if you want to dig into it, invisible otherwise.
+
+#### What’s left
+
+Like I said, this isn’t on main yet. A few things I still want to figure out:  
+The mobile experience. The engine isn’t suited for mobile and I haven’t decided yet between a graceful warning, a static preview image, or trying to cut some features and make a lighter version work.
+
+1.  Performance tuning. The LOD chunk system helps a lot but I want to spend more time with it under real-world conditions before I ship it.
+2.  The world needs things to actually do. Right now you can walk around and look at the terrain, which is beautiful, but it’s empty. I want to add activities — something that gives you a reason to explore. Haven’t figured out exactly what that looks like yet, but an infinite world with nothing in it is only interesting for so long.
+
+This was mostly just a good excuse to spend time inside a codebase I find genuinely impressive and figure out how to make something cool from it. Bruno’s work has always made me want to push further with my passion for Three.js. Still working on it.

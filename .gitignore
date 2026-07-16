@@ -34,3 +34,7 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 structure.txt
+
+# medium account export (backfill source, not for the repo)
+medium-export-*.zip
+/.medium-export/
