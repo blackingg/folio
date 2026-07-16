@@ -317,4 +317,18 @@ export default class Chunk
 
         return false
     }
+
+    collectTerrainChunksForArea(xMin, xMax, zMin, zMax, result)
+    {
+        if(xMax < this.bounding.xMin || xMin > this.bounding.xMax || zMax < this.bounding.zMin || zMin > this.bounding.zMax)
+            return
+
+        // During split/unsplit transitions a parent can still hold terrain
+        // while its children load, so collect at every level, not just leaves
+        if(this.final && this.terrain)
+            result.push(this)
+
+        for(const [key, chunk] of this.children)
+            chunk.collectTerrainChunksForArea(xMin, xMax, zMin, zMax, result)
+    }
 }

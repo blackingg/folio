@@ -75,20 +75,30 @@ export default class Player
             this.position.current[2] -= z
         }
 
-        // Tree collision
+        // Tree collision — only against chunks overlapping the player's
+        // collision circle, instead of every tree in the loaded world.
+        // Padded because jittered trees can sit up to half a terrain segment
+        // (1.6u on depth-3 chunks) outside the chunk that emitted them.
         const collisionRadius = 0.8;
-        for (const [id, chunk] of this.state.chunks.allChunks) {
-            if (chunk.final && chunk.terrain && chunk.terrain.trees) {
-                for (const tree of chunk.terrain.trees) {
-                    const dx = this.position.current[0] - tree.position[0];
-                    const dz = this.position.current[2] - tree.position[2];
-                    const distSq = dx * dx + dz * dz;
-                    if (distSq < collisionRadius * collisionRadius && distSq > 0.0001) {
-                        const dist = Math.sqrt(distSq);
-                        const push = collisionRadius - dist;
-                        this.position.current[0] += (dx / dist) * push;
-                        this.position.current[2] += (dz / dist) * push;
-                    }
+        const chunkQueryPadding = 2;
+        const queryRadius = collisionRadius + chunkQueryPadding;
+        const nearbyChunks = this.state.chunks.getTerrainChunksForArea(
+            this.position.current[0] - queryRadius,
+            this.position.current[0] + queryRadius,
+            this.position.current[2] - queryRadius,
+            this.position.current[2] + queryRadius
+        );
+        for (const chunk of nearbyChunks) {
+            if (!chunk.terrain.trees) continue;
+            for (const tree of chunk.terrain.trees) {
+                const dx = this.position.current[0] - tree.position[0];
+                const dz = this.position.current[2] - tree.position[2];
+                const distSq = dx * dx + dz * dz;
+                if (distSq < collisionRadius * collisionRadius && distSq > 0.0001) {
+                    const dist = Math.sqrt(distSq);
+                    const push = collisionRadius - dist;
+                    this.position.current[0] += (dx / dist) * push;
+                    this.position.current[2] += (dz / dist) * push;
                 }
             }
         }

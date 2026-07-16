@@ -282,6 +282,16 @@ export default class Chunks
         return chunk
     }
 
+    getTerrainChunksForArea(xMin, xMax, zMin, zMax)
+    {
+        const result = []
+
+        for(const [key, chunk] of this.mainChunks)
+            chunk.collectTerrainChunksForArea(xMin, xMax, zMin, zMax, result)
+
+        return result
+    }
+
     getElevationForPosition(x, z)
     {
         const currentChunk = this.getDeepestChunkForPosition(x, z)
