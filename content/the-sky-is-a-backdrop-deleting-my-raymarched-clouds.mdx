@@ -1,0 +1,76 @@
+---
+title: "The Sky Is a Backdrop: Deleting My Raymarched Clouds"
+publishedAt: "2026-07-16T12:00:00.000Z"
+summary: "Three weeks ago I published a post celebrating the volumetric clouds in my 3D world. Then I profiled the scene and found they were the single heaviest thing in it. This is the confession I owed."
+image: "/blog/the-sky-is-a-backdrop-deleting-my-raymarched-clouds/sky-before-after.png"
+keywords:
+  - three.js
+  - glsl
+  - shaders
+  - performance
+  - raymarching
+---
+
+![Before and after: the raymarched volumetric cloud deck on the left, the flat one-fetch backdrop sky on the right](/blog/the-sky-is-a-backdrop-deleting-my-raymarched-clouds/sky-before-after.png)
+
+Three weeks ago I published a post about building volumetric clouds — raymarched, self-shadowing, Perlin-Worley noise, the works. I was proud of them. I ended that post by saying I wouldn't add rain because the performance budget was too tight to ask of someone just visiting a website.
+
+The budget was tight because of the clouds.
+
+I found out the way you find out most things you don't want to know: by measuring. The world had gotten heavier — trees, a border wall, experience zones — and I went looking for where the frame time was actually going before piling on more. The answer was straight up. The single most expensive draw in the scene was the sky. **The thing behind everything was costing more than everything.**
+
+#### The receipts
+
+The raymarcher I wrote about worked exactly as described, and that was the problem. For every pixel of sky, the fragment shader marched up to 120 steps through the cloud slab, sampling a 3D noise texture at each step. At the first sample inside a cloud it also marched 50 more steps upward toward the light to compute self-shadowing. Up to 170 texture fetches per pixel, in the worst case, for pixels that make up most of the top half of the screen.
+
+```glsl
+// fragment.glsl (the old sky) — the budget, in #defines
+#define MAX_STEPS  120  // at least 120 steps to avoid banding
+#define UP_STEPS   50   // upward light march for self-shadowing
+```
+
+It got worse. The whole point of the two-pass pipeline was to render the sky into a low-resolution target and upscale it — clouds are soft, nobody can tell. When I actually looked, `resolutionRatio` was sitting at `1`. Somewhere along the way, the low-res half of the design had stopped being true, and the raymarcher was running at full window resolution. The optimization existed in my blog post. It did not exist in my code.
+
+And one more, while I was in there: the `resize()` handler assigned new values to the render target's `.width` and `.height` — which does nothing. A `WebGLRenderTarget` only reallocates through `setSize()`. Every window resize since the beginning had been a silent no-op.
+
+None of this was hidden. It was three numbers in two files, waiting for me to stop admiring the clouds and read them.
+
+#### The decision
+
+My first instinct was to optimize — fewer steps, smarter early exits, temporal tricks. But the honest question wasn't *how do I make the raymarcher cheaper*. It was *why is a backdrop running a raymarcher at all*.
+
+Nobody plays this world staring at the sky. The clouds exist in your peripheral vision while you walk, at the top edge of the frame while the camera follows the character. They're a matte painting — set dressing behind the stage where things actually happen. I had built a hero asset and hung it where no hero shot would ever occur.
+
+So I deleted it. Not tuned it — deleted it. The replacement is one noise fetch per pixel: project the view ray onto a single plane at cloud height, sample the same 3D noise texture once, threshold it into coverage, feather the edges, fade it into the sky color near the horizon.
+
+```glsl
+// fragment.glsl (the new sky) — one plane, one fetch
+float t = (CLOUD_HEIGHT - uCameraPosition.y) / rayDir.y;
+vec3 p = uCameraPosition + t * rayDir;
+float density = texture(uNoise3D, vec3(p.xz / CLOUD_SCALE + scroll, 0.5)).r;
+float cloud = smoothstep(CLOUD_COVERAGE, CLOUD_COVERAGE + CLOUD_SOFTNESS, density);
+```
+
+The render target went back down to 20% resolution, where the design always said it should be — a soft gradient upscales invisibly, and the fill cost drops about 25x from that alone. The sun and moon glow, the dawn and dusk color blending, the day cycle — all untouched. The sky still changes mood with the time of day. It just stopped charging admission for it.
+
+#### What was actually lost
+
+I want to be precise here, because it would be easy to claim the swap is invisible. It isn't. Stand still, tilt the camera up, and compare: the old clouds had depth you could look through, undersides that shaded themselves, edges that billowed. The new ones are a flat painting of clouds on glass. In a side-by-side screenshot, the raymarcher wins.
+
+But nobody plays a side-by-side screenshot. In motion, walking through the world with the camera at its usual pitch, I cannot tell the difference — and I wrote both of them. The clouds still drift, still catch the dawn colors, still read as *sky*. The information a backdrop needs to communicate is "there is weather up there," and one texture fetch communicates it as well as a hundred and seventy.
+
+The frame time I got back went straight into things you do look at: twenty-four kinds of trees, a border wall you can see from across the map, a god that lifts you off the ground. That trade is not close.
+
+#### What I'm keeping
+
+**The profiler doesn't care what you're proud of.** The clouds were the most technically interesting thing in the scene and the least justifiable expense in it. Those two facts are unrelated, and only one of them belongs in a frame budget.
+
+**Optimizations you write about are optimizations you must verify.** The low-res pipeline degraded into full-res rendering without a single visual symptom — that's what makes performance regressions different from bugs. Nothing looks wrong. You have to go look.
+
+**Spend where the eyes are.** A backdrop earns a backdrop's budget. The moment I priced the sky like scenery instead of like a hero, the right implementation was obvious — and it was sixty lines shorter.
+
+The clouds post stays up as written, because that's what actually happened: I built them, I loved them, and they were real. This post is just the part that came after. The painted sky is up there now, doing its one fetch per pixel, and the world underneath it finally has room to be interesting.
+
+* * *
+
+_This post is part of_ [_Sidequesting 3D_](https://www.whoisblxck.xyz/blog/playlist/sidequesting-3d) _— a series about my journey through 3D development._
