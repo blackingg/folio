@@ -2,16 +2,12 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import { HudCluster } from "./hud/HudCluster";
-import { MapPanel } from "./hud/MapPanel";
-import { InfoPanel } from "./hud/InfoPanel";
-import { SettingsPanel } from "./hud/SettingsPanel";
+import { WorldMenu, type MenuTab } from "./hud/WorldMenu";
 import { WorldLoader } from "./WorldLoader";
 
 interface InfiniteWorldProps {
   className?: string;
 }
-
-type ActivePanel = "map" | "info" | "settings" | null;
 
 export default function InfiniteWorld({ className }: InfiniteWorldProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -20,10 +16,7 @@ export default function InfiniteWorld({ className }: InfiniteWorldProps) {
   const [loadProgress, setLoadProgress] = useState(0);
   const [isLoaded, setIsLoaded] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const [activePanel, setActivePanel] = useState<ActivePanel>(null);
-
-  const togglePanel = (panel: "info" | "settings") =>
-    setActivePanel((cur) => (cur === panel ? null : panel));
+  const [menuTab, setMenuTab] = useState<MenuTab | null>(null);
 
   // Detect mobile
   useEffect(() => {
@@ -60,7 +53,11 @@ export default function InfiniteWorld({ className }: InfiniteWorldProps) {
     ];
     const handler = (e: KeyboardEvent) => {
       if (e.code === "Escape") {
-        setActivePanel(null);
+        setMenuTab(null);
+        return;
+      }
+      if (e.code === "KeyM") {
+        setMenuTab((cur) => (cur === null ? "map" : null));
         return;
       }
       if (!GAME_KEYS.includes(e.code)) return;
@@ -70,17 +67,17 @@ export default function InfiniteWorld({ className }: InfiniteWorldProps) {
     return () => window.removeEventListener("keydown", handler);
   }, []);
 
-  // Disable game input while a panel is open
+  // Disable game input while the menu is open
   useEffect(() => {
     const controls = gameRef.current?.state?.controls;
     if (!controls) return;
-    controls.inputEnabled = activePanel === null;
-    if (activePanel) {
+    controls.inputEnabled = menuTab === null;
+    if (menuTab) {
       for (const key of Object.keys(controls.keys.down)) {
         controls.keys.down[key] = false;
       }
     }
-  }, [activePanel, isLoaded]);
+  }, [menuTab, isLoaded]);
 
   const handleLoadProgress = useCallback(
     (progress: number) => setLoadProgress(progress),
@@ -201,26 +198,17 @@ export default function InfiniteWorld({ className }: InfiniteWorldProps) {
       <HudCluster
         gameRef={gameRef}
         isLoaded={isLoaded}
-        activePanel={activePanel}
-        onTogglePanel={togglePanel}
-        onOpenMap={() => setActivePanel("map")}
+        onOpenTab={setMenuTab}
       />
 
-      {/* Active panel */}
-      {activePanel === "map" && (
-        <MapPanel
-          onClose={() => setActivePanel(null)}
+      {/* Pause menu */}
+      {menuTab && (
+        <WorldMenu
+          tab={menuTab}
+          onTabChange={setMenuTab}
+          onClose={() => setMenuTab(null)}
           gameRef={gameRef}
           isLoaded={isLoaded}
-        />
-      )}
-      {activePanel === "info" && (
-        <InfoPanel onClose={() => setActivePanel(null)} />
-      )}
-      {activePanel === "settings" && (
-        <SettingsPanel
-          onClose={() => setActivePanel(null)}
-          gameRef={gameRef}
         />
       )}
 

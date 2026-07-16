@@ -3,13 +3,18 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { PanelBackdrop } from "./PanelBackdrop";
-import { PanelContainer } from "./PanelContainer";
-import { PanelTabs } from "./PanelTabs";
 
 interface ConnectedGamepad {
   index: number;
   id: string;
+}
+
+function SectionHeading({ children }: { children: React.ReactNode }) {
+  return (
+    <h3 className="mb-3 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+      {children}
+    </h3>
+  );
 }
 
 function SliderRow({
@@ -97,26 +102,17 @@ const DEFAULTS = {
   lookSensitivity: 0.03,
 };
 
-const TABS = [
-  { id: "movement", label: "Movement" },
-  { id: "controller", label: "Controller" },
-  { id: "graphics", label: "Graphics" },
-] as const;
-
 function shortGamepadName(id: string) {
   const trimmed = id.trim();
   if (trimmed.length <= 48) return trimmed;
   return `${trimmed.slice(0, 45)}…`;
 }
 
-export function SettingsPanel({
-  onClose,
+export function SettingsSection({
   gameRef,
 }: {
-  onClose: () => void;
   gameRef: React.RefObject<any>;
 }) {
-  const [activeTab, setActiveTab] = useState<string>("movement");
   const [moveSpeed, setMoveSpeed] = useState(DEFAULTS.moveSpeed);
   const [boostSpeed, setBoostSpeed] = useState(DEFAULTS.boostSpeed);
   const [fogEnabled, setFogEnabled] = useState(DEFAULTS.fogEnabled);
@@ -198,113 +194,107 @@ export function SettingsPanel({
       : gamepads.find((gp) => String(gp.index) === selectedGamepad);
 
   return (
-    <>
-      <PanelBackdrop onClose={onClose} />
-      <PanelContainer
-        title="Settings"
-        subtitle="Customize your experience"
-        onClose={onClose}
-      >
-        <PanelTabs tabs={[...TABS]} active={activeTab} onChange={setActiveTab} />
-
-        {activeTab === "movement" && (
-          <div className="flex flex-col gap-4">
-            <SliderRow
-              label="Walk Speed"
-              value={moveSpeed}
-              min={2}
-              max={30}
-              step={1}
-              format={(v) => `${v}`}
-              onChange={(v) => {
-                setMoveSpeed(v);
-                applySpeed(v, boostSpeed);
-              }}
-            />
-            <SliderRow
-              label="Boost Speed"
-              value={boostSpeed}
-              min={10}
-              max={80}
-              step={5}
-              format={(v) => `${v}`}
-              onChange={(v) => {
-                setBoostSpeed(v);
-                applySpeed(moveSpeed, v);
-              }}
-            />
-          </div>
-        )}
-
-        {activeTab === "controller" && (
-          <div className="flex flex-col gap-3">
-            <div>
-              <label
-                htmlFor="gamepad-select"
-                className="mb-2 block text-sm text-muted-foreground"
-              >
-                Active Controller
-              </label>
-              <select
-                id="gamepad-select"
-                value={selectedGamepad}
-                onChange={(e) => applyGamepadSelection(e.target.value)}
-                className="w-full rounded-lg border border-border bg-secondary px-3 py-2.5 text-sm text-foreground outline-none ring-offset-background focus:ring-2 focus:ring-ring"
-              >
-                <option value="auto">Auto (first connected)</option>
-                {gamepads.map((gp) => (
-                  <option key={gp.index} value={String(gp.index)}>
-                    {shortGamepadName(gp.id)}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <SliderRow
-              label="Camera Sensitivity"
-              value={lookSensitivity}
-              min={0.01}
-              max={0.08}
-              step={0.005}
-              format={(v) => v.toFixed(3)}
-              onChange={applyLookSensitivity}
-            />
-
-            <div className="rounded-lg border border-border bg-muted/40 px-4 py-3 text-xs leading-relaxed text-muted-foreground">
-              {gamepads.length === 0 ? (
-                <p>
-                  No controller detected. Pair a USB or Bluetooth gamepad, then
-                  press any button so your browser can see it.
-                </p>
-              ) : (
-                <p>
-                  Using{" "}
-                  <span className="font-medium text-foreground">
-                    {activeGamepad ? shortGamepadName(activeGamepad.id) : "—"}
-                  </span>
-                  . Bluetooth controllers (Xbox, PlayStation, Switch Pro, etc.)
-                  are supported through the browser Gamepad API.
-                </p>
-              )}
-            </div>
-          </div>
-        )}
-
-        {activeTab === "graphics" && (
-          <ToggleRow
-            label="Distance Fog"
-            description="Atmospheric fog at horizon"
-            value={fogEnabled}
-            onChange={setFogEnabled}
+    <div className="flex max-w-xl flex-col gap-7">
+      <section>
+        <SectionHeading>Movement</SectionHeading>
+        <div className="flex flex-col gap-4">
+          <SliderRow
+            label="Walk Speed"
+            value={moveSpeed}
+            min={2}
+            max={30}
+            step={1}
+            format={(v) => `${v}`}
+            onChange={(v) => {
+              setMoveSpeed(v);
+              applySpeed(v, boostSpeed);
+            }}
           />
-        )}
-
-        <div className="mt-6 border-t border-border pt-4">
-          <Button variant="outline" className="w-full" onClick={resetDefaults}>
-            Reset to Defaults
-          </Button>
+          <SliderRow
+            label="Boost Speed"
+            value={boostSpeed}
+            min={10}
+            max={80}
+            step={5}
+            format={(v) => `${v}`}
+            onChange={(v) => {
+              setBoostSpeed(v);
+              applySpeed(moveSpeed, v);
+            }}
+          />
         </div>
-      </PanelContainer>
-    </>
+      </section>
+
+      <section>
+        <SectionHeading>Controller</SectionHeading>
+        <div className="flex flex-col gap-3">
+          <div>
+            <label
+              htmlFor="gamepad-select"
+              className="mb-2 block text-sm text-muted-foreground"
+            >
+              Active Controller
+            </label>
+            <select
+              id="gamepad-select"
+              value={selectedGamepad}
+              onChange={(e) => applyGamepadSelection(e.target.value)}
+              className="w-full rounded-lg border border-border bg-secondary px-3 py-2.5 text-sm text-foreground outline-none ring-offset-background focus:ring-2 focus:ring-ring"
+            >
+              <option value="auto">Auto (first connected)</option>
+              {gamepads.map((gp) => (
+                <option key={gp.index} value={String(gp.index)}>
+                  {shortGamepadName(gp.id)}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <SliderRow
+            label="Camera Sensitivity"
+            value={lookSensitivity}
+            min={0.01}
+            max={0.08}
+            step={0.005}
+            format={(v) => v.toFixed(3)}
+            onChange={applyLookSensitivity}
+          />
+
+          <div className="rounded-lg border border-border bg-muted/40 px-4 py-3 text-xs leading-relaxed text-muted-foreground">
+            {gamepads.length === 0 ? (
+              <p>
+                No controller detected. Pair a USB or Bluetooth gamepad, then
+                press any button so your browser can see it.
+              </p>
+            ) : (
+              <p>
+                Using{" "}
+                <span className="font-medium text-foreground">
+                  {activeGamepad ? shortGamepadName(activeGamepad.id) : "—"}
+                </span>
+                . Bluetooth controllers (Xbox, PlayStation, Switch Pro, etc.)
+                are supported through the browser Gamepad API.
+              </p>
+            )}
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <SectionHeading>Graphics</SectionHeading>
+        <ToggleRow
+          label="Distance Fog"
+          description="Atmospheric fog at horizon"
+          value={fogEnabled}
+          onChange={setFogEnabled}
+        />
+      </section>
+
+      <div className="flex justify-end border-t border-border pt-4">
+        <Button variant="outline" size="sm" onClick={resetDefaults}>
+          Reset to Defaults
+        </Button>
+      </div>
+    </div>
   );
 }
