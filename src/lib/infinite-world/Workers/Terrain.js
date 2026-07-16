@@ -416,24 +416,31 @@ onmessage = function(event)
      */
     const trees = []
 
+    // Shared by every tree emitter below
+    const pseudoRandom = (x, z) => {
+        let n = Math.sin(x * 12.9898 + z * 78.233) * 43758.5453
+        return n - Math.floor(n)
+    }
+
+    // World border — shared formula from worldGen.js (coastline wall of
+    // blue trees with a single gate due north)
+    const border = createBorder(seed)
+    const borderRadiusAt = border.radiusAt
+    const gateDistanceAt = border.gateArcDistance
+    const BORDER_CLEAR_BAND = BORDER.clearBand
+    const GATE_WIDTH = BORDER.gateWidth
+    const GATE_CORRIDOR = BORDER.gateCorridor
+
+    const chunkMinX = baseX - size * 0.5
+    const chunkMaxX = baseX + size * 0.5
+    const chunkMinZ = baseZ - size * 0.5
+    const chunkMaxZ = baseZ + size * 0.5
+
+    // Random forest trees — only on high-precision (nearby) chunks
     if (precision >= 0.75)
     {
         const uSeed_t = hashString(seed + '_t') * 100.0
         const uSeed_b = hashString(seed + '_b') * 100.0
-
-        const pseudoRandom = (x, z) => {
-            let n = Math.sin(x * 12.9898 + z * 78.233) * 43758.5453
-            return n - Math.floor(n)
-        }
-
-        // World border — shared formula from worldGen.js (coastline wall of
-        // blue trees with a single gate due north)
-        const border = createBorder(seed)
-        const borderRadiusAt = border.radiusAt
-        const gateDistanceAt = border.gateArcDistance
-        const BORDER_CLEAR_BAND = BORDER.clearBand
-        const GATE_WIDTH = BORDER.gateWidth
-        const GATE_CORRIDOR = BORDER.gateCorridor
 
         // Experience zones that keep random trees off their ground
         const treeClearZones = EXPERIENCES.filter((def) => def.treeClearRadius)
@@ -536,96 +543,59 @@ onmessage = function(event)
                 }
             }
         }
+    }
 
-        /**
-         * Border wall — BORDER.wallRows staggered rows of blue trees along the
-         * coastline. The trees are the visual wall; the impassable barrier is
-         * the analytic collision band in State/Player.js, so nothing slips
-         * through between trunks. Half-open chunk bounds ensure each wall tree
-         * is emitted by exactly one chunk.
-         */
-        const chunkMinX = baseX - size * 0.5
-        const chunkMaxX = baseX + size * 0.5
-        const chunkMinZ = baseZ - size * 0.5
-        const chunkMaxZ = baseZ + size * 0.5
+    /**
+     * Border wall — BORDER.wallRows staggered rows of blue trees along the
+     * coastline. The trees are the visual wall; the impassable barrier is
+     * the analytic collision band in State/Player.js, so nothing slips
+     * through between trunks. Half-open chunk bounds ensure each wall tree
+     * is emitted by exactly one chunk.
+     *
+     * Emitted at every precision so the coastline reads from anywhere on
+     * the map. Distant low-precision chunks place a thinned subset (the two
+     * middle rows, every other arc step) at positions identical to the full
+     * wall, so nearby LODs fill trees in between instead of reshuffling.
+     */
+    const isFarChunk = precision < 0.75
 
-        // Quick reject: only walk the ring for chunks that can intersect it
-        const maxWobble = BORDER.wobble[0] + BORDER.wobble[1] + BORDER.wobble[2]
-        const wallHalfExtent = ((BORDER.wallRows - 1) / 2) * BORDER.wallRowSpacing
-        const ringMargin = maxWobble + wallHalfExtent + 3
-        const nearX = Math.max(chunkMinX, Math.min(0, chunkMaxX))
-        const nearZ = Math.max(chunkMinZ, Math.min(0, chunkMaxZ))
-        const chunkMinDist = Math.hypot(nearX, nearZ)
-        let chunkMaxDist = 0
-        for (const cx of [chunkMinX, chunkMaxX])
-            for (const cz of [chunkMinZ, chunkMaxZ])
-                chunkMaxDist = Math.max(chunkMaxDist, Math.hypot(cx, cz))
+    // Quick reject: only walk the ring for chunks that can intersect it
+    const maxWobble = BORDER.wobble[0] + BORDER.wobble[1] + BORDER.wobble[2]
+    const wallHalfExtent = ((BORDER.wallRows - 1) / 2) * BORDER.wallRowSpacing
+    const ringMargin = maxWobble + wallHalfExtent + 3
+    const nearX = Math.max(chunkMinX, Math.min(0, chunkMaxX))
+    const nearZ = Math.max(chunkMinZ, Math.min(0, chunkMaxZ))
+    const chunkMinDist = Math.hypot(nearX, nearZ)
+    let chunkMaxDist = 0
+    for (const cx of [chunkMinX, chunkMaxX])
+        for (const cz of [chunkMinZ, chunkMaxZ])
+            chunkMaxDist = Math.max(chunkMaxDist, Math.hypot(cx, cz))
 
-        if (chunkMaxDist >= BORDER.radius - ringMargin && chunkMinDist <= BORDER.radius + ringMargin)
+    if (chunkMaxDist >= BORDER.radius - ringMargin && chunkMinDist <= BORDER.radius + ringMargin)
+    {
+        const WALL_SPACING = BORDER.wallTreeSpacing
+        const WALL_ROWS = BORDER.wallRows
+        const WALL_ROW_SPACING = BORDER.wallRowSpacing
+
+        let theta = 0
+        let iStep = 0
+        while (theta < Math.PI * 2)
         {
-            const WALL_SPACING = BORDER.wallTreeSpacing
-            const WALL_ROWS = BORDER.wallRows
-            const WALL_ROW_SPACING = BORDER.wallRowSpacing
+            const r0 = borderRadiusAt(theta)
 
-            let theta = 0
-            while (theta < Math.PI * 2)
+            for (let row = 0; row < WALL_ROWS; row++)
             {
-                const r0 = borderRadiusAt(theta)
+                // Far chunks: middle rows on every other arc step only
+                if (isFarChunk && (iStep % 2 !== 0 || row === 0 || row === WALL_ROWS - 1)) continue
 
-                for (let row = 0; row < WALL_ROWS; row++)
-                {
-                    // Stagger every other row half a step along the arc
-                    const t = theta + (row % 2) * (WALL_SPACING * 0.5) / r0
-                    const r = borderRadiusAt(t) + (row - (WALL_ROWS - 1) / 2) * WALL_ROW_SPACING
-                    const wx = Math.cos(t) * r
-                    const wz = Math.sin(t) * r
-
-                    if (wx < chunkMinX || wx >= chunkMaxX || wz < chunkMinZ || wz >= chunkMaxZ) continue
-                    if (gateDistanceAt(t, r0) < GATE_WIDTH * 0.5) continue
-
-                    const r1 = pseudoRandom(wx, wz)
-                    const r2 = pseudoRandom(wx + 1, wz)
-                    const r3 = pseudoRandom(wx, wz + 1)
-                    const wy = getElevation(wx, wz, lacunarity, persistence, iterations, baseFrequency, baseAmplitude, power, elevationOffset, iterationsOffsets, experiences)
-
-                    trees.push({
-                        position: [wx, wy, wz],
-                        type: 8 + Math.floor(r1 * 8) % 8,
-                        scale: 1.2 + r2 * 0.4,
-                        rotation: r3 * Math.PI * 2
-                    })
-                }
-
-                theta += WALL_SPACING / r0
-            }
-        }
-
-        /**
-         * Experience tree rings — opt-in: only definitions that declare
-         * treeRingRadius get a circle of orange trees around their centre
-         * (currently just The God's Palm). The worker stays agnostic of
-         * specific experiences and only honours declared fields. Half-open
-         * chunk bounds ensure each ring tree is emitted by exactly one chunk.
-         */
-        for (const def of EXPERIENCES)
-        {
-            if (!def.treeRingRadius) continue
-
-            // Quick reject: only walk the ring for chunks that can intersect it
-            const nearestX = Math.max(chunkMinX, Math.min(def.x, chunkMaxX))
-            const nearestZ = Math.max(chunkMinZ, Math.min(def.z, chunkMaxZ))
-            if (Math.hypot(nearestX - def.x, nearestZ - def.z) > def.treeRingRadius + 2) continue
-
-            const RING_SPACING = 2.2
-
-            let theta = 0
-            while (theta < Math.PI * 2)
-            {
-                const wx = def.x + Math.cos(theta) * def.treeRingRadius
-                const wz = def.z + Math.sin(theta) * def.treeRingRadius
-                theta += RING_SPACING / def.treeRingRadius
+                // Stagger every other row half a step along the arc
+                const t = theta + (row % 2) * (WALL_SPACING * 0.5) / r0
+                const r = borderRadiusAt(t) + (row - (WALL_ROWS - 1) / 2) * WALL_ROW_SPACING
+                const wx = Math.cos(t) * r
+                const wz = Math.sin(t) * r
 
                 if (wx < chunkMinX || wx >= chunkMaxX || wz < chunkMinZ || wz >= chunkMaxZ) continue
+                if (gateDistanceAt(t, r0) < GATE_WIDTH * 0.5) continue
 
                 const r1 = pseudoRandom(wx, wz)
                 const r2 = pseudoRandom(wx + 1, wz)
@@ -634,11 +604,57 @@ onmessage = function(event)
 
                 trees.push({
                     position: [wx, wy, wz],
-                    type: 16 + Math.floor(r1 * 8) % 8, // orange grove types
-                    scale: 1.1 + r2 * 0.4,
+                    type: 8 + Math.floor(r1 * 8) % 8,
+                    scale: 1.2 + r2 * 0.4,
                     rotation: r3 * Math.PI * 2
                 })
             }
+
+            theta += WALL_SPACING / r0
+            iStep++
+        }
+    }
+
+    /**
+     * Experience tree rings — opt-in: only definitions that declare
+     * treeRingRadius get a circle of orange trees around their centre
+     * (currently just The God's Palm). The worker stays agnostic of
+     * specific experiences and only honours declared fields. Half-open
+     * chunk bounds ensure each ring tree is emitted by exactly one chunk.
+     * Emitted at every precision — a ring is ~50 trees, and like the wall
+     * it doubles as a distant landmark.
+     */
+    for (const def of EXPERIENCES)
+    {
+        if (!def.treeRingRadius) continue
+
+        // Quick reject: only walk the ring for chunks that can intersect it
+        const nearestX = Math.max(chunkMinX, Math.min(def.x, chunkMaxX))
+        const nearestZ = Math.max(chunkMinZ, Math.min(def.z, chunkMaxZ))
+        if (Math.hypot(nearestX - def.x, nearestZ - def.z) > def.treeRingRadius + 2) continue
+
+        const RING_SPACING = 2.2
+
+        let theta = 0
+        while (theta < Math.PI * 2)
+        {
+            const wx = def.x + Math.cos(theta) * def.treeRingRadius
+            const wz = def.z + Math.sin(theta) * def.treeRingRadius
+            theta += RING_SPACING / def.treeRingRadius
+
+            if (wx < chunkMinX || wx >= chunkMaxX || wz < chunkMinZ || wz >= chunkMaxZ) continue
+
+            const r1 = pseudoRandom(wx, wz)
+            const r2 = pseudoRandom(wx + 1, wz)
+            const r3 = pseudoRandom(wx, wz + 1)
+            const wy = getElevation(wx, wz, lacunarity, persistence, iterations, baseFrequency, baseAmplitude, power, elevationOffset, iterationsOffsets, experiences)
+
+            trees.push({
+                position: [wx, wy, wz],
+                type: 16 + Math.floor(r1 * 8) % 8, // orange grove types
+                scale: 1.1 + r2 * 0.4,
+                rotation: r3 * Math.PI * 2
+            })
         }
     }
 
