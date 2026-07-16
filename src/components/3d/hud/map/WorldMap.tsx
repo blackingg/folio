@@ -3,14 +3,34 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { EXPERIENCE_ZONES, MAP_WORLD_RADIUS, type ExperienceZone } from "../constants";
+import { GATE_ANGLE, borderRadiusAt } from "./border";
 import {
-  canvasToWorld,
   drawWorldBorder,
   renderTopographicTerrain,
   worldToCanvas,
 } from "./renderTopographic";
 
-const ZONE_HIT_RADIUS = 22;
+const ZONE_HIT_PX = 16; // pointer-to-zone hit radius, CSS pixels
+const POPUP_WIDTH = 180; // matches the popup's max-w below
+// The full map grows in coarse steps as the player explores the wilds, so
+// the terrain layer rebuilds chunk-by-chunk instead of on every frame
+const FULL_RADIUS_STEP = 150;
+
+const GATE_WORLD_R = borderRadiusAt(GATE_ANGLE);
+const GATE_X = Math.cos(GATE_ANGLE) * GATE_WORLD_R;
+const GATE_Z = Math.sin(GATE_ANGLE) * GATE_WORLD_R;
+
+interface TerrainMeta {
+  centerX: number;
+  centerZ: number;
+  viewRadius: number;
+}
+
+interface PopupPlacement {
+  left: number;
+  top: number;
+  below: boolean;
+}
 
 interface WorldMapProps {
   gameRef: React.RefObject<any>;
@@ -34,14 +54,20 @@ export function WorldMap({
   const isInteractive = interactive ?? mode === "full";
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const terrainImageRef = useRef<ImageBitmap | HTMLCanvasElement | null>(null);
+  const terrainMetaRef = useRef<TerrainMeta | null>(null);
   const terrainKeyRef = useRef("");
   const pendingKeyRef = useRef("");
   const workerRef = useRef<Worker | null>(null);
   const rafRef = useRef<number | null>(null);
   const [activeZone, setActiveZone] = useState<ExperienceZone | null>(null);
-  const [popupPos, setPopupPos] = useState<{ x: number; y: number } | null>(null);
+  const [popupPos, setPopupPos] = useState<PopupPlacement | null>(null);
 
-  const viewRadius = mode === "full" ? MAP_WORLD_RADIUS : 140;
+  // The full map starts framing the walled world, then expands to keep the
+  // player on the map once they wander into the wilds (and shrinks back
+  // when they return — with hysteresis so it never thrashes).
+  const [fullRadius, setFullRadius] = useState(MAP_WORLD_RADIUS);
+
+  const viewRadius = mode === "full" ? fullRadius : 140;
   const sampleStep = mode === "full" ? 2 : 3;
 
   const getCenter = useCallback(() => {
@@ -61,9 +87,9 @@ export function WorldMap({
       new URL("./terrainMap.worker.ts", import.meta.url)
     );
     worker.onmessage = (
-      event: MessageEvent<{ key: string; bitmap: ImageBitmap }>
+      event: MessageEvent<{ key: string; bitmap: ImageBitmap } & TerrainMeta>
     ) => {
-      const { key, bitmap } = event.data;
+      const { key, bitmap, centerX, centerZ, viewRadius: imageRadius } = event.data;
       // Drop stale responses — the player kept moving and a newer
       // request is already in flight
       if (key !== pendingKeyRef.current) {
@@ -73,6 +99,7 @@ export function WorldMap({
       const old = terrainImageRef.current;
       if (old instanceof ImageBitmap) old.close();
       terrainImageRef.current = bitmap;
+      terrainMetaRef.current = { centerX, centerZ, viewRadius: imageRadius };
       terrainKeyRef.current = key;
       pendingKeyRef.current = "";
     };
@@ -115,32 +142,45 @@ export function WorldMap({
         viewRadius,
         size,
         sampleStep,
-        contourInterval: 5,
+        contourInterval: 2,
       });
 
       terrainImageRef.current = canvas;
+      terrainMetaRef.current = { centerX, centerZ, viewRadius };
       terrainKeyRef.current = key;
     },
     [mode, viewRadius, size, sampleStep]
   );
 
+  // Zone hit-testing and popup placement both work in CSS pixels so they
+  // stay accurate when the canvas is displayed at a different size than its
+  // internal resolution (e.g. the full map on small screens).
   const findZoneAt = useCallback(
     (clientX: number, clientY: number) => {
       const canvas = canvasRef.current;
       if (!canvas) return null;
 
       const rect = canvas.getBoundingClientRect();
-      const px = ((clientX - rect.left) / rect.width) * size;
-      const py = ((clientY - rect.top) / rect.height) * size;
+      if (rect.width === 0) return null;
+      const scale = rect.width / size;
+      const mx = clientX - rect.left;
+      const my = clientY - rect.top;
       const center = getCenter();
-      const [wx, wz] = canvasToWorld(px, py, center.x, center.z, viewRadius, size);
 
       let hit: ExperienceZone | null = null;
       let hitDist = Infinity;
 
       for (const zone of EXPERIENCE_ZONES) {
-        const dist = Math.hypot(wx - zone.x, wz - zone.z);
-        if (dist < ZONE_HIT_RADIUS && dist < hitDist) {
+        const [cx, cy] = worldToCanvas(
+          zone.x,
+          zone.z,
+          center.x,
+          center.z,
+          viewRadius,
+          size
+        );
+        const dist = Math.hypot(mx - cx * scale, my - cy * scale);
+        if (dist < ZONE_HIT_PX && dist < hitDist) {
           hit = zone;
           hitDist = dist;
         }
@@ -151,25 +191,43 @@ export function WorldMap({
     [getCenter, size, viewRadius]
   );
 
+  // Anchor the popup to the zone marker (not the cursor) and flip it below
+  // the marker near the top edge so the panel's overflow-hidden never clips it.
   const showZonePopup = useCallback(
-    (zone: ExperienceZone, clientX: number, clientY: number) => {
+    (zone: ExperienceZone) => {
       const canvas = canvasRef.current;
       if (!canvas) return;
       const rect = canvas.getBoundingClientRect();
+      if (rect.width === 0) return;
+      const scale = rect.width / size;
+      const center = getCenter();
+      const [cx, cy] = worldToCanvas(
+        zone.x,
+        zone.z,
+        center.x,
+        center.z,
+        viewRadius,
+        size
+      );
+      const x = cx * scale;
+      const y = cy * scale;
+      const below = y < 110;
+
       setActiveZone(zone);
       setPopupPos({
-        x: clientX - rect.left,
-        y: clientY - rect.top,
+        left: Math.min(Math.max(x + 12, 8), Math.max(8, rect.width - POPUP_WIDTH - 8)),
+        top: below ? y + 14 : y - 14,
+        below,
       });
     },
-    []
+    [getCenter, size, viewRadius]
   );
 
   const handlePointerMove = (e: React.PointerEvent<HTMLCanvasElement>) => {
     if (!isInteractive) return;
     const zone = findZoneAt(e.clientX, e.clientY);
     if (zone) {
-      showZonePopup(zone, e.clientX, e.clientY);
+      showZonePopup(zone);
     } else if (e.buttons === 0) {
       setActiveZone(null);
       setPopupPos(null);
@@ -183,7 +241,7 @@ export function WorldMap({
     }
     const zone = findZoneAt(e.clientX, e.clientY);
     if (zone) {
-      showZonePopup(zone, e.clientX, e.clientY);
+      showZonePopup(zone);
     }
   };
 
@@ -199,12 +257,26 @@ export function WorldMap({
 
       ctx.clearRect(0, 0, size, size);
 
-      if (terrainImageRef.current) {
-        ctx.drawImage(terrainImageRef.current, 0, 0, size, size);
-      } else {
-        // First worker render hasn't landed yet — hold the land colour
-        ctx.fillStyle = "#8da67c";
-        ctx.fillRect(0, 0, size, size);
+      // Base land colour under everything — covers the frames where the
+      // cached terrain image doesn't span the whole current view yet
+      ctx.fillStyle = "#8da67c";
+      ctx.fillRect(0, 0, size, size);
+
+      // Draw the cached terrain image world-aligned: while a rebuild is in
+      // flight the old image lands at its true offset/scale instead of being
+      // stretched over the new view, so recenters and expansions don't jump.
+      const meta = terrainMetaRef.current;
+      if (terrainImageRef.current && meta) {
+        const [dx, dy] = worldToCanvas(
+          meta.centerX - meta.viewRadius,
+          meta.centerZ - meta.viewRadius,
+          center.x,
+          center.z,
+          viewRadius,
+          size
+        );
+        const dw = (meta.viewRadius / viewRadius) * size;
+        ctx.drawImage(terrainImageRef.current, dx, dy, dw, dw);
       }
 
       drawWorldBorder(ctx, {
@@ -237,6 +309,25 @@ export function WorldMap({
       if (game?.state?.player) {
         const pos = game.state.player.position.current;
         const rot = game.state.player.rotation ?? 0;
+        const playerDist = Math.hypot(pos[0], pos[2]);
+        const playerTheta = Math.atan2(pos[2], pos[0]);
+        const inWilds = playerDist > borderRadiusAt(playerTheta) + 6;
+
+        if (mode === "full") {
+          // Expand to keep the player on the map; shrink back home with a
+          // wide hysteresis band so the terrain worker isn't thrashed.
+          const expand = playerDist + 80 > fullRadius;
+          const shrink =
+            fullRadius > MAP_WORLD_RADIUS && playerDist + 300 < fullRadius;
+          if (expand || shrink) {
+            const next = Math.max(
+              MAP_WORLD_RADIUS,
+              Math.ceil((playerDist + 150) / FULL_RADIUS_STEP) * FULL_RADIUS_STEP
+            );
+            if (next !== fullRadius) setFullRadius(next);
+          }
+        }
+
         const [px, py] = worldToCanvas(
           pos[0],
           pos[2],
@@ -246,8 +337,34 @@ export function WorldMap({
           size
         );
 
+        // Way back home: dotted line from the player to the gate while in
+        // the wilds (full map only — the minimap gets an edge chevron below)
+        if (mode === "full" && inWilds) {
+          const [gcx, gcy] = worldToCanvas(
+            GATE_X,
+            GATE_Z,
+            center.x,
+            center.z,
+            viewRadius,
+            size
+          );
+          ctx.save();
+          ctx.beginPath();
+          ctx.moveTo(px, py);
+          ctx.lineTo(gcx, gcy);
+          ctx.setLineDash([3, 5]);
+          ctx.lineWidth = 1.5;
+          ctx.strokeStyle = "rgba(245, 158, 11, 0.85)";
+          ctx.stroke();
+          ctx.restore();
+        }
+
+        // Player marker (clamped a hair inside the map for the transient
+        // frames before an expansion lands)
+        const mpx = Math.min(Math.max(px, 9), size - 9);
+        const mpy = Math.min(Math.max(py, 9), size - 9);
         ctx.save();
-        ctx.translate(px, py);
+        ctx.translate(mpx, mpy);
         ctx.rotate(-rot);
         ctx.fillStyle = "#ffffff";
         ctx.strokeStyle = "rgba(0,0,0,0.5)";
@@ -261,17 +378,75 @@ export function WorldMap({
         ctx.fill();
         ctx.stroke();
         ctx.restore();
+
+        // Minimap compass back to the gate: when the player is in the wilds
+        // and the gate is off-view, pin a chevron + distance at the map edge
+        if (mode === "minimap" && inWilds) {
+          const [gcx, gcy] = worldToCanvas(
+            GATE_X,
+            GATE_Z,
+            center.x,
+            center.z,
+            viewRadius,
+            size
+          );
+          const gateVisible =
+            gcx > 14 && gcy > 14 && gcx < size - 14 && gcy < size - 14;
+          if (!gateVisible) {
+            const ang = Math.atan2(GATE_Z - pos[2], GATE_X - pos[0]);
+            const edgeR = size / 2 - 13;
+            const ex = size / 2 + Math.cos(ang) * edgeR;
+            const ey = size / 2 + Math.sin(ang) * edgeR;
+
+            ctx.save();
+            ctx.translate(ex, ey);
+            ctx.rotate(ang + Math.PI / 2);
+            ctx.fillStyle = "#f59e0b";
+            ctx.strokeStyle = "rgba(0, 0, 0, 0.45)";
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(0, -6);
+            ctx.lineTo(5, 4);
+            ctx.lineTo(-5, 4);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+            ctx.restore();
+
+            const gateDist = Math.hypot(GATE_X - pos[0], GATE_Z - pos[2]);
+            const lx = size / 2 + Math.cos(ang) * (edgeR - 18);
+            const ly = size / 2 + Math.sin(ang) * (edgeR - 18);
+            ctx.save();
+            ctx.font = "bold 9px system-ui";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.strokeStyle = "rgba(0, 0, 0, 0.55)";
+            ctx.lineWidth = 3;
+            ctx.strokeText(`${Math.round(gateDist)}m`, lx, ly);
+            ctx.fillStyle = "rgba(255, 255, 255, 0.95)";
+            ctx.fillText(`${Math.round(gateDist)}m`, lx, ly);
+            ctx.restore();
+          }
+        }
       }
 
       if (mode === "full") {
-        ctx.fillStyle = "rgba(255,255,255,0.55)";
+        // Outlined like the Gate label — plain white washed out against the
+        // shaded relief
         ctx.font = "bold 10px system-ui";
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
-        ctx.fillText("N", size / 2, 10);
-        ctx.fillText("S", size / 2, size - 10);
-        ctx.fillText("E", size - 10, size / 2);
-        ctx.fillText("W", 10, size / 2);
+        ctx.strokeStyle = "rgba(0, 0, 0, 0.55)";
+        ctx.lineWidth = 3;
+        const compass: Array<[string, number, number]> = [
+          ["N", size / 2, 10],
+          ["S", size / 2, size - 10],
+          ["E", size - 10, size / 2],
+          ["W", 10, size / 2],
+        ];
+        for (const [label, x, y] of compass) ctx.strokeText(label, x, y);
+        ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
+        for (const [label, x, y] of compass) ctx.fillText(label, x, y);
       }
 
       rafRef.current = requestAnimationFrame(draw);
@@ -287,6 +462,7 @@ export function WorldMap({
     size,
     mode,
     viewRadius,
+    fullRadius,
     getCenter,
     ensureTerrain,
     activeZone,
@@ -318,9 +494,9 @@ export function WorldMap({
         <div
           className="pointer-events-none absolute z-10 max-w-[180px] rounded-lg border border-border bg-popover px-3 py-2 shadow-lg"
           style={{
-            left: Math.min(popupPos.x + 12, size - 170),
-            top: Math.max(popupPos.y - 8, 8),
-            transform: "translateY(-100%)",
+            left: popupPos.left,
+            top: popupPos.top,
+            transform: popupPos.below ? undefined : "translateY(-100%)",
           }}
         >
           <p className="text-sm font-medium text-popover-foreground">

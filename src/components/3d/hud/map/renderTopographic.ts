@@ -153,9 +153,113 @@ function marchingSquares(
   return paths;
 }
 
+function makeCanvas(w: number, h: number): OffscreenCanvas | HTMLCanvasElement {
+  if (typeof OffscreenCanvas !== "undefined") return new OffscreenCanvas(w, h);
+  const c = document.createElement("canvas");
+  c.width = w;
+  c.height = h;
+  return c;
+}
+
+const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
+const clamp01 = (v: number) => Math.max(0, Math.min(1, v));
+
+// Land ramp low → high, anchored on the original flat land colour #8da67c
+const LAND_LOW = [123, 152, 106];
+const LAND_HIGH = [201, 190, 146];
+// Water ramp shallow → deep, anchored on the original flat water #7ab8d4
+const WATER_SHALLOW = [122, 184, 212];
+const WATER_DEEP = [56, 118, 158];
+
+/**
+ * Hillshaded, elevation-tinted relief layer painted from the contour grid.
+ * This is what makes the small bumps visible: relief under one contour
+ * interval still catches light on one side and shadow on the other, and
+ * higher ground fades toward a sandy tint. Rendered at grid resolution into
+ * an ImageData then scaled up with smoothing — effectively free next to the
+ * elevation sampling itself.
+ */
+function drawShadedRelief(
+  ctx: Canvas2D,
+  grid: Float32Array,
+  cols: number,
+  extractStep: number,
+  viewRadius: number,
+  size: number
+) {
+  const small = makeCanvas(cols, cols);
+  const sctx = small.getContext("2d") as
+    | CanvasRenderingContext2D
+    | OffscreenCanvasRenderingContext2D
+    | null;
+  if (!sctx) return;
+
+  const img = sctx.createImageData(cols, cols);
+  const data = img.data;
+
+  // World-space distance between grid samples — normalises the gradient so
+  // shading strength doesn't change with zoom level
+  const cellWorld = extractStep * ((viewRadius * 2) / size);
+
+  const at = (x: number, y: number) =>
+    grid[
+      Math.min(cols - 1, Math.max(0, y)) * cols +
+        Math.min(cols - 1, Math.max(0, x))
+    ];
+
+  for (let y = 0; y < cols; y++) {
+    for (let x = 0; x < cols; x++) {
+      const e = grid[y * cols + x];
+      let r: number, g: number, b: number;
+
+      if (e < WATER_LEVEL) {
+        // Depth tint only — real topo maps don't hillshade water
+        const t = clamp01(-e / 10);
+        r = lerp(WATER_SHALLOW[0], WATER_DEEP[0], t);
+        g = lerp(WATER_SHALLOW[1], WATER_DEEP[1], t);
+        b = lerp(WATER_SHALLOW[2], WATER_DEEP[2], t);
+      } else {
+        const t = clamp01(e / 40);
+        r = lerp(LAND_LOW[0], LAND_HIGH[0], t);
+        g = lerp(LAND_LOW[1], LAND_HIGH[1], t);
+        b = lerp(LAND_LOW[2], LAND_HIGH[2], t);
+
+        // Emboss hillshade, light from the north-west: slopes rising toward
+        // the south-east face the light and brighten, the far side darkens
+        const relief =
+          (at(x + 1, y + 1) - at(x - 1, y - 1)) / (cellWorld * 2.828);
+        const light = 1 + Math.max(-0.4, Math.min(0.4, relief * 1.1));
+        r *= light;
+        g *= light;
+        b *= light;
+      }
+
+      const i = (y * cols + x) * 4;
+      data[i] = r;
+      data[i + 1] = g;
+      data[i + 2] = b;
+      data[i + 3] = 255;
+    }
+  }
+
+  sctx.putImageData(img, 0, 0);
+
+  // Scale up with smoothing; offset by half a cell so sample points land on
+  // their true canvas positions
+  const half = extractStep * 0.5;
+  ctx.imageSmoothingEnabled = true;
+  ctx.drawImage(
+    small as CanvasImageSource,
+    -half,
+    -half,
+    cols * extractStep,
+    cols * extractStep
+  );
+}
+
 export function renderTopographicTerrain(
   ctx: Canvas2D,
-  { centerX, centerZ, viewRadius, size, sampleStep = 1, contourInterval = 5 }: TopoRenderOptions
+  { centerX, centerZ, viewRadius, size, sampleStep = 1, contourInterval = 2 }: TopoRenderOptions
 ) {
   // Use a coarser step for grid extraction to save performance, as paths are smooth anyway
   const extractStep = size > 200 ? 3 : 2;
@@ -168,27 +272,12 @@ export function renderTopographicTerrain(
     if (grid[i] > max) max = grid[i];
   }
 
-  // Draw base background (land everywhere, then mask water on top).
-  // The water mask reuses the elevation grid built for the contours instead
-  // of re-sampling the 6-octave noise field a second time — roughly 40%
-  // fewer elevation evaluations per rebuild.
+  // Draw base background (land everywhere as safety, then the shaded
+  // relief layer on top). The relief layer reuses the elevation grid built
+  // for the contours instead of re-sampling the 6-octave noise field.
   ctx.fillStyle = "#8da67c"; // land
   ctx.fillRect(0, 0, size, size);
-
-  ctx.fillStyle = "#7ab8d4"; // water
-  const half = extractStep * 0.5;
-  for (let gy = 0; gy < cols; gy++) {
-    for (let gx = 0; gx < cols; gx++) {
-      if (grid[gy * cols + gx] < WATER_LEVEL) {
-        ctx.fillRect(
-          gx * extractStep - half,
-          gy * extractStep - half,
-          extractStep,
-          extractStep
-        );
-      }
-    }
-  }
+  drawShadedRelief(ctx, grid, cols, extractStep, viewRadius, size);
 
   // Draw grid
   const worldPerPixel = (viewRadius * 2) / size;
@@ -233,14 +322,16 @@ export function renderTopographicTerrain(
 
     const isMajor = level % (contourInterval * 5) === 0;
     
+    // Minor lines are kept faint — at a 2-unit interval they get dense on
+    // steep ground, and the hillshade already carries the relief
     if (level > 0) {
       // Land
-      ctx.lineWidth = isMajor ? 1.4 : 0.6;
-      ctx.strokeStyle = isMajor ? "rgba(60,38,10,0.95)" : "rgba(80,55,20,0.75)";
+      ctx.lineWidth = isMajor ? 1.4 : 0.5;
+      ctx.strokeStyle = isMajor ? "rgba(60,38,10,0.95)" : "rgba(80,55,20,0.5)";
     } else {
       // Water
-      ctx.lineWidth = isMajor ? 1.1 : 0.5;
-      ctx.strokeStyle = isMajor ? "rgba(10,40,90,0.85)" : "rgba(20,60,110,0.6)";
+      ctx.lineWidth = isMajor ? 1.1 : 0.4;
+      ctx.strokeStyle = isMajor ? "rgba(10,40,90,0.85)" : "rgba(20,60,110,0.4)";
     }
 
     const paths = marchingSquares(grid, cols, extractStep, level);

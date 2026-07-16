@@ -4,8 +4,8 @@
  * never stall the game's render loop.
  *
  * Receives { key, centerX, centerZ, viewRadius, size, sampleStep }, renders
- * into an OffscreenCanvas, and posts back { key, bitmap } with the bitmap
- * transferred (zero-copy).
+ * into an OffscreenCanvas, and posts back { key, bitmap, centerX, centerZ,
+ * viewRadius } with the bitmap transferred (zero-copy).
  */
 
 import { renderTopographicTerrain } from "./renderTopographic";
@@ -32,9 +32,14 @@ self.onmessage = (event: MessageEvent<RenderRequest>) => {
     viewRadius,
     size,
     sampleStep,
-    contourInterval: 5,
+    contourInterval: 2,
   });
 
   const bitmap = canvas.transferToImageBitmap();
-  (self as unknown as Worker).postMessage({ key, bitmap }, [bitmap]);
+  // Echo the view params so the main thread can draw this image
+  // world-aligned even after the live view has moved or rescaled
+  (self as unknown as Worker).postMessage(
+    { key, bitmap, centerX, centerZ, viewRadius },
+    [bitmap]
+  );
 };
