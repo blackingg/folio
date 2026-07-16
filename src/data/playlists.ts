@@ -9,10 +9,12 @@ export const PLAYLISTS: PlaylistConfig[] = [
   {
     slug: "sidequesting-3d",
     title: "Sidequesting 3D",
-    description: "A series chronicling my journey through the world of 3D development.",
+    description:
+      "A series chronicling my journey through the world of 3D development.",
     postSlugs: [
-      "embedding-bruno-simons-infinite-terrain-into-my-portfolio-work-in-progress-fc9e16c318d3",
+      "fencing-infinity-a-wall-a-plugin-system-and-an-old-god",
       "clouds-water-and-going-deeper-792bc6c4db98",
+      "embedding-bruno-simons-infinite-terrain-into-my-portfolio-work-in-progress-fc9e16c318d3",
     ],
   },
 ];
