@@ -66,12 +66,13 @@ export default class ExperienceManager {
                 0, Math.PI * 0.65
             );
             
-            const domeMat = new THREE.MeshStandardMaterial({
-                color: 0x90b0d0, // misty blue-grey color
+            // Unlit — the scene has no standard three.js lights (everything is
+            // shaded by custom sun-based materials), so a lit material would
+            // render black. Basic material reads as a veil of mist instead.
+            const domeMat = new THREE.MeshBasicMaterial({
+                color: 0xdfe8f2, // pale mist
                 transparent: true,
                 opacity: 0.98,
-                roughness: 0.9,
-                metalness: 0.1,
                 side: THREE.DoubleSide,
                 depthWrite: true
             });
@@ -94,7 +95,8 @@ export default class ExperienceManager {
             if (marker) {
                 if (this.state.chunks) {
                     const elevation = this.state.chunks.getElevationForPosition(exp.config.position.x, exp.config.position.z);
-                    if (elevation !== false) {
+                    // Not-ready terrain returns undefined, missing chunks false
+                    if (typeof elevation === 'number' && Number.isFinite(elevation)) {
                         marker.position.y = elevation;
                     }
                 }
