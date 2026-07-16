@@ -30,10 +30,9 @@ export async function markdownToHTML(markdown: string) {
     .use(remarkRehype)
     .use(rehypePrettyCode, {
       // https://rehype-pretty.pages.dev/#usage
-      theme: {
-        light: "min-light",
-        dark: "min-dark",
-      },
+      // Single dark theme: prose gives code blocks a dark background in both
+      // light and dark mode, so light-mode token colors were unreadable.
+      theme: "min-dark",
       keepBackground: false,
     })
     .use(rehypeStringify)

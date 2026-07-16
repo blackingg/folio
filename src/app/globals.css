@@ -97,20 +97,6 @@
     counter-reset: line;
   }
   
-  code[data-theme*=" "],
-  code[data-theme*=" "] span {
-    color: var(--shiki-light);
-    background-color: var(--shiki-light-bg);
-  }
-   
-  @media (prefers-color-scheme: dark) {
-    code[data-theme*=" "],
-    code[data-theme*=" "] span {
-      color: var(--shiki-dark);
-      background-color: var(--shiki-dark-bg);
-    }
-  }
-  
   code[data-line-numbers] {
     counter-reset: line;
   }
@@ -166,7 +152,12 @@ code[data-line-numbers-max-digits="3"] > [data-line]::before {
 }
 
 .prose code {
-  @apply break-words whitespace-pre-wrap md:whitespace-pre;
+  @apply break-words;
+}
+
+/* Block code never wraps — pre scrolls horizontally instead */
+.prose pre code {
+  @apply whitespace-pre break-normal;
 }
 
 .prose iframe {
