@@ -38,7 +38,7 @@ export default async function BlogPage({
 
   return (
     <section>
-      <BlogDoodle className="pointer-events-none fixed -bottom-10 -right-10 -z-10 size-96 rotate-6 text-foreground sm:size-[36rem]" />
+      <BlogDoodle className="doodle-draw pointer-events-none fixed -bottom-10 -right-10 -z-10 size-96 rotate-6 text-foreground sm:size-[36rem]" />
       <BlurFade delay={BLUR_FADE_DELAY}>
         <h1 className="font-medium text-2xl mb-6 tracking-tighter">Blog</h1>
       </BlurFade>

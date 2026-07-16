@@ -180,3 +180,37 @@ code[data-line-numbers-max-digits="3"] > [data-line]::before {
 .prose .medium-feed-item {
   @apply mb-12;
 }
+
+/* BlogDoodle draw-on effect: trace outlines with a stroke, then fade fills in.
+   pathLength={1} on each path normalizes dash math regardless of true length. */
+.doodle-draw path {
+  stroke: currentColor;
+  stroke-width: 0.1;
+  fill-opacity: 0;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation:
+    doodle-trace 2.8s ease-in-out forwards,
+    doodle-fill 1.2s ease-out 2.2s forwards;
+}
+
+.doodle-draw path:nth-of-type(1) {
+  animation-delay: 1.2s, 2.8s;
+}
+
+.doodle-draw path:nth-of-type(2) {
+  animation-delay: 0.6s, 2.5s;
+}
+
+@keyframes doodle-trace {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes doodle-fill {
+  to {
+    fill-opacity: 1;
+  }
+}
+
