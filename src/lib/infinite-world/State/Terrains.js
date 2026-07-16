@@ -5,7 +5,7 @@ import State from './State.js'
 import Debug from '../Debug/Debug.js'
 // Worker is loaded via new Worker() instead of Vite's ?worker import
 import Terrain from './Terrain.js'
-import { TERRAIN, computeIterationsOffsets } from '../worldGen.js'
+import { TERRAIN, EXPERIENCES, computeIterationsOffsets } from '../worldGen.js'
 
 export default class Terrains
 {
@@ -40,6 +40,16 @@ export default class Terrains
         
         // Iterations offsets
         this.iterationsOffsets = computeIterationsOffsets(this.seed)
+
+        // Experience flatten zones — derived statically from worldGen so the
+        // very first chunks already generate flattened (the ExperienceManager
+        // loads async and may not exist yet when terrain generation starts)
+        this.experiencesFlatten = EXPERIENCES.map((def) => ({
+            x: def.x,
+            z: def.z,
+            radius: def.flattenRadius,
+            targetHeight: def.targetHeight
+        }))
 
         this.setWorkers()
         this.setDebug()
@@ -87,19 +97,6 @@ export default class Terrains
         const terrain = new Terrain(this, id, size, x, z, precision)
         this.terrains.set(terrain.id, terrain)
 
-        // Extract experiences for terrain flattening
-        const experiencesData = [];
-        if (this.game.experienceManager) {
-            this.game.experienceManager.registry.forEach(exp => {
-                experiencesData.push({
-                    x: exp.config.position.x,
-                    z: exp.config.position.z,
-                    radius: exp.config.flattenRadius,
-                    targetHeight: exp.config.targetHeight
-                });
-            });
-        }
-
         // Post to worker
         // console.time(`terrains: worker (${terrain.id})`)
         this.worker.postMessage({
@@ -118,7 +115,7 @@ export default class Terrains
             power: this.power,
             elevationOffset: this.elevationOffset,
             iterationsOffsets: this.iterationsOffsets,
-            experiences: experiencesData
+            experiences: this.experiencesFlatten
         })
 
         this.events.emit('create', terrain)
@@ -160,7 +157,8 @@ export default class Terrains
                 baseAmplitude: this.baseAmplitude,
                 power: this.power,
                 elevationOffset: this.elevationOffset,
-                iterationsOffsets: this.iterationsOffsets
+                iterationsOffsets: this.iterationsOffsets,
+                experiences: this.experiencesFlatten
             })
         }
     }
