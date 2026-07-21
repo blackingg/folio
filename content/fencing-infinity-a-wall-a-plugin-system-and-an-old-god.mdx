@@ -51,7 +51,7 @@ While a heavy zone loads, a dome of mist sits over it and fades out as you appro
 
 #### A world with a coastline
 
-The terrain generates forever, and I wanted it to. But the home map — the part with my work in it — needed an edge, and I refused to do the usual invisible cliff or glass wall.
+The terrain generates forever, and I wanted it to. But the home map — the part with my work in it — needed an edge.
 
 So the border is a coastline. The wall sits at a 500-unit radius warped by three sinusoids, which is enough wobble to read as geography instead of geometry:
 
@@ -66,7 +66,7 @@ const radiusAt = (theta) =>
 
 Along that line stand four staggered rows of blue trees. Blue is reserved for the border — the generator recolors any random blue grove that spawns inside the map to green, so the color itself is a signal: blue means edge. There is exactly one gate, due north, and beyond it the wilds — untamed procedural terrain, no zones, no map coverage, on purpose.
 
-The trees are the picture, not the fence. Collision is an analytic band around the coastline formula: the player's distance from the wall centreline is checked against the formula directly, so you cannot slip between trunks on a frame spike, and the gate is the only place the band lets you through. If every wall tree disappeared tomorrow, the wall would still hold. The visuals are a rumor of the math.
+The trees are the picture, not the fence. Collision is an analytic band around the coastline formula: the player's distance from the wall centreline is checked against the formula directly, so you cannot slip between trunks on a frame spike, and the gate is the only place the band lets you through. If every wall tree disappeared tomorrow, the wall would still hold.
 
 #### The wall that wasn't there
 
