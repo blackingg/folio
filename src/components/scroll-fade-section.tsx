@@ -24,12 +24,20 @@ export function ScrollFadeSection({
   style,
   enterOffset = ["start end", "end end"],
   exitOffset = ["start start", "end start"],
+  scaleAndDrift = true,
 }: {
   children: React.ReactNode;
   className?: string;
   style?: React.CSSProperties;
   enterOffset?: ScrollOffset;
   exitOffset?: ScrollOffset;
+  // The scale/drift transform is anchored at the wrapper's own top edge, so
+  // its pixel effect grows with distance from that edge. That's subtle for
+  // a single-viewport-tall panel but blows up for wrappers that span many
+  // viewports (e.g. WorkStack's sticky pile) — content near the bottom
+  // jumps by hundreds of pixels the instant the exit phase starts. Callers
+  // wrapping tall content should pass false and rely on opacity alone.
+  scaleAndDrift?: boolean;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   // 0 while the section is still below the fold, 1 once it's fully visible.
@@ -67,7 +75,11 @@ export function ScrollFadeSection({
   return (
     <motion.div
       ref={ref}
-      style={{ ...style, opacity, scale, y }}
+      style={
+        scaleAndDrift
+          ? { ...style, opacity, scale, y }
+          : { ...style, opacity }
+      }
       className={className}
     >
       {children}
