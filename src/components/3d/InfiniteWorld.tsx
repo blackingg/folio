@@ -162,7 +162,13 @@ export default function InfiniteWorld({ className }: InfiniteWorldProps) {
   }
 
   return (
-    <div className={className}>
+    <div
+      className={`select-none ${className ?? ""}`}
+      style={{
+        WebkitTapHighlightColor: "transparent",
+        WebkitTouchCallout: "none",
+      }}
+    >
       {/* Panel animation keyframes */}
       <style>{`
         @keyframes fadeIn  { from { opacity: 0 } to { opacity: 1 } }
