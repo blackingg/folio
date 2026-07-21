@@ -34,7 +34,7 @@ export default class Trees {
 
         // treesMeshes[i] = array of InstancedMesh for each part of tree type i
 
-        this.maxInstancesPerTree = 20000;
+        this.maxInstancesPerTree = this.game.quality?.maxInstancesPerTree ?? 20000;
         this.treesMeshes = [];
 
         // Chunk churn fires bursts of create/destroy/ready events — queue a

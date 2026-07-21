@@ -92,6 +92,16 @@ export default function InfiniteWorld({ className }: InfiniteWorldProps) {
   // Boot game engine
   const [bootFailed, setBootFailed] = useState(false);
   const [bootAttempt, setBootAttempt] = useState(0);
+
+  // Full engine reboot (quality tier changes need constructor-time knobs).
+  // The cached WebGL context makes this cheap; the loader overlay returns
+  // while the 9 main chunks regenerate.
+  const rebootGame = useCallback(() => {
+    setMenuTab(null);
+    setIsLoaded(false);
+    setLoadProgress(0);
+    setBootAttempt((attempt) => attempt + 1);
+  }, []);
   useEffect(() => {
     const shouldBlock = isMobile && process.env.NODE_ENV !== "development";
     if (!containerRef.current || shouldBlock || bootFailed) return;
@@ -209,6 +219,7 @@ export default function InfiniteWorld({ className }: InfiniteWorldProps) {
           onClose={() => setMenuTab(null)}
           gameRef={gameRef}
           isLoaded={isLoaded}
+          onRebootGame={rebootGame}
         />
       )}
 

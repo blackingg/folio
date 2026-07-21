@@ -19,7 +19,7 @@ export default class TreeBillboards
         this.scene = this.view.scene
 
         // Grid parameters — modelled after Grass.js
-        this.details = 150             // 150x150 grid = 22,500 instances
+        this.details = this.game.quality?.billboardDetails ?? 150   // high = 150x150 grid = 22,500 instances
         this.size = 2500               // Covers a 2500x2500 world-unit area
         this.count = this.details * this.details
         this.fragmentSize = this.size / this.details

@@ -2,6 +2,7 @@ import Debug from "./Debug/Debug.js";
 import State from "./State/State.js";
 import View from "./View/View.js";
 import { WORLD_SEED } from "./worldGen.js";
+import { resolveQuality } from "./quality.js";
 
 export default class Game {
   static instance;
@@ -21,6 +22,10 @@ export default class Game {
     this.domElement = domElement;
     this.seed = WORLD_SEED;
     this.destroyed = false;
+
+    // Resolved before State/View construct — Viewport, Chunks, Grass,
+    // TreeBillboards, Trees, Camera and Sky read this at construction.
+    this.quality = resolveQuality();
 
     // Callbacks for React
     this.onLoadProgress = onLoadProgress || (() => {});

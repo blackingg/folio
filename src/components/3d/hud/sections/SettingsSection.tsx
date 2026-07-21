@@ -3,6 +3,11 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import {
+  detectTier,
+  getQualityOverride,
+  setQualityOverride,
+} from "@/lib/infinite-world/quality.js";
 
 interface ConnectedGamepad {
   index: number;
@@ -108,10 +113,18 @@ function shortGamepadName(id: string) {
   return `${trimmed.slice(0, 45)}…`;
 }
 
+const QUALITY_LABELS: Record<string, string> = {
+  low: "Low",
+  medium: "Medium",
+  high: "High",
+};
+
 export function SettingsSection({
   gameRef,
+  onRebootGame,
 }: {
   gameRef: React.RefObject<any>;
+  onRebootGame?: () => void;
 }) {
   const [moveSpeed, setMoveSpeed] = useState(DEFAULTS.moveSpeed);
   const [boostSpeed, setBoostSpeed] = useState(DEFAULTS.boostSpeed);
@@ -119,6 +132,23 @@ export function SettingsSection({
   const [lookSensitivity, setLookSensitivity] = useState(DEFAULTS.lookSensitivity);
   const [gamepads, setGamepads] = useState<ConnectedGamepad[]>([]);
   const [selectedGamepad, setSelectedGamepad] = useState<string>("auto");
+  const [qualityTier, setQualityTier] = useState<string>("auto");
+
+  useEffect(() => {
+    setQualityTier(getQualityOverride() ?? "auto");
+  }, []);
+
+  const applyQuality = (tier: string) => {
+    setQualityTier(tier);
+    setQualityOverride(tier);
+    // Density/depth knobs are constructor-time — rebuild the world
+    onRebootGame?.();
+  };
+
+  const resolvedTier =
+    qualityTier === "auto"
+      ? (gameRef.current?.quality?.resolved ?? detectTier())
+      : qualityTier;
 
   useEffect(() => {
     const player = gameRef.current?.state?.player;
@@ -282,12 +312,40 @@ export function SettingsSection({
 
       <section>
         <SectionHeading>Graphics</SectionHeading>
-        <ToggleRow
-          label="Distance Fog"
-          description="Atmospheric fog at horizon"
-          value={fogEnabled}
-          onChange={setFogEnabled}
-        />
+        <div className="flex flex-col gap-3">
+          <div>
+            <label
+              htmlFor="quality-select"
+              className="mb-2 block text-sm text-muted-foreground"
+            >
+              Quality
+            </label>
+            <select
+              id="quality-select"
+              value={qualityTier}
+              onChange={(e) => applyQuality(e.target.value)}
+              className="w-full rounded-lg border border-border bg-secondary px-3 py-2.5 text-sm text-foreground outline-none ring-offset-background focus:ring-2 focus:ring-ring"
+            >
+              <option value="auto">
+                Auto ({QUALITY_LABELS[resolvedTier] ?? resolvedTier})
+              </option>
+              <option value="low">Low</option>
+              <option value="medium">Medium</option>
+              <option value="high">High</option>
+            </select>
+            <p className="mt-2 text-xs text-muted-foreground">
+              Controls grass and tree density, render resolution, and view
+              distance. Changing this rebuilds the world.
+            </p>
+          </div>
+
+          <ToggleRow
+            label="Distance Fog"
+            description="Atmospheric fog at horizon"
+            value={fogEnabled}
+            onChange={setFogEnabled}
+          />
+        </div>
       </section>
 
       <div className="flex justify-end border-t border-border pt-4">

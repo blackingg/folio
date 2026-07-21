@@ -58,6 +58,7 @@ interface WorldMenuProps {
   onClose: () => void;
   gameRef: React.RefObject<any>;
   isLoaded: boolean;
+  onRebootGame?: () => void;
 }
 
 export function WorldMenu({
@@ -66,6 +67,7 @@ export function WorldMenu({
   onClose,
   gameRef,
   isLoaded,
+  onRebootGame,
 }: WorldMenuProps) {
   const [status, setStatus] = useState<WorldStatus | null>(null);
   const mapBoxRef = useRef<HTMLDivElement>(null);
@@ -246,7 +248,9 @@ export function WorldMenu({
                   </div>
                 )}
                 {tab === "guide" && <GuideSection />}
-                {tab === "settings" && <SettingsSection gameRef={gameRef} />}
+                {tab === "settings" && (
+                  <SettingsSection gameRef={gameRef} onRebootGame={onRebootGame} />
+                )}
               </div>
             </div>
           </div>

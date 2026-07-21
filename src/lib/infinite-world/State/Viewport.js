@@ -107,6 +107,6 @@ export default class Viewport
         this.smallestSide = this.width < this.height ? this.width : this.height
         this.biggestSide = this.width > this.height ? this.width : this.height
         this.pixelRatio = window.devicePixelRatio
-        this.clampedPixelRatio = Math.min(this.pixelRatio, 2)
+        this.clampedPixelRatio = Math.min(this.pixelRatio, this.game.quality?.pixelRatioCap ?? 2)
     }
 }

@@ -1,6 +1,7 @@
 import EventsEmitter from 'events'
 import { vec2 } from 'gl-matrix'
 
+import Game from '../Game.js'
 import State from './State.js'
 import Chunk from './Chunk.js'
 
@@ -11,7 +12,7 @@ export default class Chunks
         this.state = State.getInstance()
 
         this.minSize = 64
-        this.maxDepth = 4
+        this.maxDepth = Game.getInstance()?.quality?.chunkMaxDepth ?? 4
         this.maxSize = this.minSize * Math.pow(2, this.maxDepth)
         this.splitRatioPerSize = 1.3
         this.lastId = 0

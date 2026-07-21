@@ -1,5 +1,6 @@
 import { PerspectiveCamera } from 'three';
 
+import Game from '../Game.js'
 import View from './View.js'
 import State from '../State/State.js'
 
@@ -19,7 +20,7 @@ export default class Camera
     setInstance()
     {
         // Set up
-        this.instance = new PerspectiveCamera(45, this.viewport.width / this.viewport.height, 0.1, 5000)
+        this.instance = new PerspectiveCamera(45, this.viewport.width / this.viewport.height, 0.1, Game.getInstance()?.quality?.cameraFar ?? 5000)
         this.instance.rotation.reorder('YXZ')
 
         this.scene.add(this.instance)

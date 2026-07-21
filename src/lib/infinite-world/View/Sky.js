@@ -65,7 +65,7 @@ export default class Sky {
         this.customRender.camera = this.view.camera.instance.clone();
         // Backdrop resolution — the gradient and flat clouds are smooth, so
         // linear upscaling is invisible and the fill cost drops ~25x.
-        this.customRender.resolutionRatio = 0.2;
+        this.customRender.resolutionRatio = this.game.quality?.skyResolutionRatio ?? 0.2;
         this.customRender.renderTarget = new WebGLRenderTarget(
             this.viewport.width * this.customRender.resolutionRatio,
             this.viewport.height * this.customRender.resolutionRatio,
