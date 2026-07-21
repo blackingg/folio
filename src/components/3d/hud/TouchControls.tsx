@@ -56,7 +56,7 @@ export function TouchControls({ gameRef }: { gameRef: React.RefObject<any> }) {
       {/* Movement joystick */}
       <div
         ref={baseRef}
-        className="fixed bottom-8 left-6 z-20 flex h-36 w-36 touch-none select-none items-center justify-center rounded-full border border-border/60 bg-secondary/30 backdrop-blur-sm"
+        className="fixed bottom-24 left-5 z-20 flex h-36 w-36 touch-none select-none items-center justify-center rounded-full border border-border/60 bg-secondary/30 backdrop-blur-sm"
         onPointerDown={(e) => {
           e.stopPropagation();
           pointerIdRef.current = e.pointerId;
@@ -85,7 +85,7 @@ export function TouchControls({ gameRef }: { gameRef: React.RefObject<any> }) {
       <button
         type="button"
         aria-label="Boost"
-        className="fixed bottom-10 right-6 z-20 flex h-16 w-16 touch-none select-none items-center justify-center rounded-full border border-border/60 bg-secondary/30 text-foreground backdrop-blur-sm active:bg-secondary/70"
+        className="fixed bottom-24 right-5 z-20 flex h-16 w-16 touch-none select-none items-center justify-center rounded-full border border-border/60 bg-secondary/30 text-foreground backdrop-blur-sm active:bg-secondary/70"
         onPointerDown={(e) => {
           e.stopPropagation();
           setBoost(true);

@@ -13,6 +13,18 @@ const GAMEPAD: [string, string][] = [
   ["LB / RT", "Boost speed"],
 ];
 
+const TOUCH: [string, string][] = [
+  ["Joystick", "Move"],
+  ["Drag", "Rotate camera"],
+  ["⚡ Button", "Boost speed"],
+];
+
+const VR: [string, string][] = [
+  ["L-Stick", "Move where you look"],
+  ["R-Stick", "Snap turn 45°"],
+  ["Trigger / Grip", "Boost speed"],
+];
+
 const TECH: [string, string][] = [
   ["Engine", "Three.js (vanilla)"],
   ["Architecture", "Singleton OO"],
@@ -77,6 +89,40 @@ export function GuideSection() {
           <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
             USB and Bluetooth controllers are supported (Xbox, PlayStation,
             Switch Pro, and similar). Pick your active pad in Settings.
+          </p>
+        </section>
+
+        <section>
+          <SectionHeading>Touch</SectionHeading>
+          <div className="grid grid-cols-1 gap-2">
+            {TOUCH.map(([input, action]) => (
+              <div
+                key={input}
+                className="flex items-center justify-between rounded-lg border border-border bg-secondary/50 px-4 py-2.5"
+              >
+                <span className="text-sm text-muted-foreground">{action}</span>
+                <Kbd>{input}</Kbd>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section>
+          <SectionHeading>VR Headset</SectionHeading>
+          <div className="grid grid-cols-1 gap-2">
+            {VR.map(([input, action]) => (
+              <div
+                key={input}
+                className="flex items-center justify-between rounded-lg border border-border bg-secondary/50 px-4 py-2.5"
+              >
+                <span className="text-sm text-muted-foreground">{action}</span>
+                <Kbd>{input}</Kbd>
+              </div>
+            ))}
+          </div>
+          <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
+            On a headset browser (Quest and similar), use the Enter VR button
+            in the corner. Switch to smooth turning in Settings.
           </p>
         </section>
       </div>

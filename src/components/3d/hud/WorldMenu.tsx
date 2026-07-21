@@ -147,13 +147,13 @@ export function WorldMenu({
 
       <div className="pointer-events-none absolute inset-0 flex items-center justify-center p-4">
         <div
-          className="pointer-events-auto flex h-[min(85vh,720px)] w-full max-w-4xl flex-col overflow-hidden rounded-xl border border-border bg-card/85 shadow-2xl backdrop-blur-xl"
+          className="pointer-events-auto flex h-[min(85dvh,720px)] w-full max-w-4xl flex-col overflow-hidden rounded-xl border border-border bg-card/85 shadow-2xl backdrop-blur-xl"
           style={{ animation: "slideUp 250ms cubic-bezier(0.34,1.56,0.64,1)" }}
         >
-          <div className="flex min-h-0 flex-1">
-            {/* Nav rail */}
-            <nav className="flex w-44 flex-shrink-0 flex-col border-r border-border bg-secondary/30 p-3">
-              <p className="px-2 pb-3 pt-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+          <div className="flex min-h-0 flex-1 flex-col md:flex-row">
+            {/* Nav rail — horizontal tab bar on mobile, side rail on md+ */}
+            <nav className="flex w-full flex-shrink-0 flex-row gap-1 border-b border-border bg-secondary/30 p-2 md:w-44 md:flex-col md:gap-0 md:border-b-0 md:border-r md:p-3">
+              <p className="hidden px-2 pb-3 pt-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground md:block">
                 World paused
               </p>
 
@@ -166,7 +166,7 @@ export function WorldMenu({
                     type="button"
                     onClick={() => onTabChange(item.id)}
                     className={cn(
-                      "group relative flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
+                      "group relative flex flex-1 items-center justify-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors md:flex-initial md:justify-start",
                       isActive
                         ? "bg-secondary text-foreground"
                         : "text-muted-foreground hover:bg-secondary/60 hover:text-foreground"
@@ -174,13 +174,13 @@ export function WorldMenu({
                   >
                     <span
                       className={cn(
-                        "absolute left-0 top-1/2 h-4 w-0.5 -translate-y-1/2 rounded-full bg-primary transition-opacity",
+                        "absolute left-0 top-1/2 hidden h-4 w-0.5 -translate-y-1/2 rounded-full bg-primary transition-opacity md:block",
                         isActive ? "opacity-100" : "opacity-0"
                       )}
                     />
                     <Icon className="size-4" />
-                    <span className="flex-1 text-left">{item.label}</span>
-                    <kbd className="rounded border border-border bg-background/60 px-1.5 py-0.5 text-[10px] font-mono text-muted-foreground">
+                    <span className="text-left md:flex-1">{item.label}</span>
+                    <kbd className="hidden rounded border border-border bg-background/60 px-1.5 py-0.5 text-[10px] font-mono text-muted-foreground md:inline-block">
                       {item.hint}
                     </kbd>
                   </button>
@@ -190,7 +190,7 @@ export function WorldMenu({
               <button
                 type="button"
                 onClick={onClose}
-                className="mt-auto flex items-center justify-between rounded-lg border border-border bg-background/50 px-3 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-secondary"
+                className="mt-auto hidden items-center justify-between rounded-lg border border-border bg-background/50 px-3 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-secondary md:flex"
               >
                 Resume
                 <kbd className="rounded border border-border bg-background/60 px-1.5 py-0.5 text-[10px] font-mono text-muted-foreground">
@@ -201,7 +201,7 @@ export function WorldMenu({
 
             {/* Content */}
             <div className="flex min-w-0 flex-1 flex-col">
-              <header className="flex items-start justify-between px-6 pb-4 pt-5">
+              <header className="flex items-start justify-between px-4 pb-3 pt-4 md:px-6 md:pb-4 md:pt-5">
                 <div>
                   <h2 className="text-lg font-semibold tracking-tight">
                     {active.label === "Guide" ? "About This World" : active.label}
@@ -222,7 +222,7 @@ export function WorldMenu({
               <div
                 key={tab}
                 className={cn(
-                  "min-h-0 flex-1 px-6 pb-6 animate-in fade-in slide-in-from-bottom-1 duration-200",
+                  "min-h-0 flex-1 px-4 pb-4 animate-in fade-in slide-in-from-bottom-1 duration-200 md:px-6 md:pb-6",
                   tab === "map" ? "overflow-hidden" : "overflow-y-auto"
                 )}
               >
@@ -256,7 +256,7 @@ export function WorldMenu({
           </div>
 
           {/* Status bar — live world telemetry */}
-          <footer className="flex items-center justify-between gap-4 border-t border-border bg-secondary/30 px-4 py-2 text-xs">
+          <footer className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 border-t border-border bg-secondary/30 px-4 py-2 text-xs">
             <span className="font-mono text-muted-foreground">
               {status
                 ? `x ${Math.round(status.x)} · z ${Math.round(status.z)}`
