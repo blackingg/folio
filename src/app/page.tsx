@@ -24,6 +24,31 @@ export default async function Page() {
   const latestPosts = posts.slice(0, 3);
   return (
     <main className="flex flex-col min-h-[100dvh] space-y-10">
+      <script
+        type="application/ld+json"
+        suppressHydrationWarning
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@graph": [
+              {
+                "@type": "WebSite",
+                "@id": `${DATA.url}/#website`,
+                url: DATA.url,
+                name: DATA.name,
+                publisher: { "@id": `${DATA.url}/#person` },
+              },
+              {
+                "@type": "ProfilePage",
+                "@id": `${DATA.url}/#profilepage`,
+                url: DATA.url,
+                isPartOf: { "@id": `${DATA.url}/#website` },
+                mainEntity: { "@id": `${DATA.url}/#person` },
+              },
+            ],
+          }),
+        }}
+      />
       {/* Page 1: hero + about fill the viewport so the next page stays below the fold. */}
       <div className="flex min-h-[calc(100svh-3rem)] flex-col justify-center gap-y-10 sm:min-h-[calc(100svh-6rem)]">
         <section id="hero">

@@ -35,6 +35,7 @@ export const metadata: Metadata = {
   },
   description: `Professional portfolio of ${DATA.name}, a Frontend Engineer specializing in React, TypeScript, and Three.js. Discover projects, experience, and insights on web development.`,
   alternates: {
+    canonical: "/",
     types: {
       "application/rss+xml": "/rss.xml",
     },
@@ -48,9 +49,9 @@ export const metadata: Metadata = {
     type: "website",
     images: [
       {
-        url: "/me.png",
+        url: "/og.jpg",
         width: 1200,
-        height: 630,
+        height: 1200,
         alt: DATA.name,
       },
     ],
@@ -70,9 +71,9 @@ export const metadata: Metadata = {
     title: `${DATA.name}`,
     card: "summary_large_image",
     description: DATA.description,
-    site: DATA.url,
-    creator: DATA.name,
-    images: "/me.png",
+    site: "@whoisBlxck",
+    creator: "@whoisBlxck",
+    images: "/og.jpg",
   },
   keywords: [
     "Odetunde Mubarak",
@@ -116,17 +117,45 @@ export default function RootLayout({
             __html: JSON.stringify({
               "@context": "https://schema.org",
               "@type": "Person",
-              name: "Odetunde Mubarak",
-              alternateName: "whoisblxck",
+              "@id": "https://www.whoisblxck.xyz/#person",
+              name: "Mubarak Odetunde",
+              givenName: "Mubarak",
+              familyName: "Odetunde",
+              alternateName: ["whoisblxck", "Black", "Odetunde Mubarak"],
               url: "https://www.whoisblxck.xyz",
               image: "https://www.whoisblxck.xyz/me.png",
               sameAs: [
+                "https://github.com/blackingg",
                 "https://www.instagram.com/whoisblxck_/",
                 "https://www.instagram.com/createblack.x/",
                 "https://www.linkedin.com/in/mubarak-odetunde-258494236/",
                 "https://x.com/whoisBlxck/",
               ],
-              jobTitle: DATA.description,
+              jobTitle: "Frontend Engineer",
+              description: DATA.description,
+              email: `mailto:${DATA.contact.email}`,
+              worksFor: {
+                "@type": "Organization",
+                name: "Bayse Markets",
+                url: "https://www.bayse.markets/",
+              },
+              affiliation: [
+                {
+                  "@type": "Organization",
+                  name: "Shelf",
+                  url: "https://www.shelf.ng/",
+                },
+              ],
+              alumniOf: {
+                "@type": "CollegeOrUniversity",
+                name: "Obafemi Awolowo University",
+                url: "https://oauife.edu.ng/",
+              },
+              homeLocation: {
+                "@type": "Place",
+                name: "Lagos, Nigeria",
+              },
+              knowsAbout: [...DATA.skills],
             }),
           }}
         />

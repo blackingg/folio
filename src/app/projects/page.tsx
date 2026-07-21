@@ -5,9 +5,19 @@ import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 export const metadata = {
-  title: "Projects | " + DATA.name,
+  title: "Projects",
   description:
     "A showcase of all my projects, from web apps to 3D experiences.",
+  alternates: {
+    canonical: "/projects",
+  },
+  openGraph: {
+    title: "Projects",
+    description:
+      "A showcase of all my projects, from web apps to 3D experiences.",
+    url: "/projects",
+    type: "website",
+  },
 };
 
 const BLUR_FADE_DELAY = 0.04;

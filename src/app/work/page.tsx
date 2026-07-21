@@ -6,9 +6,19 @@ import { HorizontalScroller } from "@/components/horizontal-scroller";
 import { WorkExperienceItem } from "@/components/work-experience-item";
 
 export const metadata = {
-  title: "Work Experience | " + DATA.name,
+  title: "Work Experience",
   description:
     "A detailed timeline of my professional career as a software engineer.",
+  alternates: {
+    canonical: "/work",
+  },
+  openGraph: {
+    title: "Work Experience",
+    description:
+      "A detailed timeline of my professional career as a software engineer.",
+    url: "/work",
+    type: "website",
+  },
 };
 
 const BLUR_FADE_DELAY = 0.04;
