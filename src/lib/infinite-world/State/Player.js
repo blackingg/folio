@@ -37,7 +37,24 @@ export default class Player
             return; // Freeze movement if experience takes over
         }
 
-        if(this.camera.mode !== Camera.MODE_FLY && (this.controls.keys.down.forward || this.controls.keys.down.backward || this.controls.keys.down.strafeLeft || this.controls.keys.down.strafeRight))
+        if(this.camera.mode !== Camera.MODE_FLY && this.controls.move.active)
+        {
+            // Analog movement (touch joystick / XR thumbstick): x = right,
+            // z = forward relative to the reference yaw — the camera orbit
+            // normally, or the headset yaw while presenting (set by XRControls
+            // as move.headYaw). Same sign convention as the key branch below.
+            const move = this.controls.move
+            const magnitude = Math.min(1, Math.hypot(move.x, move.z))
+            const referenceYaw = move.headYaw ?? this.camera.thirdPerson.theta
+
+            this.rotation = referenceYaw - Math.atan2(move.x, move.z)
+
+            const speed = (this.controls.keys.down.boost ? this.inputBoostSpeed : this.inputSpeed) * magnitude
+
+            this.position.current[0] -= Math.sin(this.rotation) * this.time.delta * speed
+            this.position.current[2] -= Math.cos(this.rotation) * this.time.delta * speed
+        }
+        else if(this.camera.mode !== Camera.MODE_FLY && (this.controls.keys.down.forward || this.controls.keys.down.backward || this.controls.keys.down.strafeLeft || this.controls.keys.down.strafeRight))
         {
             this.rotation = this.camera.thirdPerson.theta
 

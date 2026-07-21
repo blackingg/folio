@@ -14,6 +14,11 @@ export default class Controls
 
         this.inputEnabled = true
 
+        // Analog movement channel — fed by the touch joystick and XR
+        // thumbstick. x = right, z = forward, both in [-1, 1]; Player uses
+        // it instead of the boolean key branch while active.
+        this.move = { x: 0, z: 0, active: false }
+
         this._onKeyDown = (event) =>
         {
             if (!this.inputEnabled) return
@@ -133,17 +138,59 @@ export default class Controls
         this.pointer.deltaTemp = { x: 0, y: 0 }
         this.pointer.delta = { x: 0, y: 0 }
 
-        this._onPointerDown = () => { this.pointer.down = true }
+        // Touch look-drag: movementX/Y is always 0 for touch, so deltas are
+        // computed from clientX/Y. Only touches that start on the game
+        // canvas are adopted — joystick/HUD touches have other targets.
+        this.touchLookId = null
+        this.touchLast = { x: 0, y: 0 }
+
+        this._onPointerDown = (event) =>
+        {
+            if(event.pointerType === 'touch')
+            {
+                if(this.touchLookId === null && this.game.domElement.contains(event.target))
+                {
+                    this.touchLookId = event.pointerId
+                    this.touchLast.x = event.clientX
+                    this.touchLast.y = event.clientY
+                    this.pointer.down = true
+                }
+                return
+            }
+            this.pointer.down = true
+        }
         this._onPointerMove = (event) =>
         {
+            if(event.pointerType === 'touch')
+            {
+                if(event.pointerId !== this.touchLookId) return
+                this.pointer.deltaTemp.x += event.clientX - this.touchLast.x
+                this.pointer.deltaTemp.y += event.clientY - this.touchLast.y
+                this.touchLast.x = event.clientX
+                this.touchLast.y = event.clientY
+                return
+            }
             this.pointer.deltaTemp.x += event.movementX
             this.pointer.deltaTemp.y += event.movementY
         }
-        this._onPointerUp = () => { this.pointer.down = false }
+        this._onPointerUp = (event) =>
+        {
+            if(event.pointerType === 'touch')
+            {
+                if(event.pointerId === this.touchLookId)
+                {
+                    this.touchLookId = null
+                    this.pointer.down = false
+                }
+                return
+            }
+            this.pointer.down = false
+        }
 
         window.addEventListener('pointerdown', this._onPointerDown)
         window.addEventListener('pointermove', this._onPointerMove)
         window.addEventListener('pointerup', this._onPointerUp)
+        window.addEventListener('pointercancel', this._onPointerUp)
     }
 
     update()
@@ -163,5 +210,6 @@ export default class Controls
         window.removeEventListener('pointerdown', this._onPointerDown)
         window.removeEventListener('pointermove', this._onPointerMove)
         window.removeEventListener('pointerup', this._onPointerUp)
+        window.removeEventListener('pointercancel', this._onPointerUp)
     }
 }

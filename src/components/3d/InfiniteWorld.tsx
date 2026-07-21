@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import { HudCluster } from "./hud/HudCluster";
+import { TouchControls } from "./hud/TouchControls";
 import { WorldMenu, type MenuTab } from "./hud/WorldMenu";
 import { WorldLoader } from "./WorldLoader";
 
@@ -103,8 +104,7 @@ export default function InfiniteWorld({ className }: InfiniteWorldProps) {
     setBootAttempt((attempt) => attempt + 1);
   }, []);
   useEffect(() => {
-    const shouldBlock = isMobile && process.env.NODE_ENV !== "development";
-    if (!containerRef.current || shouldBlock || bootFailed) return;
+    if (!containerRef.current || bootFailed) return;
 
     let destroyed = false;
     (async () => {
@@ -129,7 +129,7 @@ export default function InfiniteWorld({ className }: InfiniteWorldProps) {
       gameRef.current?.destroy();
       gameRef.current = null;
     };
-  }, [isMobile, handleLoadProgress, handleLoadComplete, bootFailed, bootAttempt]);
+  }, [handleLoadProgress, handleLoadComplete, bootFailed, bootAttempt]);
 
   // WebGL unavailable screen
   if (bootFailed) {
@@ -156,25 +156,6 @@ export default function InfiniteWorld({ className }: InfiniteWorldProps) {
           >
             Try again
           </button>
-        </div>
-      </div>
-    );
-  }
-
-  // Mobile block screen
-  if (isMobile && process.env.NODE_ENV !== "development") {
-    return (
-      <div className="fixed inset-0 z-10 flex items-center justify-center bg-background">
-        <div className="mx-auto max-w-md px-6 text-center">
-          <div className="mb-6 text-6xl">🌍</div>
-          <h2 className="mb-3 text-2xl font-bold tracking-tight">
-            Desktop Experience
-          </h2>
-          <p className="text-muted-foreground leading-relaxed">
-            This 3D experience requires a desktop browser with keyboard and
-            mouse controls. Please visit on a desktop device for the full
-            experience.
-          </p>
         </div>
       </div>
     );
@@ -211,6 +192,9 @@ export default function InfiniteWorld({ className }: InfiniteWorldProps) {
         onOpenTab={setMenuTab}
       />
 
+      {/* Touch movement controls */}
+      {isMobile && isLoaded && !menuTab && <TouchControls gameRef={gameRef} />}
+
       {/* Pause menu */}
       {menuTab && (
         <WorldMenu
@@ -226,8 +210,8 @@ export default function InfiniteWorld({ className }: InfiniteWorldProps) {
       {/* Three.js canvas */}
       <div
         ref={containerRef}
-        className="fixed inset-0 z-0 outline-none"
-        style={{ cursor: "grab" }}
+        className="fixed inset-0 z-0 touch-none outline-none"
+        style={{ cursor: "grab", overscrollBehavior: "none" }}
         tabIndex={0}
         onPointerDown={(e) => e.currentTarget.focus()}
       />
