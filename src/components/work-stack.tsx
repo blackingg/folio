@@ -19,25 +19,52 @@ type Work = {
   description?: string;
 };
 
+// Desktop-tuned pin geometry. On short mobile viewports these values push
+// most of the first card below the fold before it even pins, so a smaller
+// set kicks in under the `sm` breakpoint (see useStackGeometry below).
 const STICKY_TOP = 260;
 const PEEK_OFFSET = 18;
-// Pin line for the section title, floating just above the card pile.
-const TITLE_TOP = STICKY_TOP - 56;
+const MOBILE_STICKY_TOP = 120;
+const MOBILE_PEEK_OFFSET = 12;
 // Fallback card height for the first render; the real height is measured
 // after mount so the page geometry matches what's actually on screen.
 const DEFAULT_CARD_HEIGHT = 190;
+
+// Swaps in the mobile pin geometry under Tailwind's `sm` breakpoint (640px)
+// so the pile starts near the top of short mobile viewports instead of
+// eating a third of the screen as empty scroll before the first card pins.
+function useStackGeometry() {
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 639px)");
+    const update = () => setIsMobile(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
+
+  const stickyTop = isMobile ? MOBILE_STICKY_TOP : STICKY_TOP;
+  const peekOffset = isMobile ? MOBILE_PEEK_OFFSET : PEEK_OFFSET;
+  // Pin line for the section title, floating just above the card pile.
+  const titleTop = stickyTop - 56;
+  return { stickyTop, peekOffset, titleTop };
+}
 
 function StackCard({
   work,
   index,
   total,
   progress,
+  stickyTop,
+  peekOffset,
   measureRef,
 }: {
   work: Work;
   index: number;
   total: number;
   progress: MotionValue<number>;
+  stickyTop: number;
+  peekOffset: number;
   measureRef?: React.Ref<HTMLDivElement>;
 }) {
   // Once this card pins, shrink and dim it as the ones below scroll over it.
@@ -53,7 +80,7 @@ function StackCard({
   return (
     <motion.div
       ref={measureRef}
-      style={{ scale, opacity, top: STICKY_TOP + index * PEEK_OFFSET }}
+      style={{ scale, opacity, top: stickyTop + index * peekOffset }}
       className={cn("sticky origin-top", !isLast && "mb-4")}
     >
       <motion.div
@@ -79,6 +106,7 @@ function StackCard({
 
 export function WorkStack({ works, title }: { works: Work[]; title?: string }) {
   const targetRef = useRef<HTMLDivElement>(null);
+  const { stickyTop, peekOffset, titleTop } = useStackGeometry();
 
   // Measure the last card so the pile bottom, button pin, and page padding
   // track the real rendered height instead of an estimate.
@@ -95,7 +123,7 @@ export function WorkStack({ works, title }: { works: Work[]; title?: string }) {
   }, []);
 
   const pileBottom =
-    STICKY_TOP + PEEK_OFFSET * (works.length - 1) + lastCardHeight;
+    stickyTop + peekOffset * (works.length - 1) + lastCardHeight;
 
   // 0 when the first card pins, 1 when the last card lands. The padding
   // below the cards is sized so that landing moment coincides with the
@@ -103,7 +131,7 @@ export function WorkStack({ works, title }: { works: Work[]; title?: string }) {
   // out of view until the pile is complete.
   const { scrollYProgress } = useScroll({
     target: targetRef,
-    offset: [`start ${STICKY_TOP}px`, "end end"],
+    offset: [`start ${stickyTop}px`, "end end"],
   });
 
   return (
@@ -115,8 +143,9 @@ export function WorkStack({ works, title }: { works: Work[]; title?: string }) {
           lands, so the panel stays at full strength through the whole
           stacking interaction. */}
       <ScrollFadeSection
-        enterOffset={["start end", `start ${STICKY_TOP}px`]}
+        enterOffset={["start end", `start ${stickyTop}px`]}
         exitOffset={["end end", "end start"]}
+        scaleAndDrift={false}
         style={{
           // 100svh of padding (minus the pile and the ~64px button block)
           // keeps the next section below the fold until the last card lands,
@@ -132,7 +161,7 @@ export function WorkStack({ works, title }: { works: Work[]; title?: string }) {
             whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
             viewport={{ once: true, margin: "-10% 0px" }}
             transition={{ duration: 0.5, ease: "easeOut" }}
-            style={{ top: TITLE_TOP || 1 }}
+            style={{ top: titleTop || 1 }}
             className="sticky mb-3 text-xl font-bold"
           >
             {title}
@@ -145,6 +174,8 @@ export function WorkStack({ works, title }: { works: Work[]; title?: string }) {
             index={i}
             total={works.length}
             progress={scrollYProgress}
+            stickyTop={stickyTop}
+            peekOffset={peekOffset}
             measureRef={i === works.length - 1 ? lastCardRef : undefined}
           />
         ))}
