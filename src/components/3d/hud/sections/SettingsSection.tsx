@@ -133,10 +133,22 @@ export function SettingsSection({
   const [gamepads, setGamepads] = useState<ConnectedGamepad[]>([]);
   const [selectedGamepad, setSelectedGamepad] = useState<string>("auto");
   const [qualityTier, setQualityTier] = useState<string>("auto");
+  const [smoothTurn, setSmoothTurn] = useState(false);
+  const [xrSupported, setXrSupported] = useState(false);
 
   useEffect(() => {
     setQualityTier(getQualityOverride() ?? "auto");
-  }, []);
+    setSmoothTurn(gameRef.current?.state?.xrControls?.turnMode === "smooth");
+    (navigator as any).xr
+      ?.isSessionSupported?.("immersive-vr")
+      .then((ok: boolean) => setXrSupported(ok))
+      .catch(() => {});
+  }, [gameRef]);
+
+  const applyTurnMode = (smooth: boolean) => {
+    setSmoothTurn(smooth);
+    gameRef.current?.state?.xrControls?.setTurnMode(smooth ? "smooth" : "snap");
+  };
 
   const applyQuality = (tier: string) => {
     setQualityTier(tier);
@@ -347,6 +359,18 @@ export function SettingsSection({
           />
         </div>
       </section>
+
+      {xrSupported && (
+        <section>
+          <SectionHeading>VR</SectionHeading>
+          <ToggleRow
+            label="Smooth Turning"
+            description="Off = comfortable 45° snap turns on the right stick"
+            value={smoothTurn}
+            onChange={applyTurnMode}
+          />
+        </section>
+      )}
 
       <div className="flex justify-end border-t border-border pt-4">
         <Button variant="outline" size="sm" onClick={resetDefaults}>

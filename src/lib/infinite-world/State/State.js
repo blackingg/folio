@@ -1,6 +1,7 @@
 import Time from './Time.js'
 import Controls from './Controls.js'
 import GamepadControls from './GamepadControls.js'
+import XRControls from './XRControls.js'
 import Viewport from './Viewport.js'
 import DayCycle from './DayCycle.js'
 import Sun from './Sun.js'
@@ -25,9 +26,13 @@ export default class State
 
         State.instance = this
 
+        // True while an immersive-vr session presents (set by Game handlers)
+        this.xrPresenting = false
+
         this.time = new Time()
         this.controls = new Controls()
         this.gamepad = new GamepadControls()
+        this.xrControls = new XRControls()
         this.viewport = new Viewport()
         this.day = new DayCycle()
         this.sun = new Sun()
@@ -47,6 +52,7 @@ export default class State
         this.time.update()
         this.controls.update()
         this.gamepad.update()
+        this.xrControls.update()
         this.day.update()
         this.sun.update()
         this.moon.update()

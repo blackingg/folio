@@ -1,4 +1,9 @@
-import { BackSide, BufferGeometry, Color, Float32BufferAttribute, Group, Mesh, MeshBasicMaterial, PlaneGeometry, Points, PointsMaterial, Scene, SphereGeometry, Vector3, WebGLRenderTarget } from 'three';
+import { BackSide, BufferGeometry, Color, Float32BufferAttribute, Group, Mesh, MeshBasicMaterial, PlaneGeometry, Points, PointsMaterial, Quaternion, Scene, SphereGeometry, Vector3, WebGLRenderTarget } from 'three';
+
+// Scratch objects for the per-frame world-pose reads (the camera is a rig
+// child under XR, so local position/quaternion are not world space)
+const _worldPosition = new Vector3();
+const _worldQuaternion = new Quaternion();
 
 import Game from '../Game.js';
 import View from './View.js';
@@ -361,9 +366,8 @@ export default class Sky {
         // Update camera uniforms for raymarching
         const mainCamera = this.view.camera.instance; // same as player state's camera
         // This is the camera position in world space
-        this.sky.material.uniforms.uCameraPosition.value.copy(
-            mainCamera.position,
-        );
+        mainCamera.getWorldPosition(_worldPosition);
+        this.sky.material.uniforms.uCameraPosition.value.copy(_worldPosition);
 
         // // Stars
         // this.stars.material.uniforms.uSunPosition.value.set(
@@ -374,16 +378,22 @@ export default class Sky {
         // this.stars.material.uniforms.uHeightFragments.value =
         //     this.viewport.height * this.viewport.clampedPixelRatio;
 
-        // Render the sky in the offscreen buffer
-        this.customRender.camera.quaternion.copy(
-            this.view.camera.instance.quaternion,
-        );
+        // Render the sky in the offscreen buffer. While an XR session
+        // presents, three substitutes its stereo ArrayCamera into every
+        // render() call — disable xr around this pass so the fog texture is
+        // rendered once with the mono camera, not per eye.
+        mainCamera.getWorldQuaternion(_worldQuaternion);
+        this.customRender.camera.quaternion.copy(_worldQuaternion);
+
+        const xrWasEnabled = this.renderer.instance.xr.enabled;
+        this.renderer.instance.xr.enabled = false;
         this.renderer.instance.setRenderTarget(this.customRender.renderTarget);
         this.renderer.instance.render(
             this.customRender.scene,
             this.customRender.camera,
         );
         this.renderer.instance.setRenderTarget(null);
+        this.renderer.instance.xr.enabled = xrWasEnabled;
     }
 
     resize() {

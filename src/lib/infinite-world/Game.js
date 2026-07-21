@@ -2,7 +2,7 @@ import Debug from "./Debug/Debug.js";
 import State from "./State/State.js";
 import View from "./View/View.js";
 import { WORLD_SEED } from "./worldGen.js";
-import { resolveQuality } from "./quality.js";
+import { VR_OVERLAY, resolveQuality } from "./quality.js";
 
 export default class Game {
   static instance;
@@ -30,6 +30,7 @@ export default class Game {
     // Callbacks for React
     this.onLoadProgress = onLoadProgress || (() => {});
     this.onLoadComplete = onLoadComplete || (() => {});
+    this.onXRSessionChange = () => {};
 
     this.debug = new Debug();
     this.state = new State();
@@ -59,6 +60,67 @@ export default class Game {
     // window.rAF normally and to XRSession.requestAnimationFrame while a
     // WebXR session is presenting, so one loop serves both modes.
     this.view.renderer.instance.setAnimationLoop(() => this.update());
+
+    this._setupXR();
+  }
+
+  _setupXR() {
+    const xr = this.view.renderer.instance.xr;
+
+    this._onXRSessionStart = () => {
+      this.state.xrPresenting = true;
+      xr.setFoveation?.(VR_OVERLAY.foveation);
+      // Cheaper fog backdrop while rendering per-eye
+      const sky = this.view.sky;
+      if (sky?.customRender) {
+        sky.customRender.resolutionRatio = VR_OVERLAY.skyResolutionRatio;
+        sky.resize();
+      }
+      this.onXRSessionChange(true);
+    };
+
+    this._onXRSessionEnd = () => {
+      this.state.xrPresenting = false;
+      const sky = this.view.sky;
+      if (sky?.customRender) {
+        sky.customRender.resolutionRatio =
+          this.quality?.skyResolutionRatio ?? 0.2;
+        sky.resize();
+      }
+      // Restore the 2D framebuffer size the session overrode
+      this.resize();
+      this.onXRSessionChange(false);
+    };
+
+    // The renderer (and its xr manager) is cached across Game instances —
+    // these listeners are removed again in destroy()
+    xr.addEventListener("sessionstart", this._onXRSessionStart);
+    xr.addEventListener("sessionend", this._onXRSessionEnd);
+  }
+
+  async enterVR() {
+    if (this.destroyed || typeof navigator === "undefined" || !navigator.xr)
+      return;
+
+    const renderer = this.view.renderer.instance;
+
+    try {
+      const session = await navigator.xr.requestSession("immersive-vr", {
+        optionalFeatures: ["local-floor"],
+      });
+
+      renderer.xr.enabled = true;
+      renderer.xr.setReferenceSpaceType("local-floor");
+      // Must be set before setSession — ignored afterwards
+      renderer.xr.setFramebufferScaleFactor(VR_OVERLAY.xrFramebufferScale);
+      await renderer.xr.setSession(session);
+    } catch (error) {
+      console.warn("[Game] Could not start VR session:", error);
+    }
+  }
+
+  exitVR() {
+    this.view?.renderer?.instance.xr.getSession()?.end();
   }
 
   _setupLoading() {
@@ -123,6 +185,10 @@ export default class Game {
       renderer.setAnimationLoop(null);
       renderer.xr.getSession?.()?.end?.();
       renderer.xr.enabled = false;
+      if (this._onXRSessionStart) {
+        renderer.xr.removeEventListener("sessionstart", this._onXRSessionStart);
+        renderer.xr.removeEventListener("sessionend", this._onXRSessionEnd);
+      }
     }
 
     window.removeEventListener("resize", this._resizeHandler);
@@ -163,6 +229,7 @@ export default class Game {
 
     if (this.state?.controls) this.state.controls.destroy();
     if (this.state?.gamepad) this.state.gamepad.destroy();
+    if (this.state?.xrControls) this.state.xrControls.destroy();
 
     // Reset singletons
     Game.instance = null;

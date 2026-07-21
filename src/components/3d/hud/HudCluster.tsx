@@ -2,6 +2,7 @@
 
 import { BookOpen, Settings } from "lucide-react";
 import { HudButton } from "./HudButton";
+import { VrButton } from "./VrButton";
 import { WorldMap } from "./map/WorldMap";
 import type { MenuTab } from "./WorldMenu";
 
@@ -45,6 +46,7 @@ export function HudCluster({ gameRef, isLoaded, onOpenTab }: HudClusterProps) {
         label="Settings"
         onClick={() => onOpenTab("settings")}
       />
+      <VrButton gameRef={gameRef} isLoaded={isLoaded} />
     </div>
   );
 }

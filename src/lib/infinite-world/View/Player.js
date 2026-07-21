@@ -71,6 +71,9 @@ export default class Player
         const sunState = this.state.sun
         const dayState = this.state.day
 
+        // First-person VR — you are the capsule, don't show it
+        this.group.visible = !this.state.xrPresenting
+
         this.group.position.set(
             playerState.position.current[0],
             playerState.position.current[1],
