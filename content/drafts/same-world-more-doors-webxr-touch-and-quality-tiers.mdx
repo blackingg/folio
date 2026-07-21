@@ -1,0 +1,98 @@
+---
+title: "Same World, More Doors: WebXR, Touch Controls, and Quality Tiers"
+publishedAt: "2026-07-21T12:00:00.000Z"
+summary: "The infinite world on this site was desktop-only — I had never built the mobile view, and VR didn't exist in the codebase. This is a technical writeup of the work that changed that: a WebXR port, virtual joystick controls for phones, and a quality tier system — and why almost all of it was input architecture, not rendering."
+keywords:
+  - webxr
+  - three.js
+  - quest 3
+  - mobile controls
+  - performance
+  - portfolio
+---
+
+[The 3D world](https://www.whoisblxck.xyz/3d) on this site has been a desktop experience since the day it shipped — built around a keyboard, a mouse, and a wide screen. I never worked on the mobile view; a phone would load the world and then hand you controls that didn't exist. VR wasn't neglected so much as absent — it didn't exist as a concept anywhere in the codebase.
+
+This round of work changed that. The same world now runs on desktop with keyboard and mouse, on phones with a virtual joystick, on gamepads, and in immersive VR through WebXR. **The world itself barely changed — what changed is the number of doors into it.** This post is the engineering writeup: what was done, how, and why each decision fell the way it did.
+
+#### What shipped and why
+
+Four things landed, in this order deliberately:
+
+1. **Engine groundwork** — migrating the render loop to `renderer.setAnimationLoop`, debouncing a hot instance-matrix rebuild, and a soft follow camera.
+2. **A quality tier system** — low/medium/high presets with device auto-detection and a manual override in Settings.
+3. **Mobile touch controls** — the first real mobile version of the world.
+4. **WebXR immersive-vr** — first-person, head-relative locomotion, 45° snap turns.
+
+The ordering matters because of a rule I set early: tiers ship *before* the mobile gate lifts, so the first phone that ever loads the world in production lands on a preset sized for it. Opening a door and then apologizing for the framerate is worse than a locked door.
+
+The why is simpler. This world is the centerpiece of my portfolio, and most portfolio traffic is mobile. A world that only desktop visitors could actually walk meant most people never really saw the thing I'd spent months building.
+
+#### The loop had to change first
+
+The engine (vanilla three.js, grown out of [Bruno Simon's infinite-world](https://www.whoisblxck.xyz/blog/embedding-bruno-simons-infinite-terrain-into-my-portfolio-work-in-progress-fc9e16c318d3)) drove frames with a recursive `window.requestAnimationFrame`. WebXR cannot work with that: while a session presents, frames must come from `XRSession.requestAnimationFrame`, which runs at the headset's refresh rate and carries the pose data for each frame. three.js abstracts the difference behind `renderer.setAnimationLoop` — one callback, routed to whichever scheduler is active.
+
+So milestone one was swapping the loop with zero behavior change, plus one subtlety: my renderer is cached globally across engine reboots (a WebGL-context-cap defense from an older war). The loop callback now lives on that cached renderer, so `destroy()` must explicitly call `setAnimationLoop(null)` — otherwise a dead world keeps ticking inside the next one.
+
+#### One movement channel, three inputs
+
+The player moved by reading boolean key states — `forward`, `strafeLeft`, and friends — and deriving a direction from the camera orbit. Gamepads already worked by faking those booleans. I didn't want a third input faking keys, because thumbsticks and joysticks are analog: half-tilt should walk, full-tilt should run, and 37° should be 37°.
+
+The fix was one shared channel on the controls object, and one new branch where movement is computed:
+
+```js
+// State/Player.js — analog branch; the key branch below it is untouched
+if (this.controls.move.active) {
+  const move = this.controls.move
+  const magnitude = Math.min(1, Math.hypot(move.x, move.z))
+  const referenceYaw = move.headYaw ?? this.camera.thirdPerson.theta
+
+  this.rotation = referenceYaw - Math.atan2(move.x, move.z)
+  const speed = baseSpeed * magnitude
+  // ...same position integration as the key branch
+}
+```
+
+Everything downstream — tree collision, the border wall, elevation snapping, experience trigger zones — reads player position and knows nothing about input. The phone joystick writes `{x, z, active}` into that channel from a React component. The VR thumbstick writes the same shape, plus `headYaw` so walking follows your gaze. Three input methods, one movement path, zero changes to world logic.
+
+Touch had one trap worth recording: the existing mouse-look code read `event.movementX`, which is **always zero for touch pointers**. Touch look-drag computes deltas from `clientX/clientY` per pointer ID instead, and only adopts touches that start on the canvas — so dragging the joystick or tapping a HUD button never spins the camera.
+
+#### VR is a rig, plus one sneaky render pass
+
+In WebXR, the headset owns the camera. My engine also thought *it* owned the camera — a logical gl-matrix camera copied its pose onto the three.js camera every frame. Left alone, the two would fight at 90Hz.
+
+The standard answer is a rig: the camera now lives inside a `Group`. On desktop the rig sits at identity and the pose copy behaves exactly as before. While presenting, the copy is skipped — the rig plants itself at the player's feet on the terrain, the `local-floor` reference space supplies your real head height above it, and snap turns rotate the rig rather than the player. The player capsule gets hidden, because in first person, you are the capsule.
+
+The sneaky part was the sky. The fog and backdrop come from an offscreen pass — the sky scene rendered to a small render target every frame, sampled later by the terrain and tree shaders. While an XR session presents, three.js substitutes its stereo `ArrayCamera` into *every* `render()` call, including that one. The fix is small and very easy to not know you need:
+
+```js
+// View/Sky.js — force the fog pass mono while a session presents
+const xrWasEnabled = renderer.xr.enabled
+renderer.xr.enabled = false
+renderer.setRenderTarget(fogTarget)
+renderer.render(fogScene, fogCamera)
+renderer.setRenderTarget(null)
+renderer.xr.enabled = xrWasEnabled
+```
+
+Comfort defaults are boring and correct: 45° snap turns with hysteresis on the right stick, smooth turning available behind a Settings toggle for people with sturdier stomachs.
+
+#### Performance budgets are constructor arguments
+
+The world's costs were hardcoded: 40,000 grass blades, 22,500 tree billboards, a chunk quadtree four levels deep, pixel ratio capped at 2. Fine on a desktop GPU; hostile on a phone; reckless on a mobile chip rendering two eyes at 90Hz.
+
+The tier system (`quality.js`) is three presets over seven knobs — grass and billboard density, chunk depth, pixel ratio cap, sky render-target resolution, camera far plane, tree instance budget. Auto-detection is deliberately dumb: Quest browser UA gets medium, phones get low or medium depending on `navigator.deviceMemory`, desktops get high. A dropdown in Settings overrides it, persisted to localStorage.
+
+The honest engineering decision here: most of those knobs are constructor-time — they size buffers and build geometry. Rather than plumb runtime resizing through every system, changing tier just reboots the engine through the same React re-mount path that already existed for WebGL failures. The globally cached renderer makes that reboot cheap. VR is the exception — `requestSession` must run inside the user's click, so there's no room for a reboot; the Quest lands on medium at boot via UA detection, and session start layers on the VR-specific overrides (foveation, framebuffer scale, a cheaper fog target).
+
+Status, honestly: the VR path is built and verified against the WebXR emulator and desktop builds — not against real glass. I don't own a Quest; the plan is to borrow one in the coming month and run the on-headset pass then, starting with the sky pass, which is exactly the kind of thing an emulator will happily lie to you about.
+
+#### What I'd carry forward
+
+**Keep the world ignorant of its inputs.** Every hard part of this port got easy the moment movement became data — a vector and a reference yaw — instead of a device. The collision system, the border wall, the elevation snapping never learned that VR or touchscreens exist, and that ignorance is exactly why the port stayed small.
+
+**An emulator lets you build; only hardware lets you claim.** The WebXR emulator carried the rig, the session lifecycle, and the input mapping end to end. What it can't tell me is how ninety frames a second of stereo rendering feels on a mobile chip, or whether the fog texture survives real stereo cameras. So this writeup says *built*, not *battle-tested* — the distinction matters, and pretending otherwise would just be lying with extra steps.
+
+**A cheap reboot beats clever plumbing.** Making grass density adjustable at runtime would have meant threading resize logic through half the engine. Re-mounting the whole engine through a recovery path that already existed took an afternoon, and the cached WebGL context makes it nearly free. When correctness is one restart away, take the restart.
+
+The world is the same world. It just has more doors now — and one of them is headset-shaped, waiting on a borrowed key.
