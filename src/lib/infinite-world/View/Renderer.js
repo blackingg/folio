@@ -1,4 +1,4 @@
-import { PCFSoftShadowMap, ReinhardToneMapping, WebGLRenderer, sRGBEncoding } from 'three';
+import { WebGLRenderer } from 'three';
 
 import Game from '../Game.js'
 import View from './View.js'
@@ -87,6 +87,10 @@ export default class Renderer
 
     resize()
     {
+        // While presenting, the XR session owns the framebuffer size
+        if(this.instance.xr.isPresenting)
+            return
+
         // Instance
         this.instance.setSize(this.viewport.width, this.viewport.height)
         this.instance.setPixelRatio(this.viewport.clampedPixelRatio)

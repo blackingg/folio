@@ -9,6 +9,7 @@ export default class CameraThirdPerson
         this.state = State.getInstance()
         this.viewport = this.state.viewport
         this.controls = this.state.controls
+        this.time = this.state.time
 
         this.player = player
 
@@ -21,6 +22,10 @@ export default class CameraThirdPerson
         this.theta = - Math.PI * 0.25
         this.aboveOffset = 2
         this.phiLimits = { min: 0.1, max: Math.PI - 0.1 }
+
+        // Soft follow: how fast the orbit eases behind the moving player
+        // (exponential damping rate — ~95% caught up after one second)
+        this.followLambda = 3
     }
 
     activate()
@@ -50,7 +55,28 @@ export default class CameraThirdPerson
             if(this.phi > this.phiLimits.max)
                 this.phi = this.phiLimits.max
         }
-        
+        else
+        {
+            // Soft follow — when the player is moving and the camera isn't
+            // being dragged, ease theta around behind the movement direction
+            // so the character ends up facing away from the camera.
+            const keys = this.controls.keys.down
+            const moving = keys.forward || keys.backward || keys.strafeLeft || keys.strafeRight || this.controls.move?.active
+
+            if(moving)
+            {
+                const diff = Math.atan2(
+                    Math.sin(this.player.rotation - this.theta),
+                    Math.cos(this.player.rotation - this.theta)
+                )
+
+                // Backward-ish movement (S, back-diagonals) would ask the
+                // camera to swing ~180° — leave it planted instead.
+                if(Math.abs(diff) < Math.PI * 0.75)
+                    this.theta += diff * (1 - Math.exp(- this.followLambda * this.time.delta))
+            }
+        }
+
         // Position
         const sinPhiRadius = Math.sin(this.phi) * this.distance
         const sphericalPosition = vec3.fromValues(

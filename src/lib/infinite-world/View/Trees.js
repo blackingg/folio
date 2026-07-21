@@ -37,6 +37,11 @@ export default class Trees {
         this.maxInstancesPerTree = 20000;
         this.treesMeshes = [];
 
+        // Chunk churn fires bursts of create/destroy/ready events — queue a
+        // single rebuild and flush it once per frame in update() instead of
+        // rebuilding every instance matrix per event.
+        this._rebuildQueued = false;
+
 
 
         this.state.chunks.events.on('create', (chunk) => this.onChunkCreate(chunk));
@@ -52,7 +57,7 @@ export default class Trees {
 
             terrain.events.on('ready', () => {
 
-                if (this.loaded) this.updateAllChunks();
+                if (this.loaded) this._rebuildQueued = true;
 
             });
 
@@ -299,7 +304,7 @@ export default class Trees {
 
         if (!this.loaded) return;
 
-        this.updateAllChunks();
+        this._rebuildQueued = true;
 
     }
 
@@ -309,7 +314,7 @@ export default class Trees {
 
         if (!this.loaded) return;
 
-        this.updateAllChunks();
+        this._rebuildQueued = true;
 
     }
 
@@ -409,7 +414,10 @@ export default class Trees {
 
         if (!this.loaded) return;
 
-
+        if (this._rebuildQueued) {
+            this._rebuildQueued = false;
+            this.updateAllChunks();
+        }
 
         const sunState = this.state.sun;
 

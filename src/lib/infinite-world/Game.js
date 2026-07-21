@@ -21,7 +21,6 @@ export default class Game {
     this.domElement = domElement;
     this.seed = WORLD_SEED;
     this.destroyed = false;
-    this.animationFrameId = null;
 
     // Callbacks for React
     this.onLoadProgress = onLoadProgress || (() => {});
@@ -51,7 +50,10 @@ export default class Game {
     this._resizeHandler = () => this.resize();
     window.addEventListener("resize", this._resizeHandler);
 
-    this.update();
+    // setAnimationLoop instead of a recursive rAF: three routes it to
+    // window.rAF normally and to XRSession.requestAnimationFrame while a
+    // WebXR session is presenting, so one loop serves both modes.
+    this.view.renderer.instance.setAnimationLoop(() => this.update());
   }
 
   _setupLoading() {
@@ -97,10 +99,6 @@ export default class Game {
 
     this.state.update();
     this.view.update();
-
-    this.animationFrameId = window.requestAnimationFrame(() => {
-      this.update();
-    });
   }
 
   resize() {
@@ -112,8 +110,14 @@ export default class Game {
   destroy() {
     this.destroyed = true;
 
-    if (this.animationFrameId) {
-      cancelAnimationFrame(this.animationFrameId);
+    // The animation loop and XR state live on the globally cached renderer —
+    // without this reset the callback would keep ticking a destroyed Game
+    // from the next instance's renderer.
+    if (this.view?.renderer?.instance) {
+      const renderer = this.view.renderer.instance;
+      renderer.setAnimationLoop(null);
+      renderer.xr.getSession?.()?.end?.();
+      renderer.xr.enabled = false;
     }
 
     window.removeEventListener("resize", this._resizeHandler);
