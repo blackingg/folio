@@ -86,6 +86,17 @@ export default class CameraThirdPerson
         )
         vec3.add(this.position, this.player.position.current, sphericalPosition)
 
+        // Clamp to ground — must happen before the look-at quaternion is
+        // computed, otherwise the camera renders from the clamped position
+        // but aims as if it were still at the unclamped one (looks like the
+        // view "turns" and the character shrinks whenever the orbit position
+        // lands on a slope higher than the player, e.g. grassy hillsides).
+        const chunks = this.state.chunks
+        const elevation = chunks.getElevationForPosition(this.position[0], this.position[2])
+
+        if(elevation && this.position[1] < elevation + 1)
+            this.position[1] = elevation + 1
+
         // Target
         const target = vec3.fromValues(
             this.player.position.current[0],
@@ -97,12 +108,5 @@ export default class CameraThirdPerson
         const toTargetMatrix = mat4.create()
         mat4.targetTo(toTargetMatrix, this.position, target, this.gameUp)
         quat2.fromMat4(this.quaternion, toTargetMatrix)
-        
-        // Clamp to ground
-        const chunks = this.state.chunks
-        const elevation = chunks.getElevationForPosition(this.position[0], this.position[2])
-
-        if(elevation && this.position[1] < elevation + 1)
-            this.position[1] = elevation + 1
     }
 }
