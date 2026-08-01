@@ -26,6 +26,7 @@ export const DATA = {
     "Redux",
     "Zustand",
     "Supabase",
+    "Web Audio API",
   ],
   navbar: [
     { href: "/", icon: HomeIcon, label: "Home" },
@@ -181,17 +182,19 @@ export const DATA = {
     {
       company: "Portfolio Website for a University Reader",
       href: "https://www.marufatoluyemisiodetunde.com/",
-      badges: ["HTML", "TailwindCSS", "JavaScript", "SEO"],
+      badges: ["HTML", "TailwindCSS", "JavaScript", "Web Audio API", "SEO"],
       location: "Remote",
       title: "Frontend Engineer",
       logoUrl: "",
       start: "Sept 2025",
       end: "",
       description:
-        "Built and maintain the official academic portfolio of a Reader in Medical Rehabilitation at Obafemi Awolowo University, showcasing her research, grants, and publications.",
+        "Built and maintain the official academic portfolio of a Reader in Medical Rehabilitation at Obafemi Awolowo University — her research, grants, and publications, plus a media hub for the health radio drama and rehabilitation videos her work produces.",
       responsibilities: [
-        "Designed and implemented a clean, responsive single-page site with a mobile drawer navigation, highlighting professional background, grants, and research impact.",
+        "Designed and implemented a clean, responsive site with dropdown and mobile drawer navigation, highlighting professional background, grants, and research impact.",
         "Built a publications system covering 32 peer-reviewed papers with progressive disclosure and DOI links, pre-rendered as static HTML for reliable indexing.",
+        "Built the Media & Resources hub: audio drama players with a Web Audio API visualizer (AnalyserNode driving a canvas frequency-bar animation), and click-to-load YouTube facades that keep every third-party script and cookie off the page until a visitor presses play.",
+        "Engineered DOM-driven structured data — VideoObject/AudioObject JSON-LD generated from the live media cards, so schema activates automatically as real media replaces placeholders — with clean-URL routing on Vercel.",
         "Implemented deep SEO: a Schema.org scholar graph (Person + ScholarlyArticle JSON-LD), sitemap, robots.txt, and Open Graph/Twitter metadata.",
         "Delivered a design-first solution meeting specific academic branding requirements.",
       ],
