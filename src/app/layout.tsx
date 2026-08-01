@@ -49,9 +49,9 @@ export const metadata: Metadata = {
     type: "website",
     images: [
       {
-        url: "/og.jpg",
+        url: "/og-banner.png",
         width: 1200,
-        height: 1200,
+        height: 630,
         alt: DATA.name,
       },
     ],
@@ -73,7 +73,7 @@ export const metadata: Metadata = {
     description: DATA.description,
     site: "@whoisBlxck",
     creator: "@whoisBlxck",
-    images: "/og.jpg",
+    images: "/og-banner.png",
   },
   keywords: [
     "Odetunde Mubarak",
