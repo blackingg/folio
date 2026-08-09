@@ -1,17 +1,18 @@
 import { ContactIllustration } from "@/components/contact-illustration";
 import { HackathonCard } from "@/components/hackathon-card";
 import BlurFade from "@/components/magicui/blur-fade";
-import BlurFadeText from "@/components/magicui/blur-fade-text";
+import { WordStagger } from "@/components/word-stagger";
+import { HeroGreeting } from "@/components/hero-greeting";
+import { HeroAvatar } from "@/components/hero-avatar";
+import { AboutReveal } from "@/components/about-reveal";
 import { ProjectCard } from "@/components/project-card";
 import { HorizontalScroller } from "@/components/horizontal-scroller";
 import { ResumeCard } from "@/components/resume-card";
 import { ScrollFadeSection } from "@/components/scroll-fade-section";
 import { WorkStack } from "@/components/work-stack";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { SkillPills } from "@/components/skill-pills";
 import { DATA } from "@/data/resume";
 import Link from "next/link";
-import Markdown from "react-markdown";
 import { ChevronRight } from "lucide-react";
 import { getBlogPosts } from "@/data/blog";
 import { BlogCard } from "@/components/blog-card";
@@ -59,69 +60,35 @@ export default async function Page() {
                   <h1 className="sr-only">
                     {DATA.name} - Frontend Engineer Portfolio
                   </h1>
-                  <BlurFadeText
-                    delay={BLUR_FADE_DELAY}
+                  <HeroGreeting
+                    firstName={DATA.name.split(" ")[0]}
                     className="text-4xl font-bold tracking-tighter sm:text-5xl xl:text-6xl/none"
-                    yOffset={8}
-                    text={`Hi, I'm ${DATA.name.split(" ")[0]} 👋`}
-                  />
-                  <BlurFadeText
-                    className="max-w-[700px] text-base sm:text-lg md:text-xl text-left leading-relaxed"
                     delay={BLUR_FADE_DELAY}
-                    text={DATA.description}
                   />
-                </div>
-                <BlurFade delay={BLUR_FADE_DELAY}>
-                  <Avatar className="size-56 md:size-32 border-2 shadow-sm">
-                    <AvatarImage
-                      alt={DATA.name}
-                      src={DATA.avatarUrl}
+                  <p className="max-w-[700px] text-left text-base leading-relaxed sm:text-lg md:text-xl">
+                    <WordStagger
+                      text={DATA.description}
+                      delay={BLUR_FADE_DELAY + 0.5}
                     />
-                    <AvatarFallback>{DATA.initials}</AvatarFallback>
-                  </Avatar>
-                </BlurFade>
+                  </p>
+                </div>
+                <HeroAvatar
+                  src={DATA.avatarUrl}
+                  alt={DATA.name}
+                  initials={DATA.initials}
+                  delay={BLUR_FADE_DELAY}
+                />
               </div>
             </div>
           </ScrollFadeSection>
         </section>
       </div>
-      {/* Page 2: About gets its own viewport-height section like the pages below it. */}
+      {/* Page 2: About pins while the summary lights up word by word. */}
       <section id="about">
-        <ScrollFadeSection className="flex min-h-[100svh] w-full flex-col justify-center gap-y-4 py-12">
-          <div className="mx-auto w-full max-w-3xl">
-            <BlurFade inView>
-              <h2 className="text-xl font-bold">About</h2>
-            </BlurFade>
-            <BlurFade inView delay={BLUR_FADE_DELAY}>
-              <Markdown className="prose max-w-full text-pretty font-sans text-base text-foreground/80 dark:prose-invert leading-relaxed">
-                {DATA.summary}
-              </Markdown>
-            </BlurFade>
-            <BlurFade inView delay={BLUR_FADE_DELAY * 1.5}>
-              <div className="mt-4 flex flex-wrap items-center gap-4">
-                <Link
-                  href={DATA.contact.social.Resume.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
-                >
-                  Download Resume
-                </Link>
-              </div>
-            </BlurFade>
-            <BlurFade inView delay={BLUR_FADE_DELAY * 2}>
-              <Link
-                href="/3d"
-                className="group inline-flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors mt-4"
-              >
-                <span className="text-sm sm:text-base font-medium tracking-tight">
-                  Explore 3D Experience <span className="text-xl">🚧</span>
-                </span>
-                <ChevronRight className="h-4 w-4 text-foreground/60 transition-all group-hover:translate-x-1 group-hover:text-foreground" />
-              </Link>
-            </BlurFade>
-          </div>
-        </ScrollFadeSection>
+        <AboutReveal
+          summary={DATA.summary}
+          resumeUrl={DATA.contact.social.Resume.url}
+        />
       </section>
       {/* Page 3: skills pin until the pill cascade completes. */}
       <section id="skills">
