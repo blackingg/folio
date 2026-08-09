@@ -49,8 +49,8 @@ export default async function Page() {
           }),
         }}
       />
-      {/* Page 1: hero + about fill the viewport so the next page stays below the fold. */}
-      <div className="flex min-h-[calc(100svh-3rem)] flex-col justify-center gap-y-10 sm:min-h-[calc(100svh-6rem)]">
+      {/* Page 1: hero fills the viewport so the next page stays below the fold. */}
+      <div className="flex min-h-[calc(100svh-3rem)] flex-col justify-center sm:min-h-[calc(100svh-6rem)]">
         <section id="hero">
           <ScrollFadeSection>
             <div className="mx-auto w-full max-w-3xl space-y-8">
@@ -84,17 +84,20 @@ export default async function Page() {
             </div>
           </ScrollFadeSection>
         </section>
-        <section id="about">
-          <ScrollFadeSection>
-            <BlurFade delay={BLUR_FADE_DELAY * 3}>
+      </div>
+      {/* Page 2: About gets its own viewport-height section like the pages below it. */}
+      <section id="about">
+        <ScrollFadeSection className="flex min-h-[100svh] w-full flex-col justify-center gap-y-4 py-12">
+          <div className="mx-auto w-full max-w-3xl">
+            <BlurFade inView>
               <h2 className="text-xl font-bold">About</h2>
             </BlurFade>
-            <BlurFade delay={BLUR_FADE_DELAY * 4}>
+            <BlurFade inView delay={BLUR_FADE_DELAY}>
               <Markdown className="prose max-w-full text-pretty font-sans text-base text-foreground/80 dark:prose-invert leading-relaxed">
                 {DATA.summary}
               </Markdown>
             </BlurFade>
-            <BlurFade delay={BLUR_FADE_DELAY * 4.5}>
+            <BlurFade inView delay={BLUR_FADE_DELAY * 1.5}>
               <div className="mt-4 flex flex-wrap items-center gap-4">
                 <Link
                   href={DATA.contact.social.Resume.url}
@@ -106,7 +109,7 @@ export default async function Page() {
                 </Link>
               </div>
             </BlurFade>
-            <BlurFade delay={BLUR_FADE_DELAY * 4.8}>
+            <BlurFade inView delay={BLUR_FADE_DELAY * 2}>
               <Link
                 href="/3d"
                 className="group inline-flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors mt-4"
@@ -117,17 +120,17 @@ export default async function Page() {
                 <ChevronRight className="h-4 w-4 text-foreground/60 transition-all group-hover:translate-x-1 group-hover:text-foreground" />
               </Link>
             </BlurFade>
-          </ScrollFadeSection>
-        </section>
-      </div>
-      {/* Page 2: skills pin until the pill cascade completes. */}
+          </div>
+        </ScrollFadeSection>
+      </section>
+      {/* Page 3: skills pin until the pill cascade completes. */}
       <section id="skills">
         <SkillPills
           title="Skills"
           skills={DATA.skills}
         />
       </section>
-      {/* Page 3: Work Experience */}
+      {/* Page 4: Work Experience */}
       <section id="work">
         <div className="flex min-h-0 flex-col gap-y-3">
           <WorkStack
@@ -167,7 +170,7 @@ export default async function Page() {
         </ScrollFadeSection>
       </section> */}
 
-      {/* Page 4: Projects */}
+      {/* Page 5: Projects */}
       <section id="projects">
         <ScrollFadeSection
           enterOffset={["start end", "start start"]}
