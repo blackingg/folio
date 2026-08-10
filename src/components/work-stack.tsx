@@ -1,12 +1,12 @@
 "use client";
 
-import { motion, MotionValue, useScroll, useTransform } from "framer-motion";
-import { ChevronRight } from "lucide-react";
+import { motion } from "framer-motion";
+import { ArrowUpRight } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
-import { ResumeCard } from "@/components/resume-card";
-import { ScrollFadeSection } from "@/components/scroll-fade-section";
-import { cn } from "@/lib/utils";
+import { SectionLink } from "@/components/section-link";
+import { StoryStepper } from "@/components/story-stepper";
+import type { FullPageProps } from "@/components/full-page-scroll";
 
 type Work = {
   company: string;
@@ -19,186 +19,160 @@ type Work = {
   description?: string;
 };
 
-// Desktop-tuned pin geometry. On short mobile viewports these values push
-// most of the first card below the fold before it even pins, so a smaller
-// set kicks in under the `sm` breakpoint (see useStackGeometry below).
-const STICKY_TOP = 260;
-const PEEK_OFFSET = 18;
-const MOBILE_STICKY_TOP = 120;
-const MOBILE_PEEK_OFFSET = 12;
-// Fallback card height for the first render; the real height is measured
-// after mount so the page geometry matches what's actually on screen.
-const DEFAULT_CARD_HEIGHT = 190;
+const section = {
+  hidden: { opacity: 0, y: 24, filter: "blur(6px)" },
+  visible: {
+    opacity: 1,
+    y: 0,
+    filter: "blur(0px)",
+    transition: { duration: 0.5, ease: "easeOut" },
+  },
+};
 
-// Swaps in the mobile pin geometry under Tailwind's `sm` breakpoint (640px)
-// so the pile starts near the top of short mobile viewports instead of
-// eating a third of the screen as empty scroll before the first card pins.
-function useStackGeometry() {
-  const [isMobile, setIsMobile] = useState(false);
-  useEffect(() => {
-    const mq = window.matchMedia("(max-width: 639px)");
-    const update = () => setIsMobile(mq.matches);
-    update();
-    mq.addEventListener("change", update);
-    return () => mq.removeEventListener("change", update);
-  }, []);
+// Explicit initial/animate on the slide root keeps these from inheriting
+// StoryStepper's enter/center/exit variant labels.
+const slideIn = {
+  hidden: {},
+  visible: { transition: { staggerChildren: 0.07, delayChildren: 0.05 } },
+};
 
-  const stickyTop = isMobile ? MOBILE_STICKY_TOP : STICKY_TOP;
-  const peekOffset = isMobile ? MOBILE_PEEK_OFFSET : PEEK_OFFSET;
-  // Pin line for the section title, floating just above the card pile.
-  const titleTop = stickyTop - 56;
-  return { stickyTop, peekOffset, titleTop };
-}
+const markIn = {
+  hidden: { opacity: 0, scale: 0.7 },
+  visible: {
+    opacity: 1,
+    scale: 1,
+    transition: { type: "spring", stiffness: 260, damping: 18 },
+  },
+};
 
-function StackCard({
-  work,
-  index,
-  total,
-  progress,
-  stickyTop,
-  peekOffset,
-  measureRef,
-}: {
-  work: Work;
-  index: number;
-  total: number;
-  progress: MotionValue<number>;
-  stickyTop: number;
-  peekOffset: number;
-  measureRef?: React.Ref<HTMLDivElement>;
-}) {
-  // Once this card pins, shrink and dim it as the ones below scroll over it.
-  const start = index / total;
-  const isLast = index === total - 1;
-  const scale = useTransform(
-    progress,
-    [start, 1],
-    [1, isLast ? 1 : 1 - (total - 1 - index) * 0.04],
-  );
-  const opacity = useTransform(progress, [start, 1], [1, isLast ? 1 : 0.4]);
+// Same left-to-right wipe the Projects showcase uses on its screenshot —
+// here the company name is the hero, so it gets the identical reveal. The
+// negative vertical inset keeps tall glyphs and descenders from clipping.
+const heroWipe = {
+  hidden: { clipPath: "inset(-15% 100% -15% 0)" },
+  visible: {
+    clipPath: "inset(-15% 0% -15% 0)",
+    transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] },
+  },
+};
 
+const lineIn = {
+  hidden: { opacity: 0, y: 14 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } },
+};
+
+// A job has no screenshot, so the company name is the visual: display type
+// leads, the logo drops to a small mark, and everything below follows the
+// same caption rhythm as ProjectShowcase so the two sections read as one
+// system.
+function JobSlide({ work }: { work: Work }) {
   return (
     <motion.div
-      ref={measureRef}
-      style={{ scale, opacity, top: stickyTop + index * peekOffset }}
-      className={cn("sticky origin-top", !isLast && "mb-4")}
+      initial="hidden"
+      animate="visible"
+      variants={slideIn}
+      className="space-y-4"
     >
+      <div className="flex items-center gap-3 sm:gap-4">
+        <motion.div
+          variants={markIn}
+          className="size-10 shrink-0 overflow-hidden rounded-lg sm:size-12"
+        >
+          <Image
+            src={work.logoUrl}
+            alt={work.company}
+            width={48}
+            height={48}
+            className="size-full object-contain"
+          />
+        </motion.div>
+        <motion.h3
+          variants={heroWipe}
+          className="text-4xl font-bold tracking-tighter sm:text-6xl"
+        >
+          {work.company}
+        </motion.h3>
+      </div>
+
       <motion.div
-        initial={{ opacity: 0, y: 40, filter: "blur(6px)" }}
-        whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-        viewport={{ once: true, margin: "-10% 0px" }}
-        transition={{ duration: 0.5, ease: "easeOut" }}
+        variants={lineIn}
+        className="flex items-baseline justify-between gap-4"
       >
-        <ResumeCard
-          logoUrl={work.logoUrl}
-          altText={work.company}
-          title={work.company}
-          subtitle={work.title}
-          href={work.href}
-          badges={work.badges}
-          period={`${work.start} ${work.end && "-"} ${work.end ?? "Present"}`}
-          description={work.description}
-        />
+        <p className="text-base text-muted-foreground sm:text-lg">
+          {work.title}
+        </p>
+        <time className="shrink-0 text-sm tabular-nums text-neutral-500">
+          {work.start} — {work.end || "Present"}
+        </time>
+      </motion.div>
+
+      {work.description && (
+        <motion.p
+          variants={lineIn}
+          className="text-sm leading-relaxed text-foreground/80 sm:text-base"
+        >
+          {work.description}
+        </motion.p>
+      )}
+
+      <motion.div
+        variants={lineIn}
+        className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2"
+      >
+        {work.badges && work.badges.length > 0 && (
+          <p className="text-xs text-neutral-500 sm:text-sm">
+            {work.badges.join(" · ")}
+          </p>
+        )}
+        {work.href && (
+          <Link
+            href={work.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group inline-flex items-center gap-1 text-xs font-medium text-neutral-500 transition-colors hover:text-foreground sm:text-sm"
+          >
+            Visit site
+            <ArrowUpRight className="size-3 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+          </Link>
+        )}
       </motion.div>
     </motion.div>
   );
 }
 
-export function WorkStack({ works, title }: { works: Work[]; title?: string }) {
-  const targetRef = useRef<HTMLDivElement>(null);
-  const { stickyTop, peekOffset, titleTop } = useStackGeometry();
-
-  // Measure the last card so the pile bottom, button pin, and page padding
-  // track the real rendered height instead of an estimate.
-  const lastCardRef = useRef<HTMLDivElement>(null);
-  const [lastCardHeight, setLastCardHeight] = useState(DEFAULT_CARD_HEIGHT);
-  useEffect(() => {
-    const el = lastCardRef.current;
-    if (!el) return;
-    const measure = () => setLastCardHeight(el.offsetHeight);
-    measure();
-    const ro = new ResizeObserver(measure);
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, []);
-
-  const pileBottom =
-    stickyTop + peekOffset * (works.length - 1) + lastCardHeight;
-
-  // 0 when the first card pins, 1 when the last card lands. The padding
-  // below the cards is sized so that landing moment coincides with the
-  // container bottom meeting the viewport bottom — the next section stays
-  // out of view until the pile is complete.
-  const { scrollYProgress } = useScroll({
-    target: targetRef,
-    offset: [`start ${stickyTop}px`, "end end"],
-  });
-
+// A "stories" sub-pager for the job history: one role fills the slide at a
+// time behind a segmented progress bar, advanced by the same wheel/touch/
+// arrow gestures FullPageScroll uses to flip pages — see story-stepper.tsx.
+export function WorkStack({
+  works,
+  title,
+  active,
+  stepRef,
+}: {
+  works: Work[];
+  title?: string;
+} & FullPageProps) {
   return (
-    <div
-      ref={targetRef}
-      className="relative"
-    >
-      {/* Enter finishes as the title pins, exit starts once the last card
-          lands, so the panel stays at full strength through the whole
-          stacking interaction. */}
-      <ScrollFadeSection
-        enterOffset={["start end", `start ${stickyTop}px`]}
-        exitOffset={["end end", "end start"]}
-        scaleAndDrift={false}
-        style={{
-          // 100svh of padding (minus the pile and the ~64px button block)
-          // keeps the next section below the fold until the last card lands,
-          // the extra 25svh holds the finished page a beat longer, and the
-          // 6rem floor stops short viewports from collapsing the hold.
-          paddingBottom: `max(6rem, calc(125svh - ${pileBottom + 64}px))`,
-        }}
-        className="origin-top z-100"
+    <div className="flex h-full flex-col justify-center px-6 pb-20 pt-12 sm:pb-32 sm:pt-24">
+      <motion.div
+        initial="hidden"
+        animate={active ? "visible" : "hidden"}
+        variants={section}
+        className="mx-auto w-full max-w-xl"
       >
-        {title && (
-          <motion.h2
-            initial={{ opacity: 0, y: 24, filter: "blur(6px)" }}
-            whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-            viewport={{ once: true, margin: "-10% 0px" }}
-            transition={{ duration: 0.5, ease: "easeOut" }}
-            style={{ top: titleTop || 1 }}
-            className="sticky mb-3 text-xl font-bold"
-          >
-            {title}
-          </motion.h2>
-        )}
-        {works.map((work, i) => (
-          <StackCard
-            key={work.company + work.title}
-            work={work}
-            index={i}
-            total={works.length}
-            progress={scrollYProgress}
-            stickyTop={stickyTop}
-            peekOffset={peekOffset}
-            measureRef={i === works.length - 1 ? lastCardRef : undefined}
-          />
-        ))}
-        <motion.div
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true, margin: "-10% 0px" }}
-          transition={{ duration: 0.5, ease: "easeOut" }}
-          // Trails below the last card and pins just under the pile — it
-          // moves with the cards but never joins the stack, and since it's
-          // always below them nothing ever slides over it.
-          style={{ top: pileBottom + 24 }}
-          className="sticky mt-4 flex justify-center"
-        >
-          <Link
-            href="/work"
-            className="inline-flex items-center gap-2 rounded-lg bg-primary px-6 py-3 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
-          >
-            View Full Career Path
-            <ChevronRight className="h-4 w-4" />
-          </Link>
-        </motion.div>
-      </ScrollFadeSection>
+        {title && <h2 className="mb-6 text-xl font-bold">{title}</h2>}
+
+        <StoryStepper
+          count={works.length}
+          active={active}
+          stepRef={stepRef}
+          renderSlide={(i) => <JobSlide work={works[i]} />}
+        />
+
+        <div className="mt-8 flex justify-center">
+          <SectionLink href="/work">View full career path</SectionLink>
+        </div>
+      </motion.div>
     </div>
   );
 }
