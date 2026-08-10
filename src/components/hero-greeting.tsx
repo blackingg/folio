@@ -17,21 +17,22 @@ export function HeroGreeting({
   return (
     <span className={className}>
       {words.map((word, i) => (
-        <motion.span
-          key={word}
-          initial={{ opacity: 0, y: 28, rotate: -6, filter: "blur(6px)" }}
-          animate={{ opacity: 1, y: 0, rotate: 0, filter: "blur(0px)" }}
-          transition={{
-            type: "spring",
-            stiffness: 260,
-            damping: 18,
-            delay: delay + i * 0.08,
-          }}
-          className="inline-block"
-        >
-          {word}
-          {" "}
-        </motion.span>
+        <span key={word}>
+          <motion.span
+            initial={{ opacity: 0, y: 28, rotate: -6, filter: "blur(6px)" }}
+            animate={{ opacity: 1, y: 0, rotate: 0, filter: "blur(0px)" }}
+            transition={{
+              type: "spring",
+              stiffness: 260,
+              damping: 18,
+              delay: delay + i * 0.08,
+            }}
+            className="inline-block"
+          >
+            {word}
+          </motion.span>
+          <span> </span>
+        </span>
       ))}
       <motion.span
         initial={{ opacity: 0, scale: 0.4, rotate: -30 }}
