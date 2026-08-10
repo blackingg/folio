@@ -1,30 +1,22 @@
-import { ContactIllustration } from "@/components/contact-illustration";
-import { HackathonCard } from "@/components/hackathon-card";
-import BlurFade from "@/components/magicui/blur-fade";
-import { WordStagger } from "@/components/word-stagger";
-import { HeroGreeting } from "@/components/hero-greeting";
-import { HeroAvatar } from "@/components/hero-avatar";
 import { AboutReveal } from "@/components/about-reveal";
-import { ProjectCard } from "@/components/project-card";
-import { HorizontalScroller } from "@/components/horizontal-scroller";
-import { ResumeCard } from "@/components/resume-card";
-import { ScrollFadeSection } from "@/components/scroll-fade-section";
-import { WorkStack } from "@/components/work-stack";
-import { SkillPills } from "@/components/skill-pills";
-import { DATA } from "@/data/resume";
-import Link from "next/link";
-import { ChevronRight } from "lucide-react";
-import { getBlogPosts } from "@/data/blog";
 import { BlogCard } from "@/components/blog-card";
-import { BlogCardsReveal } from "@/components/blog-cards-reveal";
-
-const BLUR_FADE_DELAY = 0.04;
+import { BlogSection } from "@/components/blog-section";
+import { ContactSection } from "@/components/contact-section";
+import { FullPageScroll } from "@/components/full-page-scroll";
+import { HeroSection } from "@/components/hero-section";
+import { ProjectShowcase } from "@/components/project-showcase";
+import { ProjectsSection } from "@/components/projects-section";
+import { SkillPills } from "@/components/skill-pills";
+import { WorkStack } from "@/components/work-stack";
+import { DATA } from "@/data/resume";
+import { getBlogPosts } from "@/data/blog";
 
 export default async function Page() {
   const posts = await getBlogPosts();
   const latestPosts = posts.slice(0, 3);
+
   return (
-    <main className="flex flex-col min-h-[100dvh] space-y-10">
+    <main>
       <script
         type="application/ld+json"
         suppressHydrationWarning
@@ -50,253 +42,63 @@ export default async function Page() {
           }),
         }}
       />
-      {/* Page 1: hero fills the viewport so the next page stays below the fold. */}
-      <div className="flex min-h-[calc(100svh-3rem)] flex-col justify-center sm:min-h-[calc(100svh-6rem)]">
-        <section id="hero">
-          <ScrollFadeSection>
-            <div className="mx-auto w-full max-w-3xl space-y-8">
-              <div className="flex flex-col-reverse sm:flex-row gap-6 items-center sm:items-start justify-between">
-                <div className="flex-col flex flex-1 space-y-2 text-center sm:text-left">
-                  <h1 className="sr-only">
-                    {DATA.name} - Frontend Engineer Portfolio
-                  </h1>
-                  <HeroGreeting
-                    firstName={DATA.name.split(" ")[0]}
-                    className="text-4xl font-bold tracking-tighter sm:text-5xl xl:text-6xl/none"
-                    delay={BLUR_FADE_DELAY}
-                  />
-                  <p className="max-w-[700px] text-left text-base leading-relaxed sm:text-lg md:text-xl">
-                    <WordStagger
-                      text={DATA.description}
-                      delay={BLUR_FADE_DELAY + 0.5}
-                    />
-                  </p>
-                </div>
-                <HeroAvatar
-                  src={DATA.avatarUrl}
-                  alt={DATA.name}
-                  initials={DATA.initials}
-                  delay={BLUR_FADE_DELAY}
-                />
-              </div>
-            </div>
-          </ScrollFadeSection>
-        </section>
-      </div>
-      {/* Page 2: About pins while the summary lights up word by word. */}
-      <section id="about">
+      <FullPageScroll>
+        <HeroSection
+          name={DATA.name}
+          description={DATA.description}
+          avatarUrl={DATA.avatarUrl}
+          initials={DATA.initials}
+        />
+
         <AboutReveal
           summary={DATA.summary}
           resumeUrl={DATA.contact.social.Resume.url}
         />
-      </section>
-      {/* Page 3: skills pin until the pill cascade completes. */}
-      <section id="skills">
+
         <SkillPills
           title="Skills"
           skills={DATA.skills}
         />
-      </section>
-      {/* Page 4: Work Experience */}
-      <section id="work">
-        <div className="flex min-h-0 flex-col gap-y-3">
-          <WorkStack
-            title="Work Experience"
-            works={DATA.work.filter((work) => (work as any).featured) as any}
-          />
-        </div>
-      </section>
 
-      {/* <section id="education">
-        <ScrollFadeSection className="flex min-h-[100svh] flex-col justify-center gap-y-3">
-          <BlurFade inView>
-            <h2 className="text-xl font-bold">Education</h2>
-          </BlurFade>
-          {DATA.education.map((education, id) => (
-            <BlurFade
-              key={education.school}
-              inView
-              delay={id * 0.1}
-              className="w-full"
-            >
-              <ResumeCard
-                key={education.school}
-                href={education.href}
-                logoUrl={education.logoUrl}
-                altText={education.school}
-                title={education.school}
-                subtitle={education.degree}
-                period={
-                  education.start
-                    ? `${education.start} - ${education.end}`
-                    : undefined
-                }
-              />
-            </BlurFade>
-          ))}
-        </ScrollFadeSection>
-      </section> */}
-
-      {/* Page 5: Projects */}
-      <section id="projects">
-        <ScrollFadeSection
-          enterOffset={["start end", "start start"]}
-          exitOffset={["end end", "end start"]}
-          className="space-y-12 w-full py-12"
-        >
-          <BlurFade delay={BLUR_FADE_DELAY * 11}>
-            <div className="flex flex-col items-center justify-center space-y-4 text-center">
-              <div className="space-y-2">
-                <div className="inline-block rounded-lg bg-foreground text-background px-4 py-1.5 text-sm font-medium">
-                  My Projects
-                </div>
-                <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">
-                  Check out my latest work
-                </h2>
-                <p className="text-muted-foreground text-sm sm:text-base md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed max-w-[600px] mx-auto">
-                  I&apos;ve worked on a variety of projects, from simple
-                  websites to complex web applications. Here are a few of my
-                  favorites.
-                </p>
-              </div>
-            </div>
-          </BlurFade>
-          <HorizontalScroller
-            footer={
-              <div className="flex justify-center">
-                <Link
-                  href="/projects"
-                  className="group inline-flex items-center gap-1.5 text-sm font-medium text-neutral-500 transition-colors hover:text-foreground"
-                >
-                  View All Projects
-                  <ChevronRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
-                </Link>
-              </div>
-            }
-          >
-            {DATA.projects
-              .filter((project) => (project as any).featured)
-              .map((project) => (
-                <ProjectCard
-                  key={project.title}
-                  href={project.href}
-                  title={project.title}
-                  description={project.description}
-                  dates={project.dates}
-                  tags={project.technologies}
-                  image={project.image}
-                  video={project.video}
-                  links={project.links}
-                />
-              ))}
-          </HorizontalScroller>
-        </ScrollFadeSection>
-      </section>
-      <section id="blog">
-        <ScrollFadeSection className="flex min-h-[100svh] w-full flex-col justify-center gap-y-12 py-12">
-          <BlurFade inView>
-            <div className="flex flex-col items-center justify-center space-y-4 text-center">
-              <div className="space-y-2">
-                <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">
-                  Recent Writing
-                </h2>
-                <p className="text-muted-foreground text-sm sm:text-base md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed max-w-[600px] mx-auto">
-                  I share my thoughts on software development, life, and the
-                  things I&apos;m learning along the way.
-                </p>
-              </div>
-            </div>
-          </BlurFade>
-          <BlogCardsReveal
-            className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 mx-auto px-4 sm:px-0"
-            itemClassName="sm:last:odd:col-span-2 lg:last:odd:col-span-1"
-          >
-            {latestPosts.map((post) => (
-              <BlogCard
-                key={post.slug}
-                title={post.title}
-                publishedAt={post.publishedAt}
-                summary={post.summary}
-                image={post.image}
-                slug={post.slug}
-                readingTime={post.readingTime}
+        <ProjectsSection>
+          {DATA.projects
+            .filter((project) => (project as any).featured)
+            .map((project) => (
+              <ProjectShowcase
+                key={project.title}
+                href={project.href}
+                title={project.title}
+                description={project.description}
+                dates={project.dates}
+                tags={project.technologies}
+                image={project.image}
+                video={project.video}
+                links={project.links?.map(({ type, href }) => ({ type, href }))}
               />
             ))}
-          </BlogCardsReveal>
-          <BlurFade inView>
-            <div className="flex justify-center mt-4">
-              <Link
-                href="/blog"
-                className="inline-flex items-center gap-2 rounded-lg bg-primary px-6 py-3 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
-              >
-                View All Posts
-                <ChevronRight className="h-4 w-4" />
-              </Link>
-            </div>
-          </BlurFade>
-        </ScrollFadeSection>
-      </section>
-      {/* <section id="hackathons">
-        <div className="space-y-12 w-full py-12">
-          <BlurFade delay={BLUR_FADE_DELAY * 13}>
-            <div className="flex flex-col items-center justify-center space-y-4 text-center">
-              <div className="space-y-2">
-                <div className="inline-block rounded-lg bg-foreground text-background px-3 py-1 text-sm">
-                  Other Projects
-                </div>
-                <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">
-                  I like building things
-                </h2>
-                <p className="text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-                  These are some of the other projects I&apos;ve worked on.
-                  Contract work, personal projects, and hackathons.
-                </p>
-              </div>
-            </div>
-          </BlurFade>
-          <BlurFade delay={BLUR_FADE_DELAY * 14}>
-            <ul className="mb-4 ml-4 divide-y divide-dashed border-l">
-              {DATA.hackathons.map((project, id) => (
-                <BlurFade
-                  key={project.title + project.dates}
-                  delay={BLUR_FADE_DELAY * 15 + id * 0.05}
-                >
-                  <HackathonCard
-                    title={project.title}
-                    description={project.description}
-                    location={project.location}
-                    dates={project.dates}
-                    image={project.image}
-                    links={project.links}
-                  />
-                </BlurFade>
-              ))}
-            </ul>
-          </BlurFade>
-        </div>
-      </section> */}
-      <section id="contact">
-        <ScrollFadeSection className="grid min-h-[calc(100svh-5rem)] sm:min-h-[calc(100svh-8rem)] items-center justify-center gap-4 px-4 text-center md:px-6 w-full py-12">
-          <BlurFade inView>
-            <div className="space-y-3">
-              <ContactIllustration className="mx-auto size-40 sm:size-48 lg:size-64" />
-              <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">
-                Get in Touch
-              </h2>
-              <p className="mx-auto max-w-[600px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-                Want to chat? Just shoot me a mail{" "}
-                <Link
-                  href={DATA.contact.social.email.url}
-                  className="text-neon hover:underline"
-                >
-                  here
-                </Link>{" "}
-                and I&apos;ll respond whenever I can.
-              </p>
-            </div>
-          </BlurFade>
-        </ScrollFadeSection>
-      </section>
+        </ProjectsSection>
+
+        <WorkStack
+          title="Work Experience"
+          works={DATA.work.filter((work) => (work as any).featured) as any}
+        />
+
+        <BlogSection>
+          {latestPosts.map((post) => (
+            <BlogCard
+              key={post.slug}
+              title={post.title}
+              publishedAt={post.publishedAt}
+              summary={post.summary}
+              image={post.image}
+              slug={post.slug}
+              readingTime={post.readingTime}
+            />
+          ))}
+        </BlogSection>
+
+        <ContactSection emailUrl={DATA.contact.social.email.url} />
+      </FullPageScroll>
     </main>
   );
 }

@@ -20,21 +20,22 @@ export function WordStagger({
   return (
     <span className={cn("inline", className)}>
       {words.map((word, i) => (
-        <motion.span
-          key={i}
-          initial={{ opacity: 0, y: 14, filter: "blur(5px)" }}
-          whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-          viewport={{ once: true, margin: "-10% 0px" }}
-          transition={{
-            duration: 0.4,
-            ease: "easeOut",
-            delay: delay + i * stagger,
-          }}
-          className="inline-block"
-        >
-          {word}
-          {i < words.length - 1 ? " " : ""}
-        </motion.span>
+        <span key={i}>
+          <motion.span
+            initial={{ opacity: 0, y: 14, filter: "blur(5px)" }}
+            whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+            viewport={{ once: true, margin: "-10% 0px" }}
+            transition={{
+              duration: 0.4,
+              ease: "easeOut",
+              delay: delay + i * stagger,
+            }}
+            className="inline-block"
+          >
+            {word}
+          </motion.span>
+          {i < words.length - 1 ? " " : ""}
+        </span>
       ))}
     </span>
   );

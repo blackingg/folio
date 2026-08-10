@@ -205,3 +205,12 @@ code[data-line-numbers-max-digits="3"] > [data-line]::before {
   }
 }
 
+/* Homepage-only: FullPageScroll takes over the viewport and drives page
+   transitions itself, so the real document must never scroll or show a
+   scrollbar while it's mounted. */
+html.full-page-scroll-active,
+html.full-page-scroll-active body {
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
