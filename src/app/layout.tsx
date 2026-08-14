@@ -1,4 +1,5 @@
 import Navbar from "@/components/navbar";
+import { Explore3dButton } from "@/components/explore-3d-button";
 import { ThemeProvider } from "@/components/theme-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { DATA } from "@/data/resume";
@@ -172,6 +173,7 @@ export default function RootLayout({
           defaultTheme="dark"
         >
           <TooltipProvider delayDuration={0}>
+            <Explore3dButton />
             <div className="px-6">{children}</div>
             <Navbar />
           </TooltipProvider>
