@@ -76,7 +76,6 @@ export function Explore3dButton({ className, delay = 0 }: Explore3dButtonProps) 
               } as any
             }
           >
-            {/* Continuous levitation / idle float wrapper (from profile avatar animation) */}
             <motion.div
               animate={{ y: [0, -8, 0] }}
               transition={{
@@ -128,7 +127,7 @@ export function Explore3dButton({ className, delay = 0 }: Explore3dButtonProps) 
                     d="M 50, 50 m -37, 0 a 37,37 0 1,1 74,0 a 37,37 0 1,1 -74,0"
                     fill="none"
                   />
-                  <text className="fill-foreground/90 group-hover:fill-[hsl(var(--neon))] text-[8px] font-semibold tracking-[0.14em] uppercase transition-colors duration-300">
+                  <text className="fill-foreground/90 group-hover:fill-[hsl(var(--neon))] text-[6px] font-semibold tracking-[0.14em] uppercase transition-colors duration-300">
                     <textPath
                       href="#circularTextPath"
                       startOffset="0%"
@@ -152,7 +151,7 @@ export function Explore3dButton({ className, delay = 0 }: Explore3dButtonProps) 
                   transform: "translateZ(36px)",
                 }}
               >
-                <Box className="size-6 transition-transform duration-300 group-hover:rotate-12" />
+                <span  className="size-6 transition-transform duration-300 group-hover:rotate-12" >🚧</span>                                
               </div>
             </motion.div>
           </Link>
