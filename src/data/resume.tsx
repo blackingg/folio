@@ -462,11 +462,11 @@ export const DATA = {
     {
       title: "Pokedex",
       href: "https://pokedex-blackingg.vercel.app/",
-      dates: "...",
+      dates: "Oct 2024",
       active: true,
       description:
-        "A site filled with free pictures and videos that can be download on the pexels main site. This was built with Next.js, Tailwind CSS, pexels Api, Framer motion.",
-      technologies: ["Next.js", "Typescript", "TailwindCSS"],
+        "Pokedex is a browsable index of the first 898 Pokémon built on the PokéAPI. The grid takes a live name search and a type filter, and loads more entries as you scroll, while a side panel gives the selected Pokémon its sprite, Pokédex entry, height, weight and abilities. I put a small Express layer in front of the API rather than calling it straight from the client: the public list endpoint returns names without types, so the server walks all eighteen type endpoints once and folds them into a single pre-tagged list — which is what makes filtering instant instead of one request per card. The frontend is React and Tailwind on Vite, built to a reference design.",
+      technologies: ["React", "Vite", "TailwindCSS", "Express", "PokéAPI"],
       links: [
         {
           type: "Source - Web",
