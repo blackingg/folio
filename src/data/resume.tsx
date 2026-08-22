@@ -313,18 +313,19 @@ export const DATA = {
     {
       title: "SokoFunds",
       href: "https://github.com/blackingg/SokoFunds",
-      dates: "Nov 2025 - Jan 2026",
+      dates: "Nov 2025 - Present",
       active: true,
       featured: true,
       description:
-        "SokoFunds is a fintech mobile application built to provide a modern banking experience. It features real-time balance tracking, secure money transfers, investment management for assets like tech stocks and real estate, and digital card management. The app focuses on a sleek Glassmorphism design with smooth animations for a premium user experience.",
+        "SokoFunds is a challenger neobank for the Democratic Republic of the Congo — a market where formal banking penetration is low and mobile money is how money actually moves. It runs a two-layer rail model: free instant SokoFunds→SokoFunds transfers with live name resolution, plus interoperation with the rails people already have — M-Pesa, Airtel Money, Orange Money and the Congolese banks — alongside virtual cards and investments. I built it on a simulated backend behind a typed API boundary, so swapping in a real server touches no screen — with TanStack Query driving account data through optimistic updates and rollback, PIN and biometric auth held in SecureStore, money as integer minor units in a multi-currency layer, and French-first i18n.",
       technologies: [
         "React Native",
         "Expo",
         "TypeScript",
+        "TanStack Query",
         "Zustand",
         "NativeWind",
-        "Reanimated",
+        "i18next",
       ],
       links: [
         {
