@@ -4,8 +4,8 @@ import { BlogSection } from "@/components/blog-section";
 import { ContactSection } from "@/components/contact-section";
 import { FullPageScroll } from "@/components/full-page-scroll";
 import { HeroSection } from "@/components/hero-section";
-import { ProjectShowcase } from "@/components/project-showcase";
 import { ProjectsSection } from "@/components/projects-section";
+import { toViscoseProjects } from "@/components/viscose/select";
 import { SkillPills } from "@/components/skill-pills";
 import { WorkStack } from "@/components/work-stack";
 import { DATA } from "@/data/resume";
@@ -60,23 +60,11 @@ export default async function Page() {
           skills={DATA.skills}
         />
 
-        <ProjectsSection>
-          {DATA.projects
-            .filter((project) => (project as any).featured)
-            .map((project) => (
-              <ProjectShowcase
-                key={project.title}
-                href={project.href}
-                title={project.title}
-                description={project.description}
-                dates={project.dates}
-                tags={project.technologies}
-                image={project.image}
-                video={project.video}
-                links={project.links?.map(({ type, href }) => ({ type, href }))}
-              />
-            ))}
-        </ProjectsSection>
+        <ProjectsSection
+          projects={toViscoseProjects(
+            DATA.projects.filter((project) => (project as any).featured),
+          )}
+        />
 
         <WorkStack
           title="Work Experience"
