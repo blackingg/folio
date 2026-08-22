@@ -8,18 +8,15 @@ import {
 } from "@/components/viscose/viscose-carousel";
 
 /**
- * The full portfolio as one wheel - every project, no pagination, nothing to
- * click through.
+ * The full portfolio as one wheel — every project, no pagination.
  *
- * The page breaks out of the layout's centred max-w-3xl column and cancels
- * its vertical padding: an arc boxed into 720px is a list with a curve, not a
- * slice of something bigger going past. body has overflow-x-hidden, so 100vw
- * cannot open a horizontal scrollbar.
+ * Breaks out of the layout's centred max-w-3xl column: an arc boxed into 720px
+ * is a list with a curve, not a slice of something bigger going past. body has
+ * overflow-x-hidden, so 100vw cannot open a horizontal scrollbar.
  *
- * The grid arrives as `children` and is only ever shown as the fallback, for
- * no-WebGL. It comes in as a node rather than as data because ProjectCard
- * renders an icon per link, and a rendered node cannot be handed across the
- * server/client boundary as a prop.
+ * The grid arrives as `children` and only ever shows as the no-WebGL fallback.
+ * It comes in as a node because ProjectCard renders an icon per link, which
+ * cannot cross the server/client boundary as a prop.
  */
 export function ProjectsExplorer({
   projects,
@@ -40,17 +37,14 @@ export function ProjectsExplorer({
         </Link>
       </header>
 
-      {/* pb-16 keeps the foot clear of the dock, which floats over the page. */}
       <ViscoseCarousel
         projects={projects}
         heading="All Projects"
         layout="full"
-        // Deliberately not a loop. Wrapping hides where the list ends, so
-        // there is no way to tell you have seen everything — the wheel stops
-        // at the first and last project instead.
+        // Not a loop: wrapping hides where the list ends, so there is no way
+        // to tell you have seen everything.
         loop={false}
-        // No FullPageScroll here, so the ring takes the wheel itself and owns
-        // vertical drags outright.
+        // No FullPageScroll here, so the ring takes the wheel itself.
         className="min-h-0 flex-1 touch-none pb-16"
         fallback={
           <div className="mx-auto h-full max-w-3xl overflow-y-auto px-6 pb-28">

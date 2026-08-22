@@ -12,11 +12,10 @@ type SourceProject = {
 
 /**
  * DATA.projects carries a rendered icon on every link, which cannot cross the
- * server/client boundary. Everything the ring needs is plain data, so strip to
- * that on the way through.
+ * server/client boundary. Strip to plain data on the way through.
  *
- * Projects with no screenshot are dropped rather than shown blank: a card in
- * the ring is its artwork, and an empty cell in the atlas reads as a bug.
+ * Projects with no screenshot are dropped: a card in the ring *is* its
+ * artwork, and an empty atlas cell reads as a bug.
  */
 export function toViscoseProjects(
   projects: readonly SourceProject[],

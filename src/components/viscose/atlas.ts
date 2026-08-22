@@ -37,13 +37,11 @@ const load = (src: string, priority: "high" | "low") =>
 /**
  * Packs every screenshot into one texture.
  *
- * One sheet rather than one texture per card because GLSL ES 1.00 cannot
- * index an array of samplers with a non-constant index, and the fragment
- * shader picks its cell per pixel from a uniform.
+ * One sheet rather than one texture per card, because GLSL ES 1.00 cannot
+ * index an array of samplers with a non-constant index.
  *
  * Returns synchronously with the sheet pre-filled: the renderer needs
- * something to bind on frame one, and the entry animation runs while the
- * later cells are still arriving.
+ * something to bind on frame one.
  */
 export function buildAtlas(
   sources: readonly (string | CellPainter)[],
@@ -65,9 +63,9 @@ export function buildAtlas(
   const texture = new THREE.CanvasTexture(canvas);
   // The shader flips each cell itself, so leave the sheet as drawn.
   texture.flipY = false;
-  // NoColorSpace deliberately: the fragment shader writes straight to the
-  // framebuffer with no encoding step, and decoding on read without encoding
-  // on write is exactly what washes screenshots out.
+  // NoColorSpace deliberately: the shader writes straight to the framebuffer
+  // with no encoding step, and decoding on read without encoding on write is
+  // what washes screenshots out.
   texture.colorSpace = THREE.NoColorSpace;
   texture.wrapS = THREE.ClampToEdgeWrapping;
   texture.wrapT = THREE.ClampToEdgeWrapping;
@@ -79,8 +77,8 @@ export function buildAtlas(
     const x = (i % cols) * CELL_W;
     const y = Math.floor(i / cols) * cellH;
 
-    // Cover fit: fill the cell, crop the overflow, never squash. Anchored to
-    // the top because these are screenshots and the header is the subject.
+    // Cover fit, anchored to the top: these are screenshots, and the header is
+    // the subject.
     const scale = Math.max(CELL_W / img.width, cellH / img.height);
     const dw = img.width * scale;
     const dh = img.height * scale;
@@ -93,8 +91,7 @@ export function buildAtlas(
     ctx.restore();
   };
 
-  // Cells that draw themselves. Painted up front, so they are on the sheet
-  // for frame one — there is nothing to wait for.
+  // Cells that draw themselves, painted up front so frame one has them.
   const paintCell = (i: number) => {
     const src = sources[i];
     if (typeof src !== "function") return false;
@@ -111,9 +108,8 @@ export function buildAtlas(
   const painted = sources.map((_, i) => paintCell(i)).some(Boolean);
   if (painted) texture.needsUpdate = true;
 
-  // Canvas text is baked the moment it is drawn, so a painter that runs
-  // before the page's own typeface has arrived is stuck with the fallback
-  // for good. Draw again once the real font lands.
+  // Canvas text is baked when drawn, so a painter that runs before the page's
+  // typeface arrives is stuck with the fallback. Draw again once it lands.
   if (painted && typeof document !== "undefined" && document.fonts) {
     document.fonts.ready.then(() => {
       sources.forEach((_, i) => paintCell(i));
@@ -133,8 +129,7 @@ export function buildAtlas(
            as settled, so one bad path cannot strand the entry */
       });
 
-  // Cell 0 is whatever the ring opens on, so it is asked for ahead of the
-  // rest — unless it paints itself, in which case it is already there.
+  // Cell 0 is whatever the ring opens on, so it is asked for first.
   const first =
     typeof sources[0] === "function"
       ? Promise.resolve()
@@ -142,9 +137,8 @@ export function buildAtlas(
           texture.needsUpdate = true;
         });
 
-  // One upload at the end for the rest. Marking the texture dirty per image
-  // would re-send the whole sheet once per screenshot, for cells nobody is
-  // looking at yet.
+  // One upload at the end: marking the texture dirty per image re-sends the
+  // whole sheet once per screenshot.
   const ready = Promise.all([
     first,
     ...remote.filter((i) => i !== 0).map((i) => fetchInto(i, "low")),

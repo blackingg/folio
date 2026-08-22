@@ -10,11 +10,9 @@ import {
 } from "@/components/viscose/viscose-carousel";
 import type { FullPageProps } from "@/components/full-page-scroll";
 
-// The slide that ends the ring. A drawn neon tile rather than a screenshot
-// (see posterPainter), so it merges and strings honey exactly like a project
-// card does — it just happens to open the full list instead of a site.
-// Module-level so its identity is stable: the render loop rebuilds itself
-// whenever the projects array changes.
+// The slide that ends the ring: a drawn tile rather than a screenshot, so it
+// merges and strings honey like any project card. Module-level so its identity
+// is stable — the render loop rebuilds whenever the projects array changes.
 const VIEW_ALL: ViscoseProject = {
   title: "View all projects",
   href: "/projects",
@@ -35,14 +33,12 @@ const section = {
   },
 };
 
-// The featured projects as an arc of a much bigger wheel — see
-// components/viscose. The carousel takes the whole panel rather than sitting
-// in a column, because the cards have to be able to fuse into one another and
+// The featured projects as an arc of a much bigger wheel. Takes the whole
+// panel rather than a column: the cards have to fuse into one another, and
 // there is nothing to fuse with inside a max-w-xl box.
 //
-// It answers the same `stepRef` gesture contract the story stepper did, so a
-// wheel tick turns the ring one slot and only flips on to Work once the last
-// project has been past — see full-page-scroll.tsx.
+// Answers the same `stepRef` gesture contract the story stepper did, so a
+// wheel tick turns the ring one slot and only flips on to Work at the end.
 export function ProjectsSection({
   projects,
   active,
@@ -62,15 +58,13 @@ export function ProjectsSection({
       <ViscoseCarousel
         projects={slides}
         heading="Selected Projects"
-        // Clamped rather than looping: the first and last slots are what hand
-        // the gesture back to FullPageScroll.
+        // Clamped, not looping: the end slots hand the gesture back.
         loop={false}
         compact
         active={active}
         stepRef={stepRef}
         fallback={<StillProjects projects={projects} />}
-        // Breaks the body's max-w-3xl column for the same reason /projects
-        // does — the arc needs the width to read as an arc.
+        // Breaks the body's max-w-3xl column: the arc needs the width.
         className="relative left-1/2 min-h-0 w-screen -translate-x-1/2 flex-1"
       />
 
@@ -78,9 +72,8 @@ export function ProjectsSection({
   );
 }
 
-// Shown when the ring cannot or should not run: reduced motion, or no WebGL.
-// Deliberately not a scroller — this panel owns exactly one viewport and has
-// no scrollbar to give, so the featured set is laid out to fit instead.
+// Shown when the ring cannot run: no WebGL. Not a scroller — this panel owns
+// exactly one viewport and has no scrollbar to give.
 function StillProjects({ projects }: { projects: readonly ViscoseProject[] }) {
   return (
     <div className="mx-auto flex size-full max-w-3xl flex-col justify-center gap-4 px-6">

@@ -1,16 +1,12 @@
-// The whole carousel is one rectangle running one fragment shader. There are
-// no card elements: every card is a rounded-box distance function on an arc,
-// and the cards are combined with a *smooth* minimum so neighbours fuse into
-// one surface when they close up instead of overlapping.
-//
-// Two `<img>` tags will never merge, and no amount of `filter: blur()` makes
-// them behave like a fluid once you look closely. Once every shape is a
-// distance instead of an object, merging is just arithmetic.
+// The whole carousel is one rectangle running one fragment shader. Every card
+// is a rounded-box distance function on an arc, combined with a *smooth*
+// minimum so neighbours fuse into one surface instead of overlapping. Two
+// `<img>` tags will never merge; once every shape is a distance rather than an
+// object, merging is arithmetic.
 
 /**
  * How many cards the shader is compiled to consider. The frame loop uploads
- * only the nearest few, so this is fixed no matter how long the project list
- * gets — adding projects costs zero shader work.
+ * only the nearest few, so adding projects costs zero shader work.
  */
 export const MAX_CARDS = 9;
 
@@ -57,14 +53,11 @@ export const FRAGMENT = /* glsl */ `
     return min(max(q.x, q.y), 0.0) + length(max(q, 0.0)) - r;
   }
 
-  // The honey between two cards: a slab swept centre to centre, as wide as
-  // the edges it comes off, pinched in the middle and drooping under its own
-  // weight.
+  // The honey between two cards: a slab swept centre to centre, pinched in the
+  // middle and drooping under its own weight.
   //
-  // Deliberately not a capsule. A capsule has a round cross-section, so at
-  // full merge it bulges past the flat sides of the cards themselves. Swept
-  // as a box, it stays entirely inside them while they overlap and the
-  // silhouette still reads as one flat card.
+  // Not a capsule: a round cross-section bulges past the flat sides of the
+  // cards at full merge. Swept as a box it stays inside them.
   float sdBridge(vec2 p, vec2 a, vec2 b, float rEnd, float rMid, float sag) {
     vec2 ba = b - a;
     float len = length(ba);
@@ -89,12 +82,9 @@ export const FRAGMENT = /* glsl */ `
     return max(abs(along) - len * 0.5, abs(across) - r);
   }
 
-  // Smooth minimum. This one function is why the shapes read as liquid:
-  // plain min() unions two shapes with a crease, this one swells the join
-  // into a fillet so anything near anything else fuses.
-  //
-  // Note it degrades to min() when "a" is the 1e6 sentinel, so seeding the
-  // accumulator with it needs no special case.
+  // Smooth minimum — why the shapes read as liquid: plain min() unions with a
+  // crease, this swells the join into a fillet. Degrades to min() at the 1e6
+  // sentinel, so seeding the accumulator needs no special case.
   float smin(float a, float b, float k) {
     if (k <= 0.0001) return min(a, b);
     float h = clamp(0.5 + 0.5 * (b - a) / k, 0.0, 1.0);
@@ -104,8 +94,8 @@ export const FRAGMENT = /* glsl */ `
   void main() {
     vec2 p = (vUv - 0.5) * uResolution;
 
-    // Nothing is ever drawn at the cursor. It raises k locally, so the
-    // surface goes soft right under it and stays stiff further out.
+    // Nothing is drawn at the cursor; it raises k locally, so the surface goes
+    // soft under it and stays stiff further out.
     vec2 toPointer = p - uPointer;
     float melt = uMelt * exp(-dot(toPointer, toPointer) / (uMeltReach * uMeltReach));
     float k = uK + melt;
@@ -131,22 +121,16 @@ export const FRAGMENT = /* glsl */ `
       float di = sdRoundBox(q, hb, min(uCorner * s, min(hb.x, hb.y)));
       d = smin(d, di, k);
 
-      // Art is dealt by weight, not by whichever card is nearest. Inside the
-      // fillet where two cards have fused there *is* no nearest one, and
-      // picking a winner puts a hard seam down the middle of the join.
+      // Art is dealt by weight, not by nearest card: inside the fillet where
+      // two have fused there is no nearest one, and picking a winner puts a
+      // seam down the join.
       //
-      // Weighted by the *ratio* of distances rather than by exp(-d/px). A
-      // falloff quoted in pixels has to serve gaps that are constantly
-      // changing size, and it fails at both ends of that range: across a
-      // wide gap it holds one card's art almost the whole way over and then
-      // snaps to an even mix at the midpoint, which is the band you see, and
-      // across a narrow one it spans the entire gap and turns the join to
-      // mush. Inverse distance is scale-free, so the crossfade always
-      // occupies exactly the gap it is crossing, whatever that gap happens
-      // to be this frame.
-      //
-      // uArtFloor only keeps the divide finite; it also sets how hard the
-      // pixels right at a card face lock to that card's own artwork.
+      // Weighted by the *ratio* of distances, not exp(-d/px). A falloff in
+      // pixels has to serve gaps that constantly change size and fails at both
+      // ends — banding across a wide gap, mush across a narrow one. Inverse
+      // distance is scale-free, so the crossfade always occupies exactly the
+      // gap it is crossing. uArtFloor keeps the divide finite and sets how
+      // hard pixels at a card face lock to that card's own artwork.
       float dw = max(di, 0.0) + uArtFloor;
       float w = 1.0 / (dw * dw);
 

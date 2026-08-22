@@ -36,36 +36,46 @@ export type ViscoseProject = {
 };
 
 /**
- * Everything tunable, in one place.
- *
- * Distances are CSS px unless noted; anything derived from the card's long
- * edge is written as a multiple of it, so the ring re-proportions on a phone
- * rather than merely shrinking.
+ * Everything tunable, in one place. Distances are CSS px unless noted.
  */
 const TUNE = {
   aspect: 1.5, // card long : short
   gap: 1.32, // slot spacing, in short edges — the ring stacks vertically
-  // Big on purpose. A tight radius leans each card over like a conveyor;
-  // what you want is a few degrees, so the arc reads as a slice of something
-  // much larger passing by rather than a wheel you can see all of.
+  // Big on purpose: a tight radius leans the cards over like a conveyor.
   arcRadius: 4.0, // x container height
   arcMin: 2400,
-  // The ring sits right of centre by a fraction of the *column*, not of the
-  // viewport: keyed off the viewport it keeps walking rightward on a wide
-  // monitor and leaves the type stranded on its own.
+  // Keyed off the column, not the viewport: off the viewport the ring keeps
+  // walking rightward on a wide monitor and strands the type.
   column: 768, // px, matches the layout's max-w-3xl
   sideShift: 0.28, // fraction of the column, "column" layout
-  // "full" layout puts the ring left of centre and gives the whole right
-  // side over to the detail panel, so the shift is negative and keyed off
-  // the viewport rather than a column that isn't there.
   fullShift: 0.16, // fraction of the viewport, "full" layout
   sideShiftFrom: 768, // px of width below which the ring re-centres instead
+
+  // -- the phone, where the ring lies down --------------------------------
+  // Standing up, the ring cannot be touched on the homepage at all:
+  // FullPageScroll owns every vertical swipe and takes the finger first.
+  // Sideways is free — it drops any gesture wider than it is tall.
+  lieDownBelow: 768, // px
+  // Lying down, width is the travel axis and height is the spare one, so the
+  // card can be most of the screen rather than the 46% a standing ring takes.
+  mobileCard: 0.62, // fraction of viewport width
+  mobileCardMax: 420,
+  // The card and the gap buy from the same half-screen: the neighbour's near
+  // edge sits at hx * (2g - 1) from centre. 0.62 / 1.20 leaves ~25px of the
+  // next card showing with ~49px of daylight before it.
+  mobileGap: 1.2,
+  // Thread width, via v = (mobileGap - 1) / this. It comes off the short edge
+  // here, so it needs a bigger fraction of that edge than the standing ring's
+  // 15% to read the same. 0.46 puts it at ~28%, i.e. 46px on a 390px phone.
+  mobileThreadReach: 0.46,
+  // Lifts the arc clear of the type instead of running behind it.
+  mobileLift: 0.1, // fraction of panel height
+  axisLock: 8, // px
   window: 3, // slots either side of the front that reach the shader
   corner: 0.045, // x long edge
   k: 0.045, // base smin, x long edge — the viscosity of the whole world
-  // Not a crossfade width — the art crossfade is scale-free now (see the
-  // fragment shader). This is only the floor under the weights, and so how
-  // tightly the pixels at a card face hold that card's own artwork.
+  // Only the floor under the art weights — how tightly pixels at a card face
+  // hold that card's own artwork.
   artFloor: 0.03, // x long edge
   depthScale: 0.2, // how much the arc's far cards shrink
   depthDim: 0.38,
@@ -76,10 +86,8 @@ const TUNE = {
 
   // scroll / drag
   //
-  // A wheel tick is an impulse into a damped system, so what it is worth is
-  // not `wheel` alone: total travel is v0 * dt / (1 - damping), i.e. v0/4.2
-  // at 60fps with the damping below. These two are therefore tuned as a
-  // pair, against one Chrome notch of deltaY 120 landing just under a slot.
+  // A wheel tick is an impulse into a damped system: travel is v0/4.2 at 60fps
+  // with the damping below, so these two are tuned as a pair.
   wheel: 0.032, // slots/s of velocity per px of wheel delta
   damping: 0.93, // velocity kept per 60fps frame
   maxSpeed: 20, // slots/s, so one flick cannot run away
@@ -89,10 +97,8 @@ const TUNE = {
   pickRate: 0.14,
 
   // the honey between neighbours
-  // At rest the neighbours sit `gap - 1` short edges apart, so
-  // v = (gap - 1) / threadReach and the thread's width comes out as exactly
-  // (1 - v)^threadFalloff of the card's long edge. At 1.32 / 0.55 / 2.2 that
-  // is ~15% at the ends and ~7% through the neck: a thread, not a slab.
+  // v = (gap - 1) / threadReach, and the thread's width is (1 - v)^falloff of
+  // the facing edge. At 1.32 / 0.55 / 2.2 that is ~15%: a thread, not a slab.
   threadReach: 0.55, // gap, in short edges, over which a thread survives
   threadFalloff: 2.2, // higher thins it faster off the edge
   pinch: 0.18, // how far the neck narrows relative to the ends
@@ -126,11 +132,8 @@ const hueToRgb = (p: number, q: number, t: number) => {
 };
 
 /**
- * Reads one of the theme's HSL tokens as raw sRGB.
- *
- * Raw on purpose: the shader writes straight to the framebuffer with no
- * encoding step, so the background it mixes toward has to sit in the same
- * space as the atlas it mixes from.
+ * Reads one of the theme's HSL tokens as raw sRGB — raw because the shader
+ * writes straight to the framebuffer with no encoding step.
  */
 function themeRgb(
   token: string,
@@ -152,15 +155,11 @@ function themeRgb(
 }
 
 /**
- * Swaps a label when the front card changes. A plain fade and rise — the goo
- * belongs to the ring, not to the caption.
+ * Swaps a label when the front card changes.
  *
- * Deliberately a keyed remount rather than an AnimatePresence with an exit.
- * `mode="wait"` holds the outgoing label until its exit finishes, so a flick
- * that crosses six projects in half a second queues swaps faster than they
- * can drain and the panel ends up describing a card that left the screen
- * seconds ago. Nothing to wait for here: the key changes, React remounts,
- * and the label is always the one under the ring.
+ * A keyed remount rather than AnimatePresence: `mode="wait"` holds the
+ * outgoing label until its exit finishes, so a fast flick queues swaps faster
+ * than they drain and the panel describes a card that left seconds ago.
  */
 function Swap({
   value,
@@ -184,13 +183,11 @@ function Swap({
 }
 
 /**
- * Draws a call-to-action tile straight into the atlas, so a slide with no
- * screenshot still behaves like every other card in the ring — it merges, it
- * strings honey, it snaps to front.
+ * Draws a CTA tile straight into the atlas, so a slide with no screenshot
+ * still merges and strings honey like every other card.
  *
- * Neon rather than a theme colour: --neon is the one token globals.css does
- * not redefine under .dark, and a canvas cell is baked the moment it is
- * drawn, so anything theme-bound would be wrong as soon as the toggle flips.
+ * Neon rather than a theme colour: a canvas cell is baked when drawn, so
+ * anything theme-bound is wrong the moment the toggle flips.
  */
 function posterPainter(label: string, font: string, bg: string): CellPainter {
   return (ctx, x, y, w, h) => {
@@ -250,10 +247,9 @@ export function ViscoseCarousel({
    *  slots can hand the gesture back to FullPageScroll. */
   loop?: boolean;
   compact?: boolean;
-  /** "column" keeps the chrome inside the site's centred max-w-3xl and puts
-   *  the ring to its right — the homepage panel. "full" spans the viewport,
-   *  moves the ring left and gives the right side to a detail panel wide
-   *  enough for a description. */
+  /** "column" keeps the chrome in the site's centred max-w-3xl with the ring
+   *  to its right. "full" spans the viewport and gives the right side to a
+   *  detail panel. */
   layout?: "column" | "full";
   fallback?: React.ReactNode;
   className?: string;
@@ -282,8 +278,7 @@ export function ViscoseCarousel({
   const router = useRouter();
 
   // Plain descriptors, not painters: the render loop keys off this array's
-  // identity, and building closures here would tear down and rebuild the
-  // renderer on every re-render. They become painters inside the effect.
+  // identity, and closures here would rebuild the renderer every render.
   const sources = useMemo(
     () => projects.map((p) => p.poster ?? p.image ?? ""),
     [projects],
@@ -299,12 +294,9 @@ export function ViscoseCarousel({
     [projects, router],
   );
 
-  // The gesture contract FullPageScroll hands every page. Returning false at
-  // the ends is what lets the section flip on to Work, instead of trapping
-  // the wheel inside a ring that never runs out.
-  // Gated on `degraded`: a fallback that cannot step must not claim the
-  // gesture, or the wheel is swallowed by a list that never moves and the
-  // page below it never arrives.
+  // The gesture contract FullPageScroll hands every page: returning false at
+  // the ends lets the section flip on to Work. Gated on `degraded` — a
+  // fallback that cannot step must not claim the gesture.
   useEffect(() => {
     if (degraded) return;
     stepRef?.({
@@ -320,8 +312,7 @@ export function ViscoseCarousel({
     return () => stepRef?.(null);
   }, [stepRef, loop, count, degraded]);
 
-  // Re-arm the entry each time the section comes back into view, the same way
-  // the story stepper used to reset to its first slide.
+  // Re-arm the entry each time the section comes back into view.
   useEffect(() => {
     if (!active) return;
     progressRef.current = 0;
@@ -336,10 +327,8 @@ export function ViscoseCarousel({
     const canvas = canvasRef.current;
     if (!host || !canvas || count === 0) return;
 
-    // Reduced motion means no *involuntary* motion — not no carousel. The
-    // arc itself is a layout, and a still arc is no more animated than a
-    // grid is. What goes is everything that moves without being asked: the
-    // entry fan, the inertia after a flick, and every cursor force.
+    // Reduced motion means no *involuntary* motion, not no carousel: what goes
+    // is the entry fan, the inertia and the cursor forces.
     const motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
     let reduced = motionQuery.matches;
     const onMotionChange = (e: MediaQueryListEvent) => {
@@ -421,8 +410,7 @@ export function ViscoseCarousel({
     mesh.frustumCulled = false;
     scene.add(mesh);
 
-    // Re-read the palette when the theme flips, rather than rebuilding the
-    // renderer for a colour change.
+    // Re-read the palette on a theme flip rather than rebuilding the renderer.
     const themeObserver = new MutationObserver(() => {
       const bg = themeRgb("--background", [1, 1, 1]);
       const ink = themeRgb("--muted", [0.94, 0.94, 0.94]);
@@ -443,31 +431,44 @@ export function ViscoseCarousel({
     let arcR = 2000;
     let step = 0.13; // radians between slots
     let shiftX = 0;
+    let shiftY = 0;
+    // Which way the ring travels; everything axis-dependent reads this.
+    let lying = false;
 
     const measure = () => {
       const rect = host.getBoundingClientRect();
       W = Math.max(1, rect.width);
       H = Math.max(1, rect.height);
-      // A standing ring is bounded by height, not width: the card has to
-      // leave room above and below for the neighbours it is about to pull
-      // apart from.
-      L = clamp(
-        Math.min(W * 0.46, H * TUNE.aspect * (compact ? 0.4 : 0.44)),
-        compact ? 170 : 200,
-        compact ? 360 : 520,
-      );
+      lying = W < TUNE.lieDownBelow;
+      if (lying) {
+        // Bounded by width now; the height term only catches a landscape phone.
+        L = clamp(
+          Math.min(W * TUNE.mobileCard, H * TUNE.aspect * 0.5),
+          170,
+          TUNE.mobileCardMax,
+        );
+      } else {
+        // Standing, the ring is bounded by height: the card must leave room
+        // above and below for the neighbours it pulls apart from.
+        L = clamp(
+          Math.min(W * 0.46, H * TUNE.aspect * (compact ? 0.4 : 0.44)),
+          compact ? 170 : 200,
+          compact ? 360 : 520,
+        );
+      }
       hx = L / 2;
       hy = L / TUNE.aspect / 2;
-      arcR = Math.max(H * TUNE.arcRadius, TUNE.arcMin);
-      // Neighbours are stacked, so a slot is worth one short edge plus the
-      // gap between them — not one long edge.
-      step = (2 * hy * TUNE.gap) / arcR;
+      // Curvature belongs to the travel axis, not always to the height.
+      arcR = Math.max((lying ? W : H) * TUNE.arcRadius, TUNE.arcMin);
+      // A slot is worth whichever half-extent faces along the travel axis.
+      step = (2 * (lying ? hx : hy) * (lying ? TUNE.mobileGap : TUNE.gap)) / arcR;
       shiftX =
-        W < TUNE.sideShiftFrom
+        lying || W < TUNE.sideShiftFrom
           ? 0
           : layout === "full"
             ? -W * TUNE.fullShift
             : Math.min(W, TUNE.column) * TUNE.sideShift;
+      shiftY = lying ? H * TUNE.mobileLift : 0;
 
       renderer.setSize(W, H, false);
       uniforms.uResolution.value.set(W, H);
@@ -502,18 +503,20 @@ export function ViscoseCarousel({
     const ptr = { x: 1e5, y: 1e5, tx: 1e5, ty: 1e5, on: false };
     let dragging = false;
     let dragId = -1;
+    let dragLastX = 0;
     let dragLastY = 0;
+    // A touch that hasn't declared its direction yet; resolved in onMove.
+    let pendingAxis = false;
     let pressX = 0;
     let pressY = 0;
     let pressAt = 0;
-    // Which card was under the finger when it went down. Resolved at press
-    // time and kept: the hover the frame loop tracks is cleared the moment a
-    // drag starts, so by the time the release arrives it is already -1 and
-    // reading it there means no click ever lands.
+    // Which card was under the finger at press time. Kept, because the frame
+    // loop's hover is cleared the moment a drag starts — reading it on release
+    // means no click ever lands.
     let pressed = -1;
 
-    // The stage geometry the last frame settled on, so a press can be tested
-    // against exactly what was on screen when it happened.
+    // The geometry the last frame settled on, so a press tests against what
+    // was actually on screen.
     const stageIdx = new Int32Array(MAX_CARDS);
     const stageRel = new Float32Array(MAX_CARDS);
     let stageN = 0;
@@ -543,11 +546,9 @@ export function ViscoseCarousel({
 
     const onDown = (e: PointerEvent) => {
       if (e.button !== 0) return;
-      // Never start a drag on a link. setPointerCapture below retargets the
-      // compatibility mouse events along with the pointer ones, so `click`
-      // is delivered to the host rather than to the anchor under the cursor
-      // — which leaves every link in the panel inert. Let the press through
-      // untouched and the browser opens it as it should.
+      // Never start a drag on a link. setPointerCapture retargets the
+      // compatibility mouse events too, so `click` lands on the host rather
+      // than the anchor — which leaves every link in the panel inert.
       if ((e.target as Element | null)?.closest("a, button")) return;
 
       const q = local(e);
@@ -559,14 +560,18 @@ export function ViscoseCarousel({
       pressY = e.clientY;
       pressAt = performance.now();
       dragId = e.pointerId;
+      dragLastX = e.clientX;
       dragLastY = e.clientY;
       targetRef.current = null;
 
-      // Where FullPageScroll is driving us it already turns a vertical swipe
-      // into a step, so taking touch drags here as well would move the ring
-      // twice for one finger. The press still counts — a tap has to be able
-      // to open a card on a phone.
-      dragging = !(stepRef && e.pointerType === "touch");
+      // FullPageScroll already turns a vertical swipe into a step, so taking
+      // touch drags on that axis too would move the ring twice per finger.
+      // Lying down the conflict is only about the axis — a sideways drag is
+      // ours outright — so wait and see which way the finger goes. The press
+      // still counts either way, since a tap has to open a card.
+      const shared = Boolean(stepRef) && e.pointerType === "touch";
+      pendingAxis = shared && lying;
+      dragging = !shared;
       if (dragging) host.setPointerCapture(e.pointerId);
     };
 
@@ -576,12 +581,30 @@ export function ViscoseCarousel({
       ptr.ty = p.y;
       ptr.on = true;
 
-      if (!dragging || e.pointerId !== dragId) return;
-      const dy = e.clientY - dragLastY;
+      if (e.pointerId !== dragId) return;
+
+      if (pendingAxis) {
+        const ax = e.clientX - pressX;
+        const ay = e.clientY - pressY;
+        if (Math.hypot(ax, ay) < TUNE.axisLock) return;
+        pendingAxis = false;
+        // Vertical belongs to FullPageScroll, which is listening for it.
+        if (Math.abs(ax) <= Math.abs(ay)) return;
+        dragging = true;
+        host.setPointerCapture(e.pointerId);
+        // From here, not from the press: travel spent deciding the axis is not
+        // the ring's.
+        dragLastX = e.clientX;
+        dragLastY = e.clientY;
+      }
+
+      if (!dragging) return;
+      // One card's worth of travel is one slot, along whichever axis the ring
+      // is strung out on.
+      const travel = lying ? e.clientX - dragLastX : e.clientY - dragLastY;
+      dragLastX = e.clientX;
       dragLastY = e.clientY;
-      // One card's worth of travel moves the ring one slot. Dragging down
-      // pulls the ring down, which brings the previous project back.
-      const slots = (dy * TUNE.dragSpeed) / (arcR * step);
+      const slots = (travel * TUNE.dragSpeed) / (arcR * step);
       progressRef.current -= slots;
       velRef.current = -slots * 60;
     };
@@ -590,6 +613,7 @@ export function ViscoseCarousel({
       if (e.pointerId !== dragId) return;
       const wasPressed = pressed;
       dragging = false;
+      pendingAxis = false;
       dragId = -1;
       pressed = -1;
       if (host.hasPointerCapture?.(e.pointerId)) {
@@ -597,17 +621,13 @@ export function ViscoseCarousel({
       }
       if (wasPressed < 0) return;
 
-      // Straight-line travel from where the finger went down, not the sum of
-      // every wobble along the way: a slow, careful press racks up plenty of
-      // the latter without ever leaving the card.
+      // Straight-line travel from the press, not the sum of every wobble.
       const moved = Math.hypot(e.clientX - pressX, e.clientY - pressY);
       if (moved > 10 || performance.now() - pressAt > 600) return;
 
       const i = stageIdx[wasPressed];
       const rel = stageRel[wasPressed];
-      // The card already at the front opens; anything else comes to the
-      // front first, so nothing opens from a glancing hit on a card that was
-      // half off screen.
+      // The front card opens; anything else comes to the front first.
       if (Math.abs(rel) < 0.4) {
         open(i);
       } else {
@@ -629,8 +649,7 @@ export function ViscoseCarousel({
     const onWheel = (e: WheelEvent) => {
       e.preventDefault();
       if (reduced) {
-        // One tick, one slot, with a cooldown — momentum is exactly the kind
-        // of motion the preference is asking us not to produce.
+        // One tick, one slot: momentum is exactly what the preference forbids.
         if (Math.abs(e.deltaY) < 6) return;
         const at = performance.now();
         if (at - lastStepAt < 300) return;
@@ -679,16 +698,13 @@ export function ViscoseCarousel({
       if (!visible || !activeRef.current || document.hidden) return;
 
       // The atlas is the gate: the ring launches on the frame the first
-      // screenshot lands, so the artwork arriving and the ring moving are one
-      // event rather than a hang followed by a fan.
+      // screenshot lands.
       if (reduced) entryRef.current = 1;
       else if (entryOpenRef.current && entryRef.current < 1) {
         entryRef.current = clamp01(entryRef.current + dt / TUNE.entryTime);
       }
       const entry = entryRef.current;
 
-      // Hovering still *reads* under reduced motion — the tag appears, a
-      // click still centres — it just stops pushing the field around.
       const forces = ptr.on && !dragging && !reduced;
 
       // -- physics ---------------------------------------------------------
@@ -743,27 +759,28 @@ export function ViscoseCarousel({
 
       // -- rest layout ------------------------------------------------------
       // Rest means "where this card would be with no cursor near it". Threads
-      // are measured from here and never from the hovered positions: leaning
-      // a card toward the cursor closes the gap, which fattens the thread,
-      // which moves the card again. Hover changes what you see, never what
-      // the goo is computed from.
+      // measure from here, never from hovered positions: a lean closes the gap,
+      // which fattens the thread, which moves the card again.
       for (let j = 0; j < stage.length; j++) {
         const { i, rel } = stage[j];
         const e = fanProgress(entry, fan[i], maxFan, TUNE.stagger);
-        // Centre of the wheel sits off to the left, so what you see is an
-        // arc of something much bigger going past. A whole circle looks like
-        // a diagram; a piece of one looks like a wheel.
-        //
-        // Negative theta for a positive slot puts the *next* project below
-        // the front one, so advancing lifts it into place and the ring reads
-        // bottom to top.
-        const theta = -rel * step * e;
+        const a = rel * step * e;
         const depth = smoothstep(0, TUNE.window, Math.abs(rel));
-        rest[j * 4 + 0] = shiftX + arcR * (Math.cos(theta) - 1);
-        rest[j * 4 + 1] = arcR * Math.sin(theta);
-        // The long edge points out from the centre, so the card lies over as
-        // the arc turns.
-        rest[j * 4 + 2] = theta;
+        if (lying) {
+          // The same wheel rolled a quarter turn: centre below, next project
+          // arriving from the right, long edge along the tangent so a
+          // landscape card stays landscape.
+          rest[j * 4 + 0] = arcR * Math.sin(a);
+          rest[j * 4 + 1] = shiftY + arcR * (Math.cos(a) - 1);
+          rest[j * 4 + 2] = -a;
+        } else {
+          // Centre off to the left, so this reads as a slice of a much bigger
+          // wheel. Negative angle for a positive slot puts the next project
+          // below, so advancing lifts it into place.
+          rest[j * 4 + 0] = shiftX + arcR * (Math.cos(a) - 1);
+          rest[j * 4 + 1] = -arcR * Math.sin(a);
+          rest[j * 4 + 2] = -a;
+        }
         rest[j * 4 + 3] = 1 - TUNE.depthScale * depth;
       }
 
@@ -776,40 +793,37 @@ export function ViscoseCarousel({
         const sa = rest[j * 4 + 3];
         const sb = rest[(j + 1) * 4 + 3];
         const dist = Math.hypot(bx - ax, by - ay);
-        // Stacked, so it is the short edges that close the gap and the long
-        // edges that face one another — which is what the thread comes off.
-        const gapPx = dist - hy * (sa + sb);
-        const v = clamp01(gapPx / (TUNE.threadReach * 2 * hy));
+        // `near` faces along the line between the cards and closes the gap;
+        // `across` is the facing edge the thread comes off. Stacked those are
+        // the short and long edges; in a row they swap.
+        const near = lying ? hx : hy;
+        const across = lying ? hy : hx;
+        const gapPx = dist - near * (sa + sb);
+        const reach = lying ? TUNE.mobileThreadReach : TUNE.threadReach;
+        const v = clamp01(gapPx / (reach * 2 * near));
         const s = Math.min(sa, sb);
 
-        // Width falls off on a curve, so it thins fast then lingers.
-        let rEnd = hx * s * Math.pow(1 - v, TUNE.threadFalloff);
-        // Honey strings itself between the cards you are *between*, not the
-        // one you are on.
+        let rEnd = across * s * Math.pow(1 - v, TUNE.threadFalloff);
         const mx = (ax + bx) / 2;
         const my = (ay + by) / 2;
         const dm = Math.hypot(ptr.x - mx, ptr.y - my) / (TUNE.webReach * L);
-        if (forces) rEnd += hx * TUNE.web * Math.exp(-dm * dm);
+        if (forces) rEnd += across * TUNE.web * Math.exp(-dm * dm);
 
-        // The middle narrows faster than the ends. That is the neck.
         let rMid = rEnd * (1 - (1 - TUNE.pinch) * smoothstep(0, 1, v));
-        // Drive the radius past zero near the end. Without this a thread
-        // thins down to a half-covered pixel and then just stops existing,
-        // which reads as a hairline flickering off. Negative carries it out
-        // of antialias range so it fades from the field properly — the thread
-        // does not vanish, it breaks.
-        rMid -= TUNE.dissolve * hx * smoothstep(0.75, 1, v);
+        // Past zero, not to zero: a thread that stops at a half-covered pixel
+        // reads as a hairline flickering off. Negative carries it out of
+        // antialias range, so it breaks instead.
+        rMid -= TUNE.dissolve * across * smoothstep(0.75, 1, v);
 
         uniforms.uBridge.value[j].set(
           rEnd > 0.5 ? rEnd : -1,
           rMid,
-          TUNE.sag * hx * v * s,
+          TUNE.sag * across * v * s,
           L * TUNE.threadK,
         );
       }
 
-      // Publish the settled geometry so a press can be hit-tested against
-      // exactly what was on screen at the moment it happened.
+      // Publish the settled geometry so a press can be hit-tested against it.
       stageN = stage.length;
       for (let j = 0; j < stage.length; j++) {
         stageIdx[j] = stage[j].i;
@@ -836,9 +850,7 @@ export function ViscoseCarousel({
         const st = state[i];
         const s0 = rest[j * 4 + 3];
 
-        // Lean: a card takes up a lean quickly and lets go of it slowly.
-        // Equal rates read as a mechanism following your cursor; the gap
-        // between them reads as something thick being dragged through.
+        // Asymmetric on purpose: quick to take up a lean, slow to let go.
         let tx = 0;
         let ty = 0;
         let swell = 0;
@@ -858,9 +870,6 @@ export function ViscoseCarousel({
         st.leanY += (ty - st.leanY) * rate(ty, st.leanY);
         st.swell += (swell - st.swell) * rate(swell, st.swell);
 
-        // The cards either side of the hovered one back away and dim, which
-        // is what makes the hovered card read as picked up rather than merely
-        // highlighted.
         let push = 0;
         let dim = 0;
         if (forces && hoverIdx >= 0 && i !== hoverIdx) {
@@ -963,20 +972,7 @@ export function ViscoseCarousel({
       <canvas ref={canvasRef} className="absolute inset-0 size-full" />
 
       {/* Chrome. Pointer-events off throughout, or a stray label swallows a
-          drag. Two arrangements: on the homepage the ring stands in the
-          right half of the site's centred column and the type takes the
-          left of it, because that column is where a reader is already
-          looking. On the projects page there is no column to respect, so
-          the ring moves left and the whole right side becomes a panel with
-          room for an actual description.
-
-          Type scale is the site's, not this component's: section headings
-          are `text-xl font-bold` the same as Skills, Work Experience and
-          Recent Writing; the project name takes the display treatment a
-          company name gets in work-stack.tsx, a step down because here the
-          screenshot is the visual and the name is not; and the date, tags
-          and links reuse that file's caption rhythm exactly. The ring is
-          the only part of this that gets to be novel. */}
+          drag. Type scale is the site's, not this component's. */}
       <div className="pointer-events-none absolute inset-0">
         <div
           className={cn(
@@ -984,8 +980,6 @@ export function ViscoseCarousel({
             full ? "px-6 sm:px-10" : "mx-auto max-w-3xl px-6",
           )}
         >
-          {/* Stacked, never split left-and-right: the ring spends half its
-              life in one of those corners. */}
           <div className="flex flex-col gap-1">
             {heading && <h2 className="text-xl font-bold">{heading}</h2>}
             <p className="text-sm tabular-nums text-neutral-500">
@@ -1026,8 +1020,6 @@ export function ViscoseCarousel({
 
             {full && p?.description && (
               <Swap value={p.title} delay={0.07}>
-                {/* Hidden on small screens: down there the panel sits under
-                    the ring with a card already crowding it. */}
                 <p className="hidden text-sm leading-relaxed text-foreground/80 md:line-clamp-6 md:block">
                   {p.description}
                 </p>
@@ -1063,9 +1055,7 @@ export function ViscoseCarousel({
         </div>
       </div>
 
-      {/* The cursor tag. `difference` rather than a colour: it inverts against
-          whatever pixel it lands on, so it stays legible over a dark
-          screenshot and over the page background alike. */}
+      {/* mix-blend-difference so the tag reads over any screenshot. */}
       {pointerFine && (
         <div
           ref={tagRef}
@@ -1083,8 +1073,7 @@ export function ViscoseCarousel({
         </div>
       )}
 
-      {/* The ring is a picture of the list, not the list. Everything a crawler
-          or a screen reader needs lives here. */}
+      {/* What a crawler and a screen reader read. */}
       <ul className="sr-only">
         {projects.map((project) => (
           <li key={project.title}>
