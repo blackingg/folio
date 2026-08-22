@@ -4,13 +4,21 @@ import { motion } from "framer-motion";
 import {
   Children,
   cloneElement,
+  createContext,
   isValidElement,
   useCallback,
+  useContext,
   useEffect,
   useRef,
   useState,
 } from "react";
 import { cn } from "@/lib/utils";
+import { ChevronDown } from "lucide-react";
+import { Explore3dButton } from "@/components/explore-3d-button";
+
+const FullPageContext = createContext<{ activeIndex: number }>({ activeIndex: 0 });
+
+export const useFullPage = () => useContext(FullPageContext);
 
 const TRANSITION_S = 0.7;
 const WHEEL_THRESHOLD = 24;
@@ -200,39 +208,122 @@ export function FullPageScroll({ children }: { children: React.ReactNode }) {
   }, [advance]);
 
   return (
-    <div className="fixed inset-0 overflow-hidden">
-      <motion.div
-        animate={{ y: `-${active * 100}dvh` }}
-        transition={{ duration: TRANSITION_S, ease: [0.65, 0, 0.35, 1] }}
-      >
-        {pages.map((page, i) => (
-          <div key={i} className="h-[100dvh] w-full">
-            {isValidElement<FullPageProps>(page) && typeof page.type !== "string"
-              ? cloneElement(page, {
-                  active: i === active,
-                  stepRef: setStepRef(i),
-                })
-              : page}
-          </div>
-        ))}
-      </motion.div>
+    <FullPageContext.Provider value={{ activeIndex: active }}>
+      <div className="fixed inset-0 overflow-hidden">
+        <motion.div
+          animate={{ y: `-${active * 100}dvh` }}
+          transition={{ duration: TRANSITION_S, ease: [0.65, 0, 0.35, 1] }}
+        >
+          {pages.map((page, i) => (
+            <div key={i} className="h-[100dvh] w-full">
+              {isValidElement<FullPageProps>(page) && typeof page.type !== "string"
+                ? cloneElement(page, {
+                    active: i === active,
+                    stepRef: setStepRef(i),
+                  })
+                : page}
+            </div>
+          ))}
+        </motion.div>
 
-      <div className="pointer-events-none fixed right-3 top-1/2 z-20 flex -translate-y-1/2 flex-col gap-2 sm:right-5">
-        {pages.map((_, i) => (
-          <button
-            key={i}
-            type="button"
-            aria-label={`Go to page ${i + 1}`}
-            onClick={() => goTo(i)}
-            className={cn(
-              "pointer-events-auto size-1.5 rounded-full transition-all",
-              i === active
-                ? "h-4 bg-foreground"
-                : "bg-foreground/25 hover:bg-foreground/50",
-            )}
-          />
-        ))}
+        <Explore3dButton />
+
+        <SlidePrompt
+          active={active}
+          total={total}
+          onNext={() => advance(1)}
+          onPrev={() => advance(-1)}
+        />
       </div>
+    </FullPageContext.Provider>
+  );
+}
+
+function SteppingArrows() {
+  const [step, setStep] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setStep((prev) => (prev + 1) % 18);
+    }, 550); // Relaxed stepping cadence (550ms per step)
+    return () => clearInterval(interval);
+  }, []);
+
+  // Calculate active arrow index (0, 1, 2) or -1 for pause
+  let activeArrow = -1;
+  if (step < 3) activeArrow = step;
+  else if (step >= 4 && step < 7) activeArrow = step - 4;
+  else if (step >= 8 && step < 11) activeArrow = step - 8;
+
+  // During the pause window between series (steps 11 to 17), hide arrows completely
+  const isPause = step >= 11;
+  if (isPause) {
+    return null;
+  }
+
+  return (
+    <div className="flex flex-col items-center -space-y-2">
+      {[0, 1, 2].map((i) => {
+        const isActive = activeArrow === i;
+        return (
+          <motion.div
+            key={i}
+            animate={{
+              opacity: isActive ? 1 : 0.15,
+              scale: isActive ? 1.25 : 0.85,
+              y: isActive ? 2 : 0,
+            }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
+            style={{
+              color: isActive ? "hsl(var(--neon))" : "hsl(var(--neon) / 0.2)",
+              filter: isActive ? "drop-shadow(0 0 10px hsl(var(--neon)))" : "none",
+            }}
+          >
+            <ChevronDown className="size-6 stroke-[2.5]" />
+          </motion.div>
+        );
+      })}
     </div>
+  );
+}
+
+function SlidePrompt({
+  active,
+  onNext,
+}: {
+  active: number;
+  total: number;
+  onNext: () => void;
+  onPrev: () => void;
+}) {
+  const [hasSlid, setHasSlid] = useState(false);
+
+  useEffect(() => {
+    if (active > 0) {
+      setHasSlid(true);
+    }
+  }, [active]);
+
+  if (hasSlid) {
+    return null;
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, transition: { duration: 0.3 } }}
+      transition={{ delay: 1, duration: 0.6 }}
+      className="pointer-events-none fixed inset-x-0 bottom-20 z-30 mx-auto flex items-center justify-center"
+    >
+      <button
+        type="button"
+        onClick={onNext}
+        aria-label="Slide down to continue"
+        className="pointer-events-auto group relative flex items-center justify-center p-2 transition-colors cursor-pointer"
+      >
+        <SteppingArrows />
+      </button>
+    </motion.div>
   );
 }

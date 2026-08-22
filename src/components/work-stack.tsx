@@ -63,7 +63,7 @@ const lineIn = {
 
 // A job has no screenshot, so the company name is the visual: display type
 // leads, the logo drops to a small mark, and everything below follows the
-// same caption rhythm as ProjectShowcase so the two sections read as one
+// same caption rhythm as the projects ring so the two sections read as one
 // system.
 function JobSlide({ work }: { work: Work }) {
   return (

@@ -88,30 +88,22 @@ export function AboutReveal({
             </span>
           ))}
         </motion.p>
-        <motion.div
-          initial="hidden"
-          animate={active ? "visible" : "hidden"}
-          variants={cta}
-          className="mt-6 flex flex-wrap items-center gap-4"
-        >
-          <Link
-            href={resumeUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
+        <div className="mt-8 flex flex-wrap items-center gap-5">
+          <motion.div
+            initial="hidden"
+            animate={active ? "visible" : "hidden"}
+            variants={cta}
           >
-            Download Resume
-          </Link>
-          <Link
-            href="/3d"
-            className="group inline-flex items-center gap-1.5 text-muted-foreground transition-colors hover:text-foreground"
-          >
-            <span className="text-sm font-medium tracking-tight sm:text-base">
-              Explore 3D Experience <span className="text-xl">🚧</span>
-            </span>
-            <ChevronRight className="h-4 w-4 text-foreground/60 transition-all group-hover:translate-x-1 group-hover:text-foreground" />
-          </Link>
-        </motion.div>
+            <Link
+              href={resumeUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
+            >
+              Download Resume
+            </Link>
+          </motion.div>
+        </div>
       </div>
     </div>
   );
