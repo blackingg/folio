@@ -25,10 +25,9 @@ export default function ProjectsPage() {
   return (
     <main className="min-h-screen">
       <ProjectsExplorer projects={toViscoseProjects(DATA.projects)}>
-        {/* The index. Rendered here on the server so the cards keep their link
-            icons, and so the whole list is in the HTML whichever view is
-            showing. Every project, no pagination — the ring holds all of them
-            and a paged grid beside it would only disagree. */}
+        {/* The index (WebGL fallback). Rendered on the server so ProjectCard can
+            keep its per-link icons, and so non-WebGL browsers still get the full
+            portfolio. Every project, no pagination — the ring holds all of them. */}
         <div className="space-y-8">
           <div className="space-y-2">
             <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl">
