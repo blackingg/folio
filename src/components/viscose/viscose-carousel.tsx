@@ -965,7 +965,14 @@ export function ViscoseCarousel({
       onKeyDown={onKeyDown}
       className={cn(
         "relative isolate size-full cursor-grab touch-pan-y overflow-hidden",
-        "outline-none active:cursor-grabbing",
+        "active:cursor-grabbing",
+        // An outline, not a ring: the canvas is an opaque positioned child
+        // covering the whole host, so a ring — being a box-shadow — paints
+        // underneath it and is never seen. Outlines paint above the
+        // descendants of their stacking context. The offset is negative
+        // because this element breaks out to w-screen, and an outline on the
+        // outside would land under body's overflow-x-hidden.
+        "focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring",
         className,
       )}
     >
