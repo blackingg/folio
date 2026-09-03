@@ -25,10 +25,18 @@ const slide = {
 
 // A story-style sub-pager: a segmented progress bar up top (Instagram/
 // Snapchat style) and one slide full-bleed at a time, swapped with a
-// directional blur/slide instead of a peeking carousel. Advances via the
-// same `stepRef` gesture contract FullPageScroll hands every page — see
-// full-page-scroll.tsx — so wheel/touch/arrow gestures move one slide at a
-// time and only flip the outer page once you're at the first/last slide.
+// directional blur/slide instead of a peeking carousel.
+//
+// Advances via the same `stepRef` gesture contract FullPageScroll hands
+// every page (see full-page-scroll.tsx), registered on the "x" axis because
+// the slides are laid out left to right. Sideways gestures walk the slides;
+// vertical ones are never offered here at all and pass through to the outer
+// page, so a swipe up means "next section" rather than "next slide".
+//
+// The split leaves each input to a different owner: sideways wheel deltas
+// and arrow keys arrive through `stepRef`, while horizontal touch drags are
+// bound below, since only this component knows how far a finger has to
+// travel across a slide to count as a swipe.
 export function StoryStepper({
   count,
   renderSlide,
@@ -68,6 +76,7 @@ export function StoryStepper({
 
   useEffect(() => {
     stepRef?.({
+      axis: "x",
       step: (direction) => {
         // Report the gesture as consumed rather than declining it: declining
         // would hand it back to FullPageScroll, which would flip the whole
@@ -99,9 +108,6 @@ export function StoryStepper({
     setIndex(clamped);
   };
 
-  // Horizontal drag advances the slide directly — FullPageScroll only
-  // forwards vertical-dominant gestures to `stepRef`, so a left/right swipe
-  // on the slide itself never reaches it and needs its own handling here.
   const trackRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const el = trackRef.current;

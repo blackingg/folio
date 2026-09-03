@@ -50,8 +50,13 @@ const MAX_QUIET_HOLD_MS = 400;
 // Blog) can register one of these to consume a gesture internally — e.g.
 // advancing to the next card — before FullPageScroll falls back to
 // flipping the page. Returning false means "nothing left to consume in
-// that direction," so paging proceeds as normal.
-export type StepHandle = { step: (direction: 1 | -1) => boolean };
+// that direction," so paging proceeds as normal. `axis` declares which
+// gesture direction the stepper answers to, and has to match how its items
+// are actually laid out — see the routing table on FullPageScroll below.
+export type StepHandle = {
+  step: (direction: 1 | -1) => boolean;
+  axis?: "x" | "y";
+};
 
 export type FullPageProps = {
   active?: boolean;
@@ -59,9 +64,25 @@ export type FullPageProps = {
 };
 
 // No document scroll, no scrollbar: this owns the whole viewport and turns
-// every wheel tick / vertical swipe / arrow key into exactly one page
-// transition. Horizontal gestures (dx > dy) are left alone so a page like
-// the Projects carousel can still handle its own left-right dragging.
+// every wheel tick, swipe and arrow key into exactly one transition. Which
+// transition depends on the axis the gesture came in on and on what the
+// active page registered through `stepRef`:
+//
+//   vertical    the page's stepper if it runs vertically, otherwise a page
+//               flip — so a page with no stepper at all simply flips.
+//   horizontal  the page's stepper if it runs horizontally, otherwise
+//               nothing. Sideways gestures never flip the page: running out
+//               of slides should stop, not spill into a section change
+//               nobody asked for.
+//
+// That split is what makes a swipe up on Work or Blog jump to the next
+// section rather than walk their slides — both lay their slides out side by
+// side and register on "x". The projects ring stands upright on desktop and
+// travels vertically, so it stays on "y" and still takes vertical gestures.
+//
+// Each axis tallies its own wheel deltas. A trackpad flick is never purely
+// one direction, and a shared counter would let the stray component of a
+// vertical swipe part-fill the horizontal threshold, and vice versa.
 export function FullPageScroll({ children }: { children: React.ReactNode }) {
   const pages = Children.toArray(children);
   const total = pages.length;
@@ -70,6 +91,7 @@ export function FullPageScroll({ children }: { children: React.ReactNode }) {
   activeRef.current = active;
   const lockRef = useRef(false);
   const wheelAccum = useRef(0);
+  const wheelAccumX = useRef(0);
   const wheelResetTimer = useRef<ReturnType<typeof setTimeout> | undefined>(
     undefined,
   );
@@ -85,8 +107,12 @@ export function FullPageScroll({ children }: { children: React.ReactNode }) {
     },
     [],
   );
-  const tryStep = useCallback((direction: 1 | -1) => {
-    return stepRefs.current[activeRef.current]?.step(direction) ?? false;
+  // An axis mismatch reports "not consumed" rather than declining to look,
+  // which is what lets a vertical swipe page straight past Work's slides.
+  const tryStep = useCallback((direction: 1 | -1, axis: "x" | "y") => {
+    const handle = stepRefs.current[activeRef.current];
+    if (!handle || (handle.axis ?? "y") !== axis) return false;
+    return handle.step(direction);
   }, []);
 
   // Locks input for one gesture's worth of time after *any* advance — a
@@ -113,6 +139,7 @@ export function FullPageScroll({ children }: { children: React.ReactNode }) {
       // Momentum belonging to the gesture we just served shouldn't carry
       // over and part-fill the threshold for the next one.
       wheelAccum.current = 0;
+      wheelAccumX.current = 0;
       lockRef.current = false;
     };
     unlockTimer.current = setTimeout(settle, ms);
@@ -125,18 +152,23 @@ export function FullPageScroll({ children }: { children: React.ReactNode }) {
     setActive(clamped);
   }, [total, lockGesture]);
 
-  // Single entry point for every gesture: try the active page's own
-  // stepper first, and only flip pages once it reports nothing left to
-  // consume in that direction. Both outcomes engage the same lock, just
+  // Entry point for vertical gestures: a vertical stepper gets first
+  // refusal, then the page flips. Both outcomes engage the same lock, just
   // scaled to how long that particular transition actually takes.
   const advance = useCallback((direction: 1 | -1) => {
     if (lockRef.current) return;
-    if (tryStep(direction)) {
+    if (tryStep(direction, "y")) {
       lockGesture(STEP_LOCK_MS);
       return;
     }
     goTo(activeRef.current + direction);
   }, [tryStep, lockGesture, goTo]);
+
+  // The sideways counterpart, with no page-flip fallback by design.
+  const advanceX = useCallback((direction: 1 | -1) => {
+    if (lockRef.current) return;
+    if (tryStep(direction, "x")) lockGesture(STEP_LOCK_MS);
+  }, [tryStep, lockGesture]);
 
   useEffect(() => {
     const html = document.documentElement;
@@ -154,19 +186,22 @@ export function FullPageScroll({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const onWheel = (e: WheelEvent) => {
-      if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
       lastWheelAtRef.current = Date.now();
       e.preventDefault();
       if (lockRef.current) return;
-      wheelAccum.current += e.deltaY;
+      const sideways = Math.abs(e.deltaX) > Math.abs(e.deltaY);
+      const accum = sideways ? wheelAccumX : wheelAccum;
+      accum.current += sideways ? e.deltaX : e.deltaY;
       clearTimeout(wheelResetTimer.current);
       wheelResetTimer.current = setTimeout(() => {
         wheelAccum.current = 0;
+        wheelAccumX.current = 0;
       }, WHEEL_IDLE_RESET_MS);
-      if (Math.abs(wheelAccum.current) > WHEEL_THRESHOLD) {
-        const direction = wheelAccum.current > 0 ? 1 : -1;
-        wheelAccum.current = 0;
-        advance(direction);
+      if (Math.abs(accum.current) > WHEEL_THRESHOLD) {
+        const direction = accum.current > 0 ? 1 : -1;
+        accum.current = 0;
+        if (sideways) advanceX(direction);
+        else advance(direction);
       }
     };
 
@@ -192,6 +227,10 @@ export function FullPageScroll({ children }: { children: React.ReactNode }) {
       } else if (e.key === "ArrowUp" || e.key === "PageUp") {
         e.preventDefault();
         advance(-1);
+      } else if (e.key === "ArrowRight") {
+        advanceX(1);
+      } else if (e.key === "ArrowLeft") {
+        advanceX(-1);
       }
     };
 
@@ -205,7 +244,7 @@ export function FullPageScroll({ children }: { children: React.ReactNode }) {
       window.removeEventListener("touchend", onTouchEnd);
       window.removeEventListener("keydown", onKeyDown);
     };
-  }, [advance]);
+  }, [advance, advanceX]);
 
   return (
     <FullPageContext.Provider value={{ activeIndex: active }}>
