@@ -6,11 +6,10 @@ import { ChevronRight } from "lucide-react";
 import type { FullPageProps } from "@/components/full-page-scroll";
 
 const heading = {
-  hidden: { opacity: 0, y: 24, filter: "blur(6px)" },
+  hidden: { opacity: 0, y: 24 },
   visible: {
     opacity: 1,
     y: 0,
-    filter: "blur(0px)",
     transition: { duration: 0.5, ease: "easeOut" },
   },
 };
@@ -21,11 +20,10 @@ const wordsContainer = {
 };
 
 const word = {
-  hidden: { opacity: 0, y: 12, filter: "blur(4px)" },
+  hidden: { opacity: 0, y: 12 },
   visible: {
     opacity: 1,
     y: 0,
-    filter: "blur(0px)",
     transition: { duration: 0.35, ease: "easeOut" },
   },
 };
@@ -46,7 +44,7 @@ function ctaVariants(wordCount: number) {
 }
 
 // Plays once, in full, every time this becomes the active page: the
-// heading blurs in, the summary cascades word by word, then the CTAs
+// heading rises in, the summary cascades word by word, then the CTAs
 // spring in behind it. Reverses instantly if the page is left mid-cascade.
 export function AboutReveal({
   summary,

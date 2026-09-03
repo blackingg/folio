@@ -8,6 +8,7 @@ import {
   isValidElement,
   useCallback,
   useContext,
+  useMemo,
   useEffect,
   useRef,
   useState,
@@ -16,7 +17,14 @@ import { cn } from "@/lib/utils";
 import { ChevronDown } from "lucide-react";
 import { Explore3dButton } from "@/components/explore-3d-button";
 
-const FullPageContext = createContext<{ activeIndex: number }>({ activeIndex: 0 });
+// `settled` is false for as long as a page flip is in flight. Anything
+// costly enough to compete with the slide for the frame budget — the
+// Projects WebGL ring above all — waits on this rather than on
+// `activeIndex`, which flips the instant the transition *starts*.
+const FullPageContext = createContext<{
+  activeIndex: number;
+  settled: boolean;
+}>({ activeIndex: 0, settled: true });
 
 export const useFullPage = () => useContext(FullPageContext);
 
@@ -89,6 +97,11 @@ export function FullPageScroll({ children }: { children: React.ReactNode }) {
   const [active, setActive] = useState(0);
   const activeRef = useRef(active);
   activeRef.current = active;
+  // See FullPageContext above.
+  const [settled, setSettled] = useState(true);
+  const settleTimer = useRef<ReturnType<typeof setTimeout> | undefined>(
+    undefined,
+  );
   const lockRef = useRef(false);
   const wheelAccum = useRef(0);
   const wheelAccumX = useRef(0);
@@ -149,6 +162,12 @@ export function FullPageScroll({ children }: { children: React.ReactNode }) {
     const clamped = Math.max(0, Math.min(total - 1, index));
     if (clamped === activeRef.current || lockRef.current) return;
     lockGesture(GESTURE_LOCK_MS);
+    setSettled(false);
+    clearTimeout(settleTimer.current);
+    settleTimer.current = setTimeout(
+      () => setSettled(true),
+      TRANSITION_S * 1000,
+    );
     setActive(clamped);
   }, [total, lockGesture]);
 
@@ -180,6 +199,7 @@ export function FullPageScroll({ children }: { children: React.ReactNode }) {
     () => () => {
       clearTimeout(unlockTimer.current);
       clearTimeout(wheelResetTimer.current);
+      clearTimeout(settleTimer.current);
     },
     [],
   );
@@ -246,15 +266,34 @@ export function FullPageScroll({ children }: { children: React.ReactNode }) {
     };
   }, [advance, advanceX]);
 
+  const contextValue = useMemo(
+    () => ({ activeIndex: active, settled }),
+    [active, settled],
+  );
+
   return (
-    <FullPageContext.Provider value={{ activeIndex: active }}>
+    <FullPageContext.Provider value={contextValue}>
       <div className="fixed inset-0 overflow-hidden">
         <motion.div
           animate={{ y: `-${active * 100}dvh` }}
           transition={{ duration: TRANSITION_S, ease: [0.65, 0, 0.35, 1] }}
         >
           {pages.map((page, i) => (
-            <div key={i} className="h-[100dvh] w-full">
+            // Panels more than one step away are hidden outright.     All of
+            // them stay mounted — unmounting would restart their reveals
+            // and tear the ring down — but `visibility: hidden` stops the
+            // compositor rastering seven viewports' worth of image, canvas
+            // and text into the one tall promoted layer this div becomes
+            // while it animates. Layout is untouched, so nothing reflows on
+            // the way back, and a panel is repainted a full flip before it
+            // is needed.
+            <div
+              key={i}
+              className="h-[100dvh] w-full"
+              style={
+                Math.abs(i - active) > 1 ? { visibility: "hidden" } : undefined
+              }
+            >
               {isValidElement<FullPageProps>(page) && typeof page.type !== "string"
                 ? cloneElement(page, {
                     active: i === active,

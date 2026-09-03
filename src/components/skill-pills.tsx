@@ -5,11 +5,10 @@ import { Badge } from "@/components/ui/badge";
 import type { FullPageProps } from "@/components/full-page-scroll";
 
 const heading = {
-  hidden: { opacity: 0, y: 24, filter: "blur(6px)" },
+  hidden: { opacity: 0, y: 24 },
   visible: {
     opacity: 1,
     y: 0,
-    filter: "blur(0px)",
     transition: { duration: 0.5, ease: "easeOut" },
   },
 };
@@ -29,7 +28,7 @@ const pill = {
   },
 };
 
-// Plays once per arrival on this page: the title blurs in, then the pills
+// Plays once per arrival on this page: the title rises in, then the pills
 // pop in one after another instead of all at once.
 export function SkillPills({
   skills,

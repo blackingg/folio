@@ -14,12 +14,16 @@ export function HeroAvatar({
   initials,
   className,
   delay = 0,
+  float = true,
 }: {
   src: string;
   alt: string;
   initials: string;
   className?: string;
   delay?: number;
+  /** The idle bob is an infinite animation, so it keeps a frame loop alive
+   *  for as long as it runs. Off-page callers pass false to park it. */
+  float?: boolean;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const pointerX = useMotionValue(0);
@@ -63,13 +67,17 @@ export function HeroAvatar({
       )}
     >
       <motion.div
-        animate={{ y: [0, -6, 0] }}
-        transition={{
-          duration: 4,
-          repeat: Infinity,
-          ease: "easeInOut",
-          delay: delay + 0.6,
-        }}
+        animate={float ? { y: [0, -6, 0] } : { y: 0 }}
+        transition={
+          float
+            ? {
+                duration: 4,
+                repeat: Infinity,
+                ease: "easeInOut",
+                delay: delay + 0.6,
+              }
+            : { duration: 0.3 }
+        }
         whileHover={{
           filter: "drop-shadow(0 8px 24px rgb(0 0 0 / 0.25))",
         }}

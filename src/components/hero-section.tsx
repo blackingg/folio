@@ -12,6 +12,7 @@ export function HeroSection({
   description,
   avatarUrl,
   initials,
+  active,
 }: {
   name: string;
   description: string;
@@ -41,6 +42,8 @@ export function HeroSection({
             alt={name}
             initials={initials}
             delay={BLUR_FADE_DELAY}
+            // Parks the idle bob once the hero is no longer the live panel.
+            float={active ?? true}
           />
         </div>
       </div>

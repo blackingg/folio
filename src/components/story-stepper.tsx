@@ -9,23 +9,20 @@ import type { FullPageProps } from "@/components/full-page-scroll";
 
 const SWIPE_THRESHOLD = 40;
 
+// Opacity and offset only, deliberately: arriving on this panel resets the
+// index below, so a swap can land on the same frames as a FullPageScroll
+// flip. An animated `filter: blur()` there re-rasterises both slides every
+// frame while the tall page layer is already moving, which is the one thing
+// this transition must not do.
 const slide = {
-  enter: (direction: number) => ({
-    opacity: 0,
-    x: direction * 32,
-    filter: "blur(6px)",
-  }),
-  center: { opacity: 1, x: 0, filter: "blur(0px)" },
-  exit: (direction: number) => ({
-    opacity: 0,
-    x: -direction * 32,
-    filter: "blur(6px)",
-  }),
+  enter: (direction: number) => ({ opacity: 0, x: direction * 32 }),
+  center: { opacity: 1, x: 0 },
+  exit: (direction: number) => ({ opacity: 0, x: -direction * 32 }),
 };
 
 // A story-style sub-pager: a segmented progress bar up top (Instagram/
 // Snapchat style) and one slide full-bleed at a time, swapped with a
-// directional blur/slide instead of a peeking carousel.
+// directional slide instead of a peeking carousel.
 //
 // Advances via the same `stepRef` gesture contract FullPageScroll hands
 // every page (see full-page-scroll.tsx), registered on the "x" axis because

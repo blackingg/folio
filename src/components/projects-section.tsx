@@ -8,7 +8,10 @@ import {
   ViscoseCarousel,
   type ViscoseProject,
 } from "@/components/viscose/viscose-carousel";
-import type { FullPageProps } from "@/components/full-page-scroll";
+import {
+  useFullPage,
+  type FullPageProps,
+} from "@/components/full-page-scroll";
 
 // The slide that ends the ring: a drawn tile rather than a screenshot, so it
 // merges and strings honey like any project card. Module-level so its identity
@@ -24,11 +27,10 @@ const VIEW_ALL: ViscoseProject = {
 };
 
 const section = {
-  hidden: { opacity: 0, y: 24, filter: "blur(6px)" },
+  hidden: { opacity: 0, y: 24 },
   visible: {
     opacity: 1,
     y: 0,
-    filter: "blur(0px)",
     transition: { duration: 0.5, ease: "easeOut" },
   },
 };
@@ -47,6 +49,12 @@ export function ProjectsSection({
   projects: readonly ViscoseProject[];
 } & FullPageProps) {
   const slides = useMemo(() => [...projects, VIEW_ALL], [projects]);
+  // The ring's frame loop is the most expensive thing on this page, so it
+  // waits for the flip to land rather than starting the moment `active`
+  // flips — see the note on FullPageContext. Nothing is lost visually: the
+  // entry fan re-arms from zero on activation regardless, so it simply
+  // begins when the panel arrives instead of part-way through the slide.
+  const { settled } = useFullPage();
 
   return (
     <motion.div
@@ -61,7 +69,7 @@ export function ProjectsSection({
         // Clamped, not looping: the end slots hand the gesture back.
         loop={false}
         compact
-        active={active}
+        active={active && settled}
         stepRef={stepRef}
         fallback={<StillProjects projects={projects} />}
         // Breaks the body's max-w-3xl column: the arc needs the width.
