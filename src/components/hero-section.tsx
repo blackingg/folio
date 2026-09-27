@@ -7,6 +7,7 @@ import { HeroGreeting } from "@/components/hero-greeting";
 import { SectionLink } from "@/components/section-link";
 import { WordStagger } from "@/components/word-stagger";
 import type { FullPageProps } from "@/components/full-page-scroll";
+import { cn } from "@/lib/utils";
 
 const BLUR_FADE_DELAY = 0.04;
 
@@ -41,18 +42,23 @@ export function HeroSection({
     <div className="flex h-full flex-col justify-center px-6 pb-20 pt-12 sm:pb-32 sm:pt-24">
       <div className="mx-auto w-full max-w-3xl space-y-8">
         <div className="flex flex-col-reverse items-center justify-between gap-6 sm:flex-row sm:items-start">
-          <div className="flex w-full min-w-0 flex-1 flex-col space-y-2 text-center sm:text-left">
+          <div className="flex w-full min-w-0 flex-1 flex-col space-y-3 text-left sm:space-y-4">
             <h1 className="sr-only">{name} - Frontend Engineer Portfolio</h1>
             <HeroGreeting
               firstName={name.split(" ")[0]}
-              className="text-3xl font-bold tracking-tighter sm:text-5xl xl:text-6xl/none"
+              className="text-3xl font-bold tracking-tight sm:text-5xl sm:tracking-tighter xl:text-6xl/none"
               delay={BLUR_FADE_DELAY}
             />
-            <div className="max-w-[700px] space-y-2 text-left sm:space-y-3">
-              {timed.map(({ text, delay }) => (
+            <div className="max-w-[40ch] space-y-2 sm:max-w-[46ch] sm:space-y-3">
+              {timed.map(({ text, delay }, i) => (
                 <p
                   key={text}
-                  className="text-sm leading-relaxed sm:text-lg md:text-xl"
+                  className={cn(
+                    "text-pretty text-base leading-relaxed sm:text-lg sm:leading-snug md:text-xl",
+                    i === timed.length - 1
+                      ? "font-medium text-foreground"
+                      : "text-foreground/70",
+                  )}
                 >
                   <WordStagger
                     text={text}
