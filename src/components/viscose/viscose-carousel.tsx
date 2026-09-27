@@ -269,6 +269,10 @@ export function ViscoseCarousel({
   const [hovered, setHovered] = useState(-1);
   const [degraded, setDegraded] = useState(false);
   const [pointerFine, setPointerFine] = useState(false);
+  // Mirrors the render loop's own `lying`, which is measured off the host.
+  // Kept in React too because the axis the ring answers gestures on has to
+  // match the axis it is strung out on — see the stepRef effect below.
+  const [lying, setLying] = useState(false);
 
   const count = projects.length;
 
@@ -301,12 +305,30 @@ export function ViscoseCarousel({
     [projects, router],
   );
 
+  // The ring lies down below this width, and everything that reads as travel
+  // — the drag axis, the gesture axis — turns with it.
+  useEffect(() => {
+    const mq = window.matchMedia(`(max-width: ${TUNE.lieDownBelow - 1}px)`);
+    const sync = () => setLying(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
+
   // The gesture contract FullPageScroll hands every page: returning false at
   // the ends lets the section flip on to Work. Gated on `degraded` — a
   // fallback that cannot step must not claim the gesture.
+  //
+  // The axis has to be the one the cards are actually laid out on. Standing,
+  // the ring travels vertically and takes the up/down gesture, handing it
+  // back at the ends. Lying down it travels sideways, so vertical is not its
+  // gesture at all: it declares "x" and every swipe up flips the section on
+  // to Work, the way it does on Work and Blog. The ring is still walked
+  // sideways — by a drag, which it takes directly.
   useEffect(() => {
     if (degraded) return;
     stepRef?.({
+      axis: lying ? "x" : "y",
       step: (direction) => {
         const from = targetRef.current ?? progressRef.current;
         const next = Math.round(from) + direction;
@@ -317,7 +339,7 @@ export function ViscoseCarousel({
       },
     });
     return () => stepRef?.(null);
-  }, [stepRef, loop, count, degraded]);
+  }, [stepRef, loop, count, degraded, lying]);
 
   // Re-arm the entry each time the section comes back into view.
   useEffect(() => {
@@ -571,11 +593,11 @@ export function ViscoseCarousel({
       dragLastY = e.clientY;
       targetRef.current = null;
 
-      // FullPageScroll already turns a vertical swipe into a step, so taking
+      // Standing, FullPageScroll turns a vertical swipe into a step, so taking
       // touch drags on that axis too would move the ring twice per finger.
-      // Lying down the conflict is only about the axis — a sideways drag is
-      // ours outright — so wait and see which way the finger goes. The press
-      // still counts either way, since a tap has to open a card.
+      // Lying down it flips the section instead, and either way the vertical
+      // finger is not ours — so wait and see which way this one goes. The
+      // press still counts regardless, since a tap has to open a card.
       const shared = Boolean(stepRef) && e.pointerType === "touch";
       pendingAxis = shared && lying;
       dragging = !shared;

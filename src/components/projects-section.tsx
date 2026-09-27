@@ -40,8 +40,9 @@ const section = {
 // panel rather than a column: the cards have to fuse into one another, and
 // there is nothing to fuse with inside a max-w-xl box.
 //
-// Answers the same `stepRef` gesture contract the story stepper did, so a
-// wheel tick turns the ring one slot and only flips on to Work at the end.
+// Answers the same `stepRef` gesture contract the story stepper did: standing
+// up, a wheel tick turns the ring one slot and only flips on to Work at the
+// end; lying down it hands the vertical gesture straight back.
 export function ProjectsSection({
   projects,
   heading,

@@ -85,8 +85,10 @@ export type FullPageProps = {
 //
 // That split is what makes a swipe up on Work or Blog jump to the next
 // section rather than walk their slides — both lay their slides out side by
-// side and register on "x". The projects ring stands upright on desktop and
-// travels vertically, so it stays on "y" and still takes vertical gestures.
+// side and register on "x". The projects ring registers whichever axis it is
+// currently strung out on: "y" standing up on a wide viewport, "x" once it
+// lies down on a phone, where a swipe up flips the section like everywhere
+// else and the ring is walked by a sideways drag instead.
 //
 // Each axis tallies its own wheel deltas. A trackpad flick is never purely
 // one direction, and a shared counter would let the stray component of a
