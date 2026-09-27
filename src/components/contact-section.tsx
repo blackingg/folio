@@ -50,20 +50,28 @@ export function ContactSection({
           variants={item}
           className="text-3xl font-bold tracking-tighter sm:text-5xl"
         >
-          Get in Touch
+          Let&apos;s build it.
         </motion.h2>
         <motion.p
           variants={item}
           className="mx-auto max-w-[600px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed"
         >
-          Want to chat? Just shoot me a mail{" "}
+          Got a product, concept, or wild idea? I&apos;m open to working with
+          startups, individuals, and creative studios on digital products,
+          interactive experiences, and everything in between.
+        </motion.p>
+        <motion.p
+          variants={item}
+          className="mx-auto max-w-[600px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed"
+        >
+          Just shoot me a mail{" "}
           <Link
             href={emailUrl}
             className="text-neon hover:underline"
           >
             here
-          </Link>{" "}
-          and I&apos;ll respond whenever I can.
+          </Link>
+          , and I&apos;ll respond ASAP.
         </motion.p>
       </motion.div>
     </div>

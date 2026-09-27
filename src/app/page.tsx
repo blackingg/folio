@@ -45,33 +45,41 @@ export default async function Page() {
       <FullPageScroll>
         <HeroSection
           name={DATA.name}
-          description={DATA.description}
+          lines={DATA.hero}
           avatarUrl={DATA.avatarUrl}
           initials={DATA.initials}
-        />
-
-        <AboutReveal
-          summary={DATA.summary}
-          resumeUrl={DATA.contact.social.Resume.url}
-        />
-
-        <SkillPills
-          title="Skills"
-          skills={DATA.skills}
+          hireUrl={DATA.contact.social.email.url}
+          workUrl="/projects"
         />
 
         <ProjectsSection
+          heading="Don't believe me? Check out my projects!"
           projects={toViscoseProjects(
             DATA.projects.filter((project) => (project as any).featured),
           )}
         />
 
         <WorkStack
-          title="Work Experience"
+          kicker="That's not enough?"
+          heading="You want to know who I've actually worked with?"
+          srLabel="Work Experience"
+          intro="Fair enough. Here are the people and teams who have trusted me to build things for them."
           works={DATA.work.filter((work) => (work as any).featured) as any}
         />
 
-        <BlogSection>
+        <AboutReveal
+          kicker="Here's a little more about me!"
+          heading="I'm a tinkerer at heart."
+          paragraphs={DATA.summary}
+          resumeUrl={DATA.contact.social.Resume.url}
+        />
+
+        <BlogSection
+          kicker="That's not all:"
+          heading="I have thoughts."
+          srLabel="Recent Writing"
+          intro="Like every slightly obsessive nerd with a computer, I have opinions about the things I build. Sometimes I write them down."
+        >
           {latestPosts.map((post) => (
             <BlogCard
               key={post.slug}
@@ -84,6 +92,12 @@ export default async function Page() {
             />
           ))}
         </BlogSection>
+
+        <SkillPills
+          title="A few of the tools I get my hands dirty with"
+          srLabel="Skills"
+          skills={DATA.skills}
+        />
 
         <ContactSection emailUrl={DATA.contact.social.email.url} />
       </FullPageScroll>

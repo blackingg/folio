@@ -18,6 +18,7 @@ import {
 } from "./ring";
 import { FRAGMENT, MAX_CARDS, VERTEX } from "./shaders";
 import type { FullPageProps } from "@/components/full-page-scroll";
+import { SectionIntro } from "@/components/section-intro";
 import { cn } from "@/lib/utils";
 
 export type ViscoseProject = {
@@ -233,6 +234,8 @@ type CardState = {
 export function ViscoseCarousel({
   projects,
   heading,
+  eyebrow,
+  srLabel,
   loop = true,
   compact = false,
   layout = "column",
@@ -243,6 +246,10 @@ export function ViscoseCarousel({
 }: {
   projects: readonly ViscoseProject[];
   heading?: string;
+  /** Connective line under the heading, carrying the page's running voice. */
+  eyebrow?: string;
+  /** Plain heading for the document outline when `heading` is voice-led. */
+  srLabel?: string;
   /** Full-page rings wrap; the homepage panel clamps, so its first and last
    *  slots can hand the gesture back to FullPageScroll. */
   loop?: boolean;
@@ -987,8 +994,16 @@ export function ViscoseCarousel({
             full ? "px-6 sm:px-10" : "mx-auto max-w-3xl px-6",
           )}
         >
-          <div className="flex flex-col gap-1">
-            {heading && <h2 className="text-xl font-bold">{heading}</h2>}
+          {/* Capped from md up so the heading cannot run under the ring's
+              artwork. "Selected Projects" was short enough to stay clear on
+              its own; a full conversational line is not, and white type over a
+              white screenshot is invisible. */}
+          <div className="flex flex-col gap-1 md:max-w-[46%]">
+            <SectionIntro
+              heading={heading}
+              srLabel={srLabel}
+              lead={eyebrow}
+            />
             <p className="text-sm tabular-nums text-neutral-500">
               {String(front + 1).padStart(2, "0")}
               <span className="mx-1">/</span>
@@ -1025,9 +1040,19 @@ export function ViscoseCarousel({
               </Swap>
             )}
 
-            {full && p?.description && (
+            {/* Shown in both layouts now. It used to be gated to `full`
+                because the descriptions were five-sentence case studies that
+                swamped the narrower column; they are short blurbs now, so the
+                homepage ring can carry one too — just clamped tighter, since
+                the column layout has less room than the full-page one. */}
+            {p?.description && (
               <Swap value={p.title} delay={0.07}>
-                <p className="hidden text-sm leading-relaxed text-foreground/80 md:line-clamp-6 md:block">
+                <p
+                  className={cn(
+                    "hidden text-sm leading-relaxed text-foreground/80 md:block",
+                    full ? "md:line-clamp-6" : "md:line-clamp-4",
+                  )}
+                >
                   {p.description}
                 </p>
               </Swap>
