@@ -63,7 +63,7 @@ export function AboutReveal({
           {paragraphs.map((paragraph) => (
             <p
               key={paragraph}
-              className="max-w-full text-pretty font-sans text-sm leading-relaxed text-foreground/80 sm:text-base lg:text-lg"
+              className="max-w-prose text-pretty font-sans text-sm leading-relaxed text-foreground/80 sm:text-base lg:text-lg"
             >
               {paragraph.split(" ").map((w, i, all) => {
                 const delay = LEAD_IN + index * step;
