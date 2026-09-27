@@ -10,6 +10,7 @@ interface Props {
   image?: string | null;
   slug: string;
   readingTime?: string;
+  compact?: boolean;
 }
 
 export function BlogCard({
@@ -19,7 +20,48 @@ export function BlogCard({
   image,
   slug,
   readingTime,
+  compact = false,
 }: Props) {
+  const meta = (
+    <div className="mb-1 flex items-center gap-2 text-xs text-muted-foreground">
+      <span>{formatDate(publishedAt)}</span>
+      {readingTime && (
+        <>
+          <span>&bull;</span>
+          <span>{readingTime}</span>
+        </>
+      )}
+    </div>
+  );
+
+  if (compact) {
+    return (
+      <Link
+        href={`/blog/${slug}`}
+        className="block h-full"
+      >
+        <Card className="group h-full border-none bg-[color-mix(in_srgb,hsl(var(--muted))_40%,hsl(var(--background)))] shadow-none transition-all hover:bg-[color-mix(in_srgb,hsl(var(--muted))_80%,hsl(var(--background)))]">
+          <div className="flex items-start gap-3 p-4">
+            <BlogImage
+              src={image || undefined}
+              alt={title}
+              compact
+            />
+            <div className="min-w-0 flex-1">
+              {meta}
+              <CardTitle className="text-base leading-snug transition-colors line-clamp-2 group-hover:text-primary">
+                {title}
+              </CardTitle>
+              <p className="mt-1 text-sm text-muted-foreground line-clamp-2">
+                {summary}
+              </p>
+            </div>
+          </div>
+        </Card>
+      </Link>
+    );
+  }
+
   return (
     <Link
       href={`/blog/${slug}`}

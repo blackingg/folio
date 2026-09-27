@@ -89,6 +89,7 @@ export default async function Page() {
               image={post.image}
               slug={post.slug}
               readingTime={post.readingTime}
+              compact
             />
           ))}
         </BlogSection>
