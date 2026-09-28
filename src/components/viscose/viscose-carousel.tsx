@@ -727,8 +727,10 @@ export function ViscoseCarousel({
       if (!visible || !activeRef.current || document.hidden) return;
 
       // The atlas is the gate: the ring launches on the frame the first
-      // screenshot lands.
-      if (reduced) entryRef.current = 1;
+      // screenshot lands. Lying down there is no fan to gate: a phone gets
+      // the strip already strung out, so the panel arrives looking the way it
+      // will sit rather than dealing itself sideways every visit.
+      if (reduced || lying) entryRef.current = 1;
       else if (entryOpenRef.current && entryRef.current < 1) {
         entryRef.current = clamp01(entryRef.current + dt / TUNE.entryTime);
       }
