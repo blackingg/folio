@@ -83,7 +83,7 @@ export function HeroAvatar({
         }}
         style={{ translateZ: 24 }}
       >
-        <Avatar className="size-56 md:size-32 border-2 shadow-sm">
+        <Avatar className="size-[clamp(5.5rem,17svh,11rem)] md:size-32 border-2 shadow-sm">
           <AvatarImage alt={alt} src={src} />
           <AvatarFallback>{initials}</AvatarFallback>
         </Avatar>

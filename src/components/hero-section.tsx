@@ -39,9 +39,9 @@ export function HeroSection({
   });
 
   return (
-    <div className="flex h-full flex-col justify-center px-6 pb-20 pt-12 sm:pb-32 sm:pt-24">
+    <div className="flex h-full flex-col justify-center px-6 pb-20 pt-[clamp(1.25rem,5svh,3rem)] sm:pb-32 sm:pt-24">
       <div className="mx-auto w-full max-w-3xl space-y-8">
-        <div className="flex flex-col-reverse items-center justify-between gap-6 sm:flex-row sm:items-start">
+        <div className="flex flex-col-reverse items-center justify-between gap-[clamp(0.75rem,3svh,1.5rem)] sm:flex-row sm:items-start">
           <div className="flex w-full min-w-0 flex-1 flex-col space-y-3 text-left sm:space-y-4">
             <h1 className="sr-only">{name} - Frontend Engineer Portfolio</h1>
             <HeroGreeting
