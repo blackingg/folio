@@ -4,20 +4,9 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import { ContactIllustration } from "@/components/contact-illustration";
 import type { FullPageProps } from "@/components/full-page-scroll";
+import { WordStagger, wordLine } from "@/components/word-stagger";
 
-const container = {
-  hidden: {},
-  visible: { transition: { staggerChildren: 0.12, delayChildren: 0.1 } },
-};
-
-const item = {
-  hidden: { opacity: 0, y: 20 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.45, ease: "easeOut" },
-  },
-};
+const container = { hidden: {}, visible: {} };
 
 const illustration = {
   hidden: { opacity: 0, scale: 0.6, rotate: -8 },
@@ -25,9 +14,13 @@ const illustration = {
     opacity: 1,
     scale: 1,
     rotate: 0,
-    transition: { type: "spring", stiffness: 220, damping: 16 },
+    transition: { type: "spring", stiffness: 220, damping: 16, delay: 0.1 },
   },
 };
+
+const HEADING = wordLine(0.35, 0.06);
+const BLURB = wordLine(0.65, 0.022);
+const SIGNOFF = wordLine(1.35, 0.03);
 
 export function ContactSection({
   emailUrl,
@@ -47,31 +40,32 @@ export function ContactSection({
           <ContactIllustration className="mx-auto size-40 sm:size-48 lg:size-64" />
         </motion.div>
         <motion.h2
-          variants={item}
+          variants={HEADING}
           className="text-3xl font-bold tracking-tighter sm:text-5xl"
         >
-          Let&apos;s build it.
+          <WordStagger inherit>Let&apos;s build it.</WordStagger>
         </motion.h2>
         <motion.p
-          variants={item}
+          variants={BLURB}
           className="mx-auto max-w-[600px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed"
         >
-          Got a product, concept, or wild idea? I&apos;m open to working with
-          startups, individuals, and creative studios on digital products,
-          interactive experiences, and everything in between.
+          <WordStagger inherit>
+            Got a product, concept, or wild idea? I&apos;m open to working with
+            startups, individuals, and creative studios on digital products,
+            interactive experiences, and everything in between.
+          </WordStagger>
         </motion.p>
         <motion.p
-          variants={item}
+          variants={SIGNOFF}
           className="mx-auto max-w-[600px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed"
         >
-          Just shoot me a mail{" "}
-          <Link
-            href={emailUrl}
-            className="text-neon hover:underline"
-          >
-            here
-          </Link>
-          , and I&apos;ll respond ASAP.
+          <WordStagger inherit>
+            Just shoot me a mail{" "}
+            <Link href={emailUrl} className="text-neon hover:underline">
+              here
+            </Link>
+            , and I&apos;ll respond ASAP.
+          </WordStagger>
         </motion.p>
       </motion.div>
     </div>
