@@ -1,7 +1,6 @@
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
-import type { Metadata } from "next";
 
 const InfiniteWorld = dynamic(
   () => import("@/components/3d/InfiniteWorld"),
@@ -16,12 +15,6 @@ const InfiniteWorld = dynamic(
     ),
   }
 );
-
-export const metadata: Metadata = {
-  title: "3D World",
-  description:
-    "An infinite procedurally generated 3D world — explore terrain, sky, and nature in your browser.",
-};
 
 export default function ThreeDPage() {
   return (

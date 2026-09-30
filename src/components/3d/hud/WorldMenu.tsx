@@ -204,7 +204,7 @@ export function WorldMenu({
               <header className="flex items-start justify-between px-4 pb-3 pt-4 md:px-6 md:pb-4 md:pt-5">
                 <div>
                   <h2 className="text-lg font-semibold tracking-tight">
-                    {active.label === "Guide" ? "About This World" : active.label}
+                    {active.label === "Guide" ? "About Project TRUMAN" : active.label}
                   </h2>
                   <p className="mt-0.5 text-sm text-muted-foreground">
                     {active.blurb}
