@@ -3,16 +3,16 @@
 import { motion } from "framer-motion";
 import { Children } from "react";
 import BlurFade from "@/components/magicui/blur-fade";
+import { SectionIntro } from "@/components/section-intro";
 import { SectionLink } from "@/components/section-link";
 import { StoryStepper } from "@/components/story-stepper";
 import type { FullPageProps } from "@/components/full-page-scroll";
 
 const section = {
-  hidden: { opacity: 0, y: 24, filter: "blur(6px)" },
+  hidden: { opacity: 0, y: 24 },
   visible: {
     opacity: 1,
     y: 0,
-    filter: "blur(0px)",
     transition: { duration: 0.5, ease: "easeOut" },
   },
 };
@@ -22,10 +22,18 @@ const section = {
 // arrow gestures FullPageScroll uses to flip pages — see story-stepper.tsx.
 export function BlogSection({
   children,
+  kicker,
+  heading = "Recent Writing",
+  intro,
+  srLabel,
   active,
   stepRef,
 }: {
   children: React.ReactNode;
+  kicker?: string;
+  heading?: string;
+  intro?: string;
+  srLabel?: string;
 } & FullPageProps) {
   const posts = Children.toArray(children);
 
@@ -38,11 +46,13 @@ export function BlogSection({
         className="mx-auto w-full max-w-xl space-y-6"
       >
         <BlurFade>
-          <h2 className="mb-2 text-xl font-bold">Recent Writing</h2>
-          <p className="text-sm text-muted-foreground sm:text-base">
-            I share my thoughts on software development, life, and the
-            things I&apos;m learning along the way.
-          </p>
+          <SectionIntro
+            kicker={kicker}
+            heading={heading}
+            srLabel={srLabel}
+            lead={intro}
+            active={active}
+          />
         </BlurFade>
 
         <StoryStepper

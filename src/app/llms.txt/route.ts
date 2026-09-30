@@ -34,7 +34,7 @@ export async function GET() {
 
 > ${DATA.description}
 
-${DATA.summary}
+${DATA.summary.join("\n\n")}
 
 Based in ${DATA.location}. Contact: ${DATA.contact.email}
 

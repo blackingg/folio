@@ -9,8 +9,16 @@ export const DATA = {
   locationLink: "https://goo.gl/maps/8Q1KZJ8v1Zz",
   description:
     "Frontend dev | React/React Native/Electron/Tauri | TypeScript/Three.js | Building interactive experiences across platforms",
-  summary:
-    "Hi! I'm Mubarak — a tinkerer at heart. I build frontend experiences, and I'm less interested in ticking off a tech stack than in how a product actually feels to use — the motion, the sound, the small details most people won't consciously notice but always feel. I chase that feeling across whatever medium gets me there, from interactive visuals to full products built and shipped end to end. If it doesn't feel good to use, I haven't finished it.",
+  hero: [
+    "I'm a frontend dev, technically. Think of me as the guy you call when you want something people enjoy using.",
+    "Websites. Apps. Digital products. Even entire 3D worlds.",
+    "I make things functional. Then I make them fun to use.",
+  ],
+  summary: [
+    "I'm a frontend engineer, but I've never been particularly interested in just ticking off a tech stack. I care much more about how something actually feels to use — the motion, the interaction, the sound, the tiny details you might not consciously notice but always feel. If it doesn't feel good to use, I don't consider it finished.",
+    "When I'm not building for clients, I'm usually building because I'm curious. I draw too, and I think that has a lot to do with how I approach the things I build. I like paying attention — to people, nature, architecture, conversations, little everyday details. A lot of my ideas start there.",
+    "I like making things that are useful, things that are playful, and occasionally things that are a little weird. Usually, the best projects are somewhere in between.",
+  ],
   avatarUrl: "/me.png",
   skills: [
     "Typescript",
@@ -275,7 +283,7 @@ export const DATA = {
       active: true,
       featured: true,
       description:
-        "Shelf is a digital library and resource-sharing platform I founded for Nigerian students and readers — textbooks, novels, comics, and school notes in one community-driven pool, organized into curated public and private folders with smart search and a custom EPUB/PDF reader. I built it end to end, from the shared-library architecture and responsive frontend to the moderation and vetting model that keeps the library authentic.",
+        "I noticed Nigerian students had a problem — no decentralised space for storing and accessing online materials and past questions. So I built one. Shelf lets students log in and get what they need without having to hunt through WhatsApp groups, Telegram chats, and that one person who somehow has every PDF ever created.",
       technologies: ["Next.js", "Typescript", "TailwindCSS", "Framer Motion"],
       links: [
         {
@@ -298,7 +306,7 @@ export const DATA = {
       dates: "Oct 2025",
       active: true,
       description:
-        "OAU Homes is a Next.js platform that connects OAU students directly with verified housing agents to reduce inflated accommodation prices. The platform offers a clean, responsive interface with search and filtering tools, plus verified agent profiles for transparency. I built the frontend in Next.js and Tailwind CSS, collaborated with a backend developer within the same repo, and personally handled the UI design from scratch. I also created clear listing layouts and optimized the experience for mobile users.",
+        "OAU students have always struggled with unscrupulous house agents and exorbitant fees just to secure reasonable accommodation. OAU Homes connects students with verified housing agents, with the goal of making the process simpler and cutting out the unnecessary costs.",
       technologies: ["Next.js", "Typescript", "TailwindCSS", "React"],
       links: [
         {
@@ -317,7 +325,7 @@ export const DATA = {
       active: true,
       featured: true,
       description:
-        "SokoFunds is a challenger neobank for the Democratic Republic of the Congo — a market where formal banking penetration is low and mobile money is how money actually moves. It runs a two-layer rail model: free instant SokoFunds→SokoFunds transfers with live name resolution, plus interoperation with the rails people already have — M-Pesa, Airtel Money, Orange Money and the Congolese banks — alongside virtual cards and investments. I built it on a simulated backend behind a typed API boundary, so swapping in a real server touches no screen — with TanStack Query driving account data through optimistic updates and rollback, PIN and biometric auth held in SecureStore, money as integer minor units in a multi-currency layer, and French-first i18n.",
+        "Banking doesn't work quite the same way everywhere. In the Democratic Republic of Congo, phone numbers play a major role in how people send and receive money. SokoFunds explored what managing money through an app could look like in that context — creating an account, moving money around, and experiencing the whole product digitally.",
       technologies: [
         "React Native",
         "Expo",
@@ -343,7 +351,7 @@ export const DATA = {
       dates: "Jan 2026",
       active: true,
       description:
-        "The official landing page for the SokoFunds application, designed to showcase the app's premium features with high-end aesthetics. It includes a responsive device selector for app previews, smooth Framer Motion animations, and a modern UI that aligns with the SokoFunds brand identity.",
+        "I didn't just build the product. I also built the website that introduced people to it. The goal: explain what SokoFunds is, make the product feel familiar, and give potential users a reason to care.",
       technologies: ["Next.js", "TypeScript", "Tailwind CSS", "Framer Motion"],
       links: [
         {
@@ -367,7 +375,7 @@ export const DATA = {
       active: true,
       featured: true,
       description:
-        "Doggverse is a Telegram Mini App for buying virtual land across three metaverse islands with a 3D viewer. The platform features a Three.js interface with touch controls (swipe, pinch, tap), color filtering, and wallet integration. I built the frontend in React, TypeScript, and Tailwind CSS, implemented centralized state management for data consistency, and designed the Telegram-style UI. I created the 3D visualization with custom camera controls and optimized for mobile users.",
+        "A Telegram mini-app for buying virtual land in Web3. And because apparently a normal map wasn't enough, I built three explorable islands in 3D for users to wander before they buy the NFTs.",
       technologies: ["React", "TypeScript", "TailwindCSS", "Three.js"],
       links: [
         {
@@ -390,7 +398,7 @@ export const DATA = {
       dates: "Dec 2025",
       active: true,
       description:
-        "NOTDOG is a playful Solana-themed memecoin project built as a fun, interactive web experience. The site blends meme culture with blockchain-inspired visuals, featuring smooth animations, dynamic UI elements, and collectible-style graphics. Designed as a frontend-focused project, it highlights responsive design, fluid interactions, and a colorful, engaging interface that brings the memecoin aesthetic to life.",
+        "A playful memecoin project built around recognisable pieces of meme culture and collectible-style graphics. Mostly an excuse to see how far I could push the idea.",
       technologies: ["React", "TailwindCSS", "Framer Motion"],
       links: [
         {
@@ -414,7 +422,7 @@ export const DATA = {
       active: true,
       featured: true,
       description:
-        "The Breakfast Place is an innovative e-commerce web application for a restaurant, featuring interactive 3D models of customizable breakfast items and real-time 3D rendering of user-created meals. It is integrated with Supabase for efficient data management and designed responsively to deliver a seamless experience across all devices.",
+        "A restaurant website where ordering isn't just clicking \"add to cart.\" Want bread? Put it on the burger. Cheese? Absolutely. Onions? Get those things out of here. I built an interactive ordering experience that lets customers actually construct their meal, while keeping it simple enough that nobody needs a tutorial to order breakfast.",
       technologies: [
         "Three.js",
         "React Three Fiber",
@@ -443,7 +451,7 @@ export const DATA = {
       dates: "Oct 2024",
       active: true,
       description:
-        "This is a sleek, animated music-themed web application for the artist Dafash, featuring a dynamic, motion-powered UI with smooth transitions using Framer Motion. It offers interactive horizontal album previews with modal pop-ups for detailed views, built with a modular architecture using reusable components like AlbumCard and Modal. Tailwind CSS was used for rapid, responsive styling across all screen sizes.",
+        "A sleek, animated website built to give an artist and their music somewhere to be discovered. It brings their work, discography, and personality together in one place.",
       technologies: ["React", "TailwindCSS", "Framer Motion"],
       links: [
         {
@@ -466,7 +474,7 @@ export const DATA = {
       dates: "Oct 2024",
       active: true,
       description:
-        "Pokedex is a browsable index of the first 898 Pokémon built on the PokéAPI. The grid takes a live name search and a type filter, and loads more entries as you scroll, while a side panel gives the selected Pokémon its sprite, Pokédex entry, height, weight and abilities. I put a small Express layer in front of the API rather than calling it straight from the client: the public list endpoint returns names without types, so the server walks all eighteen type endpoints once and folds them into a single pre-tagged list — which is what makes filtering instant instead of one request per card. The frontend is React and Tailwind on Vite, built to a reference design.",
+        "I needed to browse all 898 Pokémon from somewhere other than my childhood memories. So I built a searchable, browsable Pokédex on top of the PokéAPI.",
       technologies: ["React", "Vite", "TailwindCSS", "Express", "PokéAPI"],
       links: [
         {
@@ -481,6 +489,25 @@ export const DATA = {
         },
       ],
       image: "/pokedex.png",
+      video: "",
+    },
+    {
+      title: "Project TRUMAN",
+      href: "/3d",
+      dates: "2025",
+      active: true,
+      featured: true,
+      description:
+        "I got curious about 3D on the web, so naturally I decided to build a world. Inspired by Bruno Simon's portfolio, Project TRUMAN was my playground for figuring out 3D environments, movement, interaction, and generally asking, \"Can I actually make this work?\" I talk about this one a little too much. Fortunately, I have a blog.",
+      technologies: ["Three.js", "WebGL / GLSL", "Typescript", "Next.js"],
+      links: [
+        {
+          type: "Explore the world",
+          href: "/3d",
+          icon: <Icons.globe className="size-3" />,
+        },
+      ],
+      image: "/truman.png",
       video: "",
     },
   ],

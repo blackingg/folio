@@ -1,10 +1,16 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { AnimatePresence, motion, useMotionValue, useSpring, useTransform } from "framer-motion";
-import { type MouseEvent, useRef } from "react";
+import {
+  AnimatePresence,
+  motion,
+  useMotionValue,
+  useSpring,
+  useTransform,
+} from "framer-motion";
+import { type MouseEvent, useRef, useState } from "react";
 import Link from "next/link";
-import { Box } from "lucide-react";
+import { DoorOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useFullPage } from "@/components/full-page-scroll";
 
@@ -13,22 +19,25 @@ interface Explore3dButtonProps {
   delay?: number;
 }
 
-export function Explore3dButton({ className, delay = 0 }: Explore3dButtonProps) {
+export function Explore3dButton({
+  className,
+  delay = 0,
+}: Explore3dButtonProps) {
   const pathname = usePathname();
   const { activeIndex } = useFullPage();
   const ref = useRef<HTMLAnchorElement>(null);
   const pointerX = useMotionValue(0);
   const pointerY = useMotionValue(0);
+  const [burst, setBurst] = useState(0);
 
   const isVisible = pathname !== "/3d" && activeIndex >= 1;
 
-  // 3D tilt transformation math - styled after HeroAvatar
-  const rotateX = useSpring(useTransform(pointerY, [-0.5, 0.5], [26, -26]), {
+  const rotateX = useSpring(useTransform(pointerY, [-0.5, 0.5], [24, -24]), {
     stiffness: 350,
     damping: 14,
     mass: 0.6,
   });
-  const rotateY = useSpring(useTransform(pointerX, [-0.5, 0.5], [-26, 26]), {
+  const rotateY = useSpring(useTransform(pointerX, [-0.5, 0.5], [-24, 24]), {
     stiffness: 350,
     damping: 14,
     mass: 0.6,
@@ -46,9 +55,6 @@ export function Explore3dButton({ className, delay = 0 }: Explore3dButtonProps) 
     pointerY.set(0);
   }
 
-  // Repeating circular text string around the ring
-  const text = "Explore 3D Experience 🚧 • Explore 3D Experience 🚧 • ";
-
   return (
     <AnimatePresence>
       {isVisible && (
@@ -56,102 +62,94 @@ export function Explore3dButton({ className, delay = 0 }: Explore3dButtonProps) 
           initial={{ opacity: 0, scale: 0.5, y: -40 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.5, y: -40 }}
-          transition={{ type: "spring", stiffness: 260, damping: 20, delay: 0.2 }}
+          transition={{
+            type: "spring",
+            stiffness: 260,
+            damping: 20,
+            delay: 0.2,
+          }}
           className={cn(
-            "fixed top-4 right-4 sm:top-6 sm:right-6 z-40 pointer-events-auto perspective-800",
-            className
+            "pointer-events-auto fixed right-4 top-4 z-40 perspective-800 sm:right-6 sm:top-6",
+            className,
           )}
         >
           <Link
             ref={ref}
             href="/3d"
+            aria-label="Project TRUMAN, an explorable 3D world"
             onMouseMove={handleMouseMove}
             onMouseLeave={handleMouseLeave}
-            className="group relative flex items-center justify-center p-2 cursor-pointer [transform-style:preserve-3d]"
-            style={
-              {
-                rotateX,
-                rotateY,
-                transformStyle: "preserve-3d",
-              } as any
-            }
+            onClick={() => setBurst((n) => n + 1)}
+            className="group relative flex cursor-pointer items-center justify-center p-2 [transform-style:preserve-3d]"
+            style={{ rotateX, rotateY, transformStyle: "preserve-3d" } as any}
           >
+            <span className="pointer-events-none absolute right-full top-1/2 mr-1 hidden -translate-y-1/2 whitespace-nowrap rounded-sm border border-[hsl(var(--neon)/0.35)] bg-background/90 px-3 py-1 text-xs font-medium text-foreground opacity-0 backdrop-blur-sm transition-opacity duration-300 group-hover:opacity-100 sm:block">
+              Project TRUMAN
+            </span>
+
             <motion.div
-              animate={{ y: [0, -8, 0] }}
+              animate={{ y: [0, -7, 0] }}
               transition={{
                 duration: 4,
                 repeat: Infinity,
                 ease: "easeInOut",
                 delay: delay + 0.3,
               }}
-              whileHover={{ scale: 1.1 }}
-              className="relative flex items-center justify-center size-28 sm:size-32 [transform-style:preserve-3d]"
+              whileHover={{ scale: 1.08 }}
+              whileTap={{ scale: 0.86, transition: { duration: 0.12 } }}
+              className="relative size-20 sm:size-24 lg:size-32 [transform-style:preserve-3d]"
             >
-              {/* Ambient Glow Aura */}
               <div
-                className="absolute inset-0 rounded-full opacity-60 blur-xl transition-all duration-500 group-hover:opacity-100 group-hover:blur-2xl"
+                className="absolute -inset-3 animate-blob-hue rounded-full opacity-60 blur-2xl transition-opacity duration-500 group-hover:opacity-100"
                 style={{
-                  background: "radial-gradient(circle, hsl(var(--neon) / 0.5) 0%, hsl(var(--neon) / 0.1) 70%, transparent 100%)",
-                  transform: "translateZ(-12px)",
+                  background:
+                    "radial-gradient(circle, hsl(var(--neon) / 0.55) 0%, hsl(var(--neon) / 0.12) 65%, transparent 100%)",
                 }}
               />
 
-              {/* Glass Disc Base */}
-              <div
-                className="absolute inset-0 rounded-full bg-background/80 backdrop-blur-md shadow-2xl transition-all duration-300 group-hover:bg-background/95"
-                style={{
-                  borderColor: "hsl(var(--neon) / 0.4)",
-                  borderWidth: "1px",
-                  borderStyle: "solid",
-                  transform: "translateZ(0px)",
-                }}
-              />
-
-              {/* Rotating Circular Text Ring */}
-              <motion.div
-                animate={{ rotate: 360 }}
-                transition={{
-                  duration: 24,
-                  repeat: Infinity,
-                  ease: "linear",
-                }}
-                className="absolute inset-0 flex items-center justify-center pointer-events-none select-none"
-                style={{ transform: "translateZ(20px)" }}
-              >
-                <svg
-                  viewBox="0 0 100 100"
-                  className="size-full overflow-visible"
-                >
-                  <path
-                    id="circularTextPath"
-                    d="M 50, 50 m -37, 0 a 37,37 0 1,1 74,0 a 37,37 0 1,1 -74,0"
-                    fill="none"
-                  />
-                  <text className="fill-foreground/90 group-hover:fill-[hsl(var(--neon))] text-[6px] font-semibold tracking-[0.14em] uppercase transition-colors duration-300">
-                    <textPath
-                      href="#circularTextPath"
-                      startOffset="0%"
+              <div className="absolute inset-0 animate-blob-breathe">
+                <div className="size-full animate-blob-hue">
+                  <div className="size-full animate-blob-spin">
+                    <div
+                      className="size-full animate-blob-morph overflow-hidden"
+                      style={{
+                        borderRadius: "62% 38% 44% 56% / 54% 48% 52% 46%",
+                        background:
+                          "radial-gradient(120% 120% at 30% 24%, hsl(48 100% 78%) 0%, hsl(var(--neon)) 38%, hsl(32 92% 46%) 100%)",
+                        boxShadow:
+                          "inset 0 -10px 20px hsl(26 90% 24% / 0.5), inset 0 8px 16px hsl(48 100% 90% / 0.4)",
+                      }}
                     >
-                      {text}
-                    </textPath>
-                  </text>
-                </svg>
-              </motion.div>
+                      <div
+                        className="size-full animate-blob-sheen opacity-75"
+                        style={{
+                          background:
+                            "radial-gradient(36% 28% at 34% 26%, hsl(48 100% 95% / 0.9) 0%, transparent 70%)",
+                        }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
 
-              {/* Center 3D Floating Icon Button Core */}
-              <div
-                className="relative flex items-center justify-center size-12 sm:size-14 rounded-full shadow-md group-hover:scale-110 transition-all duration-300"
-                style={{
-                  backgroundColor: "hsl(var(--neon) / 0.15)",
-                  color: "hsl(var(--neon))",
-                  borderColor: "hsl(var(--neon) / 0.4)",
-                  borderWidth: "1px",
-                  borderStyle: "solid",
-                  boxShadow: "0 0 12px hsl(var(--neon) / 0.35)",
-                  transform: "translateZ(36px)",
-                }}
-              >
-                <span  className="size-6 transition-transform duration-300 group-hover:rotate-12" >🚧</span>                                
+              <AnimatePresence>
+                {burst > 0 && (
+                  <motion.span
+                    key={burst}
+                    initial={{ opacity: 0.85, scale: 0.6 }}
+                    animate={{ opacity: 0, scale: 2.1 }}
+                    transition={{ duration: 0.7, ease: "easeOut" }}
+                    className="pointer-events-none absolute inset-0 rounded-full border-2"
+                    style={{ borderColor: "hsl(var(--neon) / 0.9)" }}
+                  />
+                )}
+              </AnimatePresence>
+
+              <div className="pointer-events-none absolute inset-0 grid place-items-center">
+                <DoorOpen
+                  className="size-6 text-background drop-shadow-sm transition-transform duration-300 group-hover:scale-110 sm:size-7 lg:size-9"
+                  strokeWidth={2.25}
+                />
               </div>
             </motion.div>
           </Link>

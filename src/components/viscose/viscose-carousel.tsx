@@ -18,6 +18,7 @@ import {
 } from "./ring";
 import { FRAGMENT, MAX_CARDS, VERTEX } from "./shaders";
 import type { FullPageProps } from "@/components/full-page-scroll";
+import { SectionIntro } from "@/components/section-intro";
 import { cn } from "@/lib/utils";
 
 export type ViscoseProject = {
@@ -233,6 +234,8 @@ type CardState = {
 export function ViscoseCarousel({
   projects,
   heading,
+  eyebrow,
+  srLabel,
   loop = true,
   compact = false,
   layout = "column",
@@ -243,6 +246,10 @@ export function ViscoseCarousel({
 }: {
   projects: readonly ViscoseProject[];
   heading?: string;
+  /** Connective line under the heading, carrying the page's running voice. */
+  eyebrow?: string;
+  /** Plain heading for the document outline when `heading` is voice-led. */
+  srLabel?: string;
   /** Full-page rings wrap; the homepage panel clamps, so its first and last
    *  slots can hand the gesture back to FullPageScroll. */
   loop?: boolean;
@@ -262,6 +269,10 @@ export function ViscoseCarousel({
   const [hovered, setHovered] = useState(-1);
   const [degraded, setDegraded] = useState(false);
   const [pointerFine, setPointerFine] = useState(false);
+  // Mirrors the render loop's own `lying`, which is measured off the host.
+  // Kept in React too because the axis the ring answers gestures on has to
+  // match the axis it is strung out on — see the stepRef effect below.
+  const [lying, setLying] = useState(false);
 
   const count = projects.length;
 
@@ -294,12 +305,30 @@ export function ViscoseCarousel({
     [projects, router],
   );
 
+  // The ring lies down below this width, and everything that reads as travel
+  // — the drag axis, the gesture axis — turns with it.
+  useEffect(() => {
+    const mq = window.matchMedia(`(max-width: ${TUNE.lieDownBelow - 1}px)`);
+    const sync = () => setLying(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
+
   // The gesture contract FullPageScroll hands every page: returning false at
   // the ends lets the section flip on to Work. Gated on `degraded` — a
   // fallback that cannot step must not claim the gesture.
+  //
+  // The axis has to be the one the cards are actually laid out on. Standing,
+  // the ring travels vertically and takes the up/down gesture, handing it
+  // back at the ends. Lying down it travels sideways, so vertical is not its
+  // gesture at all: it declares "x" and every swipe up flips the section on
+  // to Work, the way it does on Work and Blog. The ring is still walked
+  // sideways — by a drag, which it takes directly.
   useEffect(() => {
     if (degraded) return;
     stepRef?.({
+      axis: lying ? "x" : "y",
       step: (direction) => {
         const from = targetRef.current ?? progressRef.current;
         const next = Math.round(from) + direction;
@@ -310,7 +339,7 @@ export function ViscoseCarousel({
       },
     });
     return () => stepRef?.(null);
-  }, [stepRef, loop, count, degraded]);
+  }, [stepRef, loop, count, degraded, lying]);
 
   // Re-arm the entry each time the section comes back into view.
   useEffect(() => {
@@ -564,11 +593,11 @@ export function ViscoseCarousel({
       dragLastY = e.clientY;
       targetRef.current = null;
 
-      // FullPageScroll already turns a vertical swipe into a step, so taking
+      // Standing, FullPageScroll turns a vertical swipe into a step, so taking
       // touch drags on that axis too would move the ring twice per finger.
-      // Lying down the conflict is only about the axis — a sideways drag is
-      // ours outright — so wait and see which way the finger goes. The press
-      // still counts either way, since a tap has to open a card.
+      // Lying down it flips the section instead, and either way the vertical
+      // finger is not ours — so wait and see which way this one goes. The
+      // press still counts regardless, since a tap has to open a card.
       const shared = Boolean(stepRef) && e.pointerType === "touch";
       pendingAxis = shared && lying;
       dragging = !shared;
@@ -698,8 +727,10 @@ export function ViscoseCarousel({
       if (!visible || !activeRef.current || document.hidden) return;
 
       // The atlas is the gate: the ring launches on the frame the first
-      // screenshot lands.
-      if (reduced) entryRef.current = 1;
+      // screenshot lands. Lying down there is no fan to gate: a phone gets
+      // the strip already strung out, so the panel arrives looking the way it
+      // will sit rather than dealing itself sideways every visit.
+      if (reduced || lying) entryRef.current = 1;
       else if (entryOpenRef.current && entryRef.current < 1) {
         entryRef.current = clamp01(entryRef.current + dt / TUNE.entryTime);
       }
@@ -987,8 +1018,16 @@ export function ViscoseCarousel({
             full ? "px-6 sm:px-10" : "mx-auto max-w-3xl px-6",
           )}
         >
-          <div className="flex flex-col gap-1">
-            {heading && <h2 className="text-xl font-bold">{heading}</h2>}
+          {/* Capped from md up so the heading cannot run under the ring's
+              artwork. "Selected Projects" was short enough to stay clear on
+              its own; a full conversational line is not, and white type over a
+              white screenshot is invisible. */}
+          <div className="flex flex-col gap-1 md:max-w-[46%]">
+            <SectionIntro
+              heading={heading}
+              srLabel={srLabel}
+              lead={eyebrow}
+            />
             <p className="text-sm tabular-nums text-neutral-500">
               {String(front + 1).padStart(2, "0")}
               <span className="mx-1">/</span>
@@ -1025,9 +1064,19 @@ export function ViscoseCarousel({
               </Swap>
             )}
 
-            {full && p?.description && (
+            {/* Shown in both layouts now. It used to be gated to `full`
+                because the descriptions were five-sentence case studies that
+                swamped the narrower column; they are short blurbs now, so the
+                homepage ring can carry one too — just clamped tighter, since
+                the column layout has less room than the full-page one. */}
+            {p?.description && (
               <Swap value={p.title} delay={0.07}>
-                <p className="hidden text-sm leading-relaxed text-foreground/80 md:line-clamp-6 md:block">
+                <p
+                  className={cn(
+                    "hidden text-sm leading-relaxed text-foreground/80 md:block",
+                    full ? "md:line-clamp-6" : "md:line-clamp-4",
+                  )}
+                >
                   {p.description}
                 </p>
               </Swap>

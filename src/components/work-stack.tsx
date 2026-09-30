@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { ArrowUpRight } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { SectionIntro } from "@/components/section-intro";
 import { SectionLink } from "@/components/section-link";
 import { StoryStepper } from "@/components/story-stepper";
 import type { FullPageProps } from "@/components/full-page-scroll";
@@ -20,11 +21,10 @@ type Work = {
 };
 
 const section = {
-  hidden: { opacity: 0, y: 24, filter: "blur(6px)" },
+  hidden: { opacity: 0, y: 24 },
   visible: {
     opacity: 1,
     y: 0,
-    filter: "blur(0px)",
     transition: { duration: 0.5, ease: "easeOut" },
   },
 };
@@ -66,17 +66,32 @@ const lineIn = {
 // same caption rhythm as the projects ring so the two sections read as one
 // system.
 function JobSlide({ work }: { work: Work }) {
+  // "Bayse Markets (formerly Gowagr)" is two different things wearing one
+  // string: the name, and an aside. Rendered at one weight the aside doubled
+  // the title's length and pushed it onto a second line, where it outweighed
+  // everything under it. Split so the name leads and the aside recedes.
+  const asideAt = work.company.lastIndexOf(" (");
+  const name = asideAt > 0 ? work.company.slice(0, asideAt) : work.company;
+  const aside =
+    asideAt > 0 && work.company.endsWith(")")
+      ? work.company.slice(asideAt + 1)
+      : null;
+
   return (
     <motion.div
       initial="hidden"
       animate="visible"
       variants={slideIn}
-      className="space-y-4"
+      className="space-y-5"
     >
-      <div className="flex items-center gap-3 sm:gap-4">
+      {/* Identity block. The logo aligns to the first line rather than the
+          centre of a wrapped title, and the role and dates sit directly under
+          the company instead of on their own full-width row — a job's name,
+          role and span are one fact, so they read as one group. */}
+      <div className="flex items-start gap-3 sm:gap-4">
         <motion.div
           variants={markIn}
-          className="size-10 shrink-0 overflow-hidden rounded-lg sm:size-12"
+          className="mt-1 size-10 shrink-0 overflow-hidden rounded-lg sm:size-12"
         >
           <Image
             src={work.logoUrl}
@@ -86,25 +101,32 @@ function JobSlide({ work }: { work: Work }) {
             className="size-full object-contain"
           />
         </motion.div>
-        <motion.h3
-          variants={heroWipe}
-          className="text-4xl font-bold tracking-tighter sm:text-6xl"
-        >
-          {work.company}
-        </motion.h3>
+        <div className="min-w-0 space-y-1">
+          <motion.h3
+            variants={heroWipe}
+            className="text-balance text-2xl font-bold leading-tight tracking-tight sm:text-3xl"
+          >
+            {name}
+            {aside && (
+              <span className="block text-base font-normal tracking-normal text-muted-foreground sm:text-lg">
+                {aside}
+              </span>
+            )}
+          </motion.h3>
+          <motion.p
+            variants={lineIn}
+            className="flex flex-wrap items-baseline gap-x-2 text-sm text-muted-foreground sm:text-base"
+          >
+            <span>{work.title}</span>
+            <span aria-hidden className="text-neutral-600">
+              &middot;
+            </span>
+            <time className="tabular-nums text-neutral-500">
+              {work.start} — {work.end || "Present"}
+            </time>
+          </motion.p>
+        </div>
       </div>
-
-      <motion.div
-        variants={lineIn}
-        className="flex items-baseline justify-between gap-4"
-      >
-        <p className="text-base text-muted-foreground sm:text-lg">
-          {work.title}
-        </p>
-        <time className="shrink-0 text-sm tabular-nums text-neutral-500">
-          {work.start} — {work.end || "Present"}
-        </time>
-      </motion.div>
 
       {work.description && (
         <motion.p
@@ -145,12 +167,18 @@ function JobSlide({ work }: { work: Work }) {
 // arrow gestures FullPageScroll uses to flip pages — see story-stepper.tsx.
 export function WorkStack({
   works,
-  title,
+  kicker,
+  heading,
+  intro,
+  srLabel,
   active,
   stepRef,
 }: {
   works: Work[];
-  title?: string;
+  kicker?: string;
+  heading?: string;
+  intro?: string;
+  srLabel?: string;
 } & FullPageProps) {
   return (
     <div className="flex h-full flex-col justify-center px-6 pb-20 pt-12 sm:pb-32 sm:pt-24">
@@ -160,7 +188,14 @@ export function WorkStack({
         variants={section}
         className="mx-auto w-full max-w-xl"
       >
-        {title && <h2 className="mb-6 text-xl font-bold">{title}</h2>}
+        <SectionIntro
+          kicker={kicker}
+          heading={heading}
+          srLabel={srLabel}
+          lead={intro}
+          active={active}
+          className="mb-6"
+        />
 
         <StoryStepper
           count={works.length}

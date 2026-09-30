@@ -8,7 +8,11 @@ import {
   ViscoseCarousel,
   type ViscoseProject,
 } from "@/components/viscose/viscose-carousel";
-import type { FullPageProps } from "@/components/full-page-scroll";
+import { SectionIntro } from "@/components/section-intro";
+import {
+  useFullPage,
+  type FullPageProps,
+} from "@/components/full-page-scroll";
 
 // The slide that ends the ring: a drawn tile rather than a screenshot, so it
 // merges and strings honey like any project card. Module-level so its identity
@@ -24,11 +28,10 @@ const VIEW_ALL: ViscoseProject = {
 };
 
 const section = {
-  hidden: { opacity: 0, y: 24, filter: "blur(6px)" },
+  hidden: { opacity: 0, y: 24 },
   visible: {
     opacity: 1,
     y: 0,
-    filter: "blur(0px)",
     transition: { duration: 0.5, ease: "easeOut" },
   },
 };
@@ -37,16 +40,25 @@ const section = {
 // panel rather than a column: the cards have to fuse into one another, and
 // there is nothing to fuse with inside a max-w-xl box.
 //
-// Answers the same `stepRef` gesture contract the story stepper did, so a
-// wheel tick turns the ring one slot and only flips on to Work at the end.
+// Answers the same `stepRef` gesture contract the story stepper did: standing
+// up, a wheel tick turns the ring one slot and only flips on to Work at the
+// end; lying down it hands the vertical gesture straight back.
 export function ProjectsSection({
   projects,
+  heading,
   active,
   stepRef,
 }: {
   projects: readonly ViscoseProject[];
+  heading?: string;
 } & FullPageProps) {
   const slides = useMemo(() => [...projects, VIEW_ALL], [projects]);
+  // The ring's frame loop is the most expensive thing on this page, so it
+  // waits for the flip to land rather than starting the moment `active`
+  // flips — see the note on FullPageContext. Nothing is lost visually: the
+  // entry fan re-arms from zero on activation regardless, so it simply
+  // begins when the panel arrives instead of part-way through the slide.
+  const { settled } = useFullPage();
 
   return (
     <motion.div
@@ -57,13 +69,14 @@ export function ProjectsSection({
     >
       <ViscoseCarousel
         projects={slides}
-        heading="Selected Projects"
+        heading={heading}
+        srLabel="Selected Projects"
         // Clamped, not looping: the end slots hand the gesture back.
         loop={false}
         compact
-        active={active}
+        active={active && settled}
         stepRef={stepRef}
-        fallback={<StillProjects projects={projects} />}
+        fallback={<StillProjects projects={projects} heading={heading} />}
         // Breaks the body's max-w-3xl column: the arc needs the width.
         className="relative left-1/2 min-h-0 w-screen -translate-x-1/2 flex-1"
       />
@@ -74,10 +87,19 @@ export function ProjectsSection({
 
 // Shown when the ring cannot run: no WebGL. Not a scroller — this panel owns
 // exactly one viewport and has no scrollbar to give.
-function StillProjects({ projects }: { projects: readonly ViscoseProject[] }) {
+function StillProjects({
+  projects,
+  heading,
+}: {
+  projects: readonly ViscoseProject[];
+  heading?: string;
+}) {
   return (
     <div className="mx-auto flex size-full max-w-3xl flex-col justify-center gap-4 px-6">
-      <h2 className="text-xl font-bold">Selected Projects</h2>
+      <SectionIntro
+        heading={heading}
+        srLabel="Selected Projects"
+      />
       <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3">
         {projects.map((project) => (
           <li key={project.title}>

@@ -3,6 +3,8 @@ import { getBlogPosts, getPlaylistsWithPosts } from "@/data/blog";
 import { BlogPostsPaginated } from "@/components/blog-posts-paginated";
 import { BlogDoodle } from "@/components/blog-doodle";
 import { PlaylistCard } from "@/components/playlist-card";
+import { PinnedPostCard } from "@/components/pinned-post-card";
+import { PINNED_POST_SLUGS } from "@/data/playlists";
 
 export const metadata = {
   title: "Blog",
@@ -33,6 +35,12 @@ export default async function BlogPage({
   const posts = await getBlogPosts();
   const playlists = await getPlaylistsWithPosts();
 
+  // Kept in the order the slugs are listed, not publish order, so the pinning
+  // is a deliberate running order.
+  const pinned = PINNED_POST_SLUGS.map((slug) =>
+    posts.find((post) => post.slug === slug),
+  ).filter((post): post is NonNullable<typeof post> => Boolean(post));
+
   const rawPage = parseInt(searchParams?.page ?? "1", 10);
   const page = Number.isNaN(rawPage) ? 1 : rawPage;
 
@@ -43,9 +51,25 @@ export default async function BlogPage({
         <h1 className="font-medium text-2xl mb-6 tracking-tighter">Blog</h1>
       </BlurFade>
 
-      {playlists.length > 0 && (
+      {(playlists.length > 0 || pinned.length > 0) && (
         <div className="mb-16 -mx-6">
           <div className="flex overflow-x-auto overflow-y-visible pt-12 pb-6 px-6 gap-6 snap-x snap-mandatory [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+            {pinned.map((post, idx) => (
+              <BlurFade
+                delay={BLUR_FADE_DELAY * 2 + idx * 0.05}
+                key={post.slug}
+                className="overflow-visible"
+                blur="0px"
+              >
+                <PinnedPostCard
+                  slug={post.slug}
+                  title={post.title}
+                  image={post.image}
+                  readingTime={post.readingTime}
+                />
+              </BlurFade>
+            ))}
+
             {playlists.map((playlist, idx) => {
               const images = playlist.posts
                 .map((p) => p.image)
@@ -54,7 +78,7 @@ export default async function BlogPage({
 
               return (
                 <BlurFade
-                  delay={BLUR_FADE_DELAY * 2 + idx * 0.05}
+                  delay={BLUR_FADE_DELAY * 2 + (pinned.length + idx) * 0.05}
                   key={playlist.slug}
                   className="overflow-visible"
                   blur="0px"

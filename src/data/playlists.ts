@@ -5,6 +5,10 @@ export type PlaylistConfig = {
   postSlugs: string[];
 };
 
+export const PINNED_POST_SLUGS: string[] = [
+  "courting-bayse-how-persistence-led-me-to-bayse-markets-f6648d292bcd",
+];
+
 export const PLAYLISTS: PlaylistConfig[] = [
   {
     slug: "sidequesting-3d",
