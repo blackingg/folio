@@ -94,7 +94,11 @@ export default class CameraThirdPerson
         const chunks = this.state.chunks
         const elevation = chunks.getElevationForPosition(this.position[0], this.position[2])
 
-        if(elevation && this.position[1] < elevation + 1)
+        // elevation can legitimately be 0 (sea level) — `if(elevation)` treated
+        // that as "no data" and silently skipped the clamp there, letting the
+        // orbit camera sink into the ground (and the grass covering it) at
+        // flat/low-lying spots instead of being held above the surface.
+        if(typeof elevation === 'number' && this.position[1] < elevation + 1)
             this.position[1] = elevation + 1
 
         // Target

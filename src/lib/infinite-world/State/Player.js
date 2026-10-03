@@ -151,22 +151,23 @@ export default class Player
             }
         }
 
+        // Elevation must land before camera.update() reads position.current —
+        // otherwise the camera orbits around last frame's height for a frame
+        // every time elevation changes, which shows up as the camera lagging
+        // behind the player vertically (most visible on slopes / low frame
+        // rates, e.g. mobile).
+        const chunks = this.state.chunks
+        const elevation = chunks.getElevationForPosition(this.position.current[0], this.position.current[2])
+
+        this.position.current[1] = typeof elevation === 'number' ? elevation : 0
+
         vec3.sub(this.position.delta, this.position.current, this.position.previous)
         vec3.copy(this.position.previous, this.position.current)
 
         this.speed = vec3.len(this.position.delta)
-        
+
         // Update view
         this.camera.update()
-
-        // Update elevation
-        const chunks = this.state.chunks
-        const elevation = chunks.getElevationForPosition(this.position.current[0], this.position.current[2])
-
-        if(elevation)
-            this.position.current[1] = elevation
-        else
-            this.position.current[1] = 0
 
         // Check Experiences trigger zones
         if (this.game.experienceManager) {

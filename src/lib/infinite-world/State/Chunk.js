@@ -273,8 +273,14 @@ export default class Chunk
 
     destroy()
     {
+        // chunk.off(...) doesn't exist — Chunk isn't an emitter, chunk.events
+        // is. This used to throw here whenever a split chunk (one with live
+        // children) was torn down, which aborted the rest of destroy() (the
+        // children were never recursively destroyed) and — since the
+        // exception propagated up into Chunks.check()'s loop — skipped every
+        // other chunk create/destroy due that cycle too.
         for(const [key, chunk] of this.children)
-            chunk.off('ready')
+            chunk.events.removeAllListeners('ready')
 
         if(this.splitted)
         {
@@ -295,6 +301,12 @@ export default class Chunk
 
         this.destroyFinal()
         // this.chunkHelper.destroy()
+
+        // allChunks (unlike mainChunks) is never pruned anywhere else — every
+        // chunk ever created otherwise stays in it for the life of the
+        // session, which is what Trees.updateAllChunks() iterates to decide
+        // what to draw.
+        this.chunks.allChunks.delete(this.id)
 
         this.events.emit('destroy')
     }
