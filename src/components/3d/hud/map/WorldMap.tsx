@@ -308,7 +308,10 @@ export function WorldMap({
       const game = gameRef.current;
       if (game?.state?.player) {
         const pos = game.state.player.position.current;
-        const rot = game.state.player.rotation ?? 0;
+        const rot =
+          game.state.player.camera?.thirdPerson?.theta ??
+          game.state.player.rotation ??
+          0;
         const playerDist = Math.hypot(pos[0], pos[2]);
         const playerTheta = Math.atan2(pos[2], pos[0]);
         const inWilds = playerDist > borderRadiusAt(playerTheta) + 6;

@@ -38,6 +38,7 @@ export const BORDER = {
     wallRowSpacing: 1.6,     // radial distance between rows
     wallTreeSpacing: 1.5,    // arc distance between trees in a row
     wallCollisionPadding: 1.5, // collision skin beyond the outermost rows
+    coastDryHeight: 2,       // min elevation kept along the wall band
 }
 
 /** Half-thickness of the wall's collision band, wall centreline to edge */
@@ -129,8 +130,10 @@ export function computeIterationsOffsets(seed) {
  * @param params     TERRAIN-shaped params; `iterations` may be lowered for
  *                   distant low-precision chunks
  * @param experiences  optional [{ x, z, radius, targetHeight }] flatten zones
+ * @param border       optional result of createBorder(seed) — floors elevation
+ *                     near the wall ring at BORDER.coastDryHeight
  */
-export function getElevation(x, y, noise2D, iterationsOffsets, params, experiences) {
+export function getElevation(x, y, noise2D, iterationsOffsets, params, experiences, border) {
     let elevation = 0
     let frequency = params.baseFrequency
     let amplitude = 1
@@ -171,6 +174,17 @@ export function getElevation(x, y, noise2D, iterationsOffsets, params, experienc
 
                 elevation = elevation * (1 - factor) + exp.targetHeight * factor
             }
+        }
+    }
+
+    if (border) {
+        const theta = Math.atan2(y, x)
+        const offset = Math.abs(Math.hypot(x, y) - border.radiusAt(theta))
+        const margin = wallCollisionHalfWidth() + 6
+
+        if (offset < margin) {
+            const t = linearStep(margin, 0, offset)
+            elevation += (Math.max(elevation, BORDER.coastDryHeight) - elevation) * t
         }
     }
 
