@@ -11,6 +11,7 @@ import {
 } from '../worldGen.js'
 
 let elevationRandom = null
+let activeBorder = null
 
 // Thin wrapper binding the shared canonical formula (worldGen.js) to this
 // worker's message-supplied params and seeded noise instance.
@@ -21,7 +22,8 @@ const getElevation = (x, y, lacunarity, persistence, iterations, baseFrequency, 
         (nx, ny) => elevationRandom.noise2D(nx, ny),
         iterationsOffsets,
         { lacunarity, persistence, iterations, baseFrequency, baseAmplitude, power, elevationOffset },
-        experiences
+        experiences,
+        activeBorder
     )
 
 onmessage = function(event)
@@ -46,6 +48,8 @@ onmessage = function(event)
     const segments = subdivisions + 1
     elevationRandom = new SimplexNoise(seed)
     const grassRandom = new SimplexNoise(seed)
+
+    activeBorder = createBorder(seed)
 
     /**
      * Elevation
@@ -424,9 +428,8 @@ onmessage = function(event)
 
     // World border — shared formula from worldGen.js (coastline wall of
     // blue trees with a single gate due north)
-    const border = createBorder(seed)
-    const borderRadiusAt = border.radiusAt
-    const gateDistanceAt = border.gateArcDistance
+    const borderRadiusAt = activeBorder.radiusAt
+    const gateDistanceAt = activeBorder.gateArcDistance
     const BORDER_CLEAR_BAND = BORDER.clearBand
     const GATE_WIDTH = BORDER.gateWidth
     const GATE_CORRIDOR = BORDER.gateCorridor
