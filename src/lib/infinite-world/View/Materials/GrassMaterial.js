@@ -1,0 +1,40 @@
+import { ShaderMaterial } from 'three';
+
+import vertexShader from './shaders/grass/vertex.glsl'
+import fragmentShader from './shaders/grass/fragment.glsl'
+
+export default function GrassMaterial()
+{
+    const material = new ShaderMaterial({
+        uniforms:
+        {
+            uTime: { value: null },
+            uGrassDistance: { value: null },
+            uPlayerPosition: { value: null },
+            uTerrainSize: { value: null },
+            uTerrainTextureSize: { value: null },
+            uTerrainATexture: { value: null },
+            uTerrainAOffset: { value: null },
+            uTerrainBTexture: { value: null },
+            uTerrainBOffset: { value: null },
+            uTerrainCTexture: { value: null },
+            uTerrainCOffset: { value: null },
+            uTerrainDTexture: { value: null },
+            uTerrainDOffset: { value: null },
+            uNoiseTexture: { value: null },
+            uFresnelOffset: { value: null },
+            uFresnelScale: { value: null },
+            uFresnelPower: { value: null },
+            uSunPosition: { value: null },
+            uDayCycleProgress: { value: 0 },
+            uBorderRadius: { value: null },
+            uBorderWobble: { value: null },
+            uBorderPhases: { value: null },
+            uBorderBand: { value: null }
+        },
+        vertexShader: vertexShader,
+        fragmentShader: fragmentShader
+    })
+
+    return material
+}

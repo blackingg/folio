@@ -1,0 +1,407 @@
+import { BackSide, BufferGeometry, Color, Float32BufferAttribute, Group, Mesh, MeshBasicMaterial, PlaneGeometry, Points, PointsMaterial, Quaternion, Scene, SphereGeometry, Vector3, WebGLRenderTarget } from 'three';
+
+// Scratch objects for the per-frame world-pose reads (the camera is a rig
+// child under XR, so local position/quaternion are not world space)
+const _worldPosition = new Vector3();
+const _worldQuaternion = new Quaternion();
+
+import Game from '../Game.js';
+import View from './View.js';
+import State from '../State/State.js';
+import Debug from '../Debug/Debug.js';
+import SkyBackgroundMaterial from "./Materials/SkyBackgroundMaterial.js";
+import SkyMaterial from "./Materials/SkyMaterial.js";
+import StarsMaterial from "./Materials/StarsMaterial.js";
+
+/**
+ * Sky rendering pipeline
+ *
+ * Rendered in two passes each frame:
+ *
+ * 1. Custom render target (10% resolution)
+ *    - Only `this.sphere.mesh` is in `customRender.scene`.
+ *    - The SkyMaterial vertex shader computes `vColor` from several layers:
+ *        - Day base:   uColorDayCycleLow (horizon) â†’ uColorDayCycleHigh (zenith)
+ *        - Night base: uColorNightLow (horizon)    â†’ uColorNightHigh (zenith)
+ *        - Day/Night mix: dayIntensity = |uDayCycleProgress - 0.5| * 2
+ *                         (0 = full night, 1 = full day, 0.5 = dusk/dawn transition)
+ *        - Dawn glow:  additive uColorDawn band near horizon at sunrise/sunset,
+ *                      driven by cos(progress * 4Ï€ + Ï€) so it peaks twice per cycle
+ *        - Sun glow:   additive uColorSun halo around the sun position
+ *    - Low resolution is intentional â€” the gradient is smooth so upscaling is invisible,
+ *      and it saves significant GPU cost.
+ *
+ * 2. Main scene render (full resolution)
+ *    - `background.mesh`  â€” fullscreen quad that samples the render target (upscaled sky gradient)
+ *    - `sun.mesh`         â€” white circle disc positioned in world space
+ *    - `stars.points`     â€” point cloud at outerDistance, full-res for sharp single pixels
+ *
+ * Color uniforms are set in setSphere() and can be tweaked live via dat.GUI
+ * (debug mode: add ?debug to the URL) under view/sky/sphere/material.
+ */
+export default class Sky {
+    constructor() {
+        this.game = Game.getInstance();
+        this.view = View.getInstance();
+        this.state = State.getInstance();
+        this.debug = Debug.getInstance();
+
+        this.viewport = this.state.viewport;
+        this.renderer = this.view.renderer;
+        this.scene = this.view.scene;
+
+        this.outerDistance = 1000;
+
+        this.group = new Group();
+        this.scene.add(this.group);
+
+        this.setCustomRender();
+        this.setBackground();
+        this.setSky();
+        // this.setStars();
+        this.setDebug();
+    }
+
+    // This sets an offscreen buffer only for rendering the sky sphere
+    // Then the rendered texture is used as the background(fullscreen quad) in the main scene
+    setCustomRender() {
+        this.customRender = {};
+        this.customRender.scene = new Scene();
+        this.customRender.camera = this.view.camera.instance.clone();
+        // Backdrop resolution — the gradient and flat clouds are smooth, so
+        // linear upscaling is invisible and the fill cost drops ~25x.
+        this.customRender.resolutionRatio = this.game.quality?.skyResolutionRatio ?? 0.2;
+        this.customRender.renderTarget = new WebGLRenderTarget(
+            this.viewport.width * this.customRender.resolutionRatio,
+            this.viewport.height * this.customRender.resolutionRatio,
+            {
+                generateMipmaps: false,
+            },
+        );
+        this.customRender.texture = this.customRender.renderTarget.texture;
+    }
+
+    setBackground() {
+        this.background = {};
+
+        this.background.geometry = new PlaneGeometry(2, 2);
+
+        // this.background.material = new MeshBasicMaterial({ wireframe: false, map: this.customRender.renderTarget.texture })
+        this.background.material = new SkyBackgroundMaterial();
+        this.background.material.uniforms.uTexture.value =
+            this.customRender.renderTarget.texture;
+        // this.background.material.wireframe = true
+        this.background.material.depthTest = false;
+        this.background.material.depthWrite = false;
+
+        this.background.mesh = new Mesh(
+            this.background.geometry,
+            this.background.material,
+        );
+        this.background.mesh.frustumCulled = false;
+
+        this.group.add(this.background.mesh);
+    }
+
+    setSky() {
+        this.sky = {};
+        this.sky.widthSegments = 128;
+        this.sky.heightSegments = 64;
+        this.sky.material = new SkyMaterial();
+        // create the 3D noise texture
+        const noise3D = this.view.noises.create3D();
+        this.sky.material.uniforms.uNoise3D.value = noise3D;
+
+        // Store hex values separately for dat.GUI to work with
+        this.sky.colors = {
+            dayCycleLow: "#f6e6f9",
+            dayCycleHigh: "#7ca7fd",
+            nightLow: "#010109",
+            nightHigh: "#010509",
+            sun: "#ffffff",
+            dawn: "#ff8800",
+        };
+
+        // Set initial uniform values from hex
+        Object.entries(this.sky.colors).forEach(([key, hex]) => {
+            const uniformKey = {
+                dayCycleLow: "uColorDayCycleLow",
+                dayCycleHigh: "uColorDayCycleHigh",
+                nightLow: "uColorNightLow",
+                nightHigh: "uColorNightHigh",
+                sun: "uColorSun",
+                dawn: "uColorDawn",
+            }[key];
+            this.sky.material.uniforms[uniformKey].value.set(hex);
+        });
+
+        this.sky.material.uniforms.uDayCycleProgress.value = 0;
+        this.sky.material.side = BackSide;
+
+        this.sky.geometry = new SphereGeometry(
+            10,
+            this.sky.widthSegments,
+            this.sky.heightSegments,
+        );
+
+        this.sky.mesh = new Mesh(this.sky.geometry, this.sky.material);
+        this.sky.mesh.material.side = BackSide;
+        this.sky.mesh.material.depthWrite = false;
+        this.customRender.scene.add(this.sky.mesh);
+    }
+
+    setStars() {
+        this.stars = {};
+        this.stars.count = 1000;
+        this.stars.distance = this.outerDistance;
+
+        this.stars.update = () => {
+            // Create geometry
+            const positionArray = new Float32Array(this.stars.count * 3);
+            const sizeArray = new Float32Array(this.stars.count);
+            const colorArray = new Float32Array(this.stars.count * 3);
+
+            for (let i = 0; i < this.stars.count; i++) {
+                const iStride3 = i * 3;
+
+                // Position
+                const position = new Vector3();
+                position.setFromSphericalCoords(
+                    this.stars.distance,
+                    Math.acos(Math.random()),
+                    2 * Math.PI * Math.random(),
+                );
+
+                positionArray[iStride3] = position.x;
+                positionArray[iStride3 + 1] = position.y;
+                positionArray[iStride3 + 2] = position.z;
+
+                // Size
+                sizeArray[i] = Math.pow(Math.random() * 0.9, 10) + 0.1;
+
+                // Color
+                const color = new Color();
+                color.setHSL(Math.random(), 1, 0.5 + Math.random() * 0.5);
+                colorArray[iStride3] = color.r;
+                colorArray[iStride3 + 1] = color.g;
+                colorArray[iStride3 + 2] = color.b;
+            }
+
+            const geometry = new BufferGeometry();
+            geometry.setAttribute(
+                "position",
+                new Float32BufferAttribute(positionArray, 3),
+            );
+            geometry.setAttribute(
+                "aSize",
+                new Float32BufferAttribute(sizeArray, 1),
+            );
+            geometry.setAttribute(
+                "aColor",
+                new Float32BufferAttribute(colorArray, 3),
+            );
+
+            // Dispose of old one
+            if (this.stars.geometry) {
+                this.stars.geometry.dispose();
+                this.stars.points.geometry = this.stars.geometry;
+            }
+
+            this.stars.geometry = geometry;
+        };
+
+        // Geometry
+        this.stars.update();
+
+        // Material
+        // this.stars.material = new PointsMaterial({ size: 5, sizeAttenuation: false })
+        this.stars.material = new StarsMaterial();
+        this.stars.material.uniforms.uHeightFragments.value =
+            this.viewport.height * this.viewport.clampedPixelRatio;
+
+        // Points
+        this.stars.points = new Points(
+            this.stars.geometry,
+            this.stars.material,
+        );
+        this.group.add(this.stars.points);
+    }
+
+    setDebug() {
+        if (!this.debug.active) return;
+
+        // Sky
+        const skyMaterialFolder = this.debug.ui.getFolder(
+            "view/sky/sky/material",
+        );
+
+        skyMaterialFolder
+            .add(this.sky.material.uniforms.uAtmosphereElevation, "value")
+            .min(0)
+            .max(5)
+            .step(0.01)
+            .name("uAtmosphereElevation");
+        skyMaterialFolder
+            .add(this.sky.material.uniforms.uAtmospherePower, "value")
+            .min(0)
+            .max(20)
+            .step(1)
+            .name("uAtmospherePower");
+
+        // Color controls using hex string wrapper objects
+        skyMaterialFolder
+            .addColor(this.sky.colors, "dayCycleLow")
+            .name("uColorDayCycleLow")
+            .onChange((hex) => {
+                this.sky.material.uniforms.uColorDayCycleLow.value.set(hex);
+            });
+        skyMaterialFolder
+            .addColor(this.sky.colors, "dayCycleHigh")
+            .name("uColorDayCycleHigh")
+            .onChange((hex) => {
+                this.sky.material.uniforms.uColorDayCycleHigh.value.set(hex);
+            });
+        skyMaterialFolder
+            .addColor(this.sky.colors, "nightLow")
+            .name("uColorNightLow")
+            .onChange((hex) => {
+                this.sky.material.uniforms.uColorNightLow.value.set(hex);
+            });
+        skyMaterialFolder
+            .addColor(this.sky.colors, "nightHigh")
+            .name("uColorNightHigh")
+            .onChange((hex) => {
+                this.sky.material.uniforms.uColorNightHigh.value.set(hex);
+            });
+        skyMaterialFolder
+            .add(this.sky.material.uniforms.uDawnAngleAmplitude, "value")
+            .min(0)
+            .max(1)
+            .step(0.001)
+            .name("uDawnAngleAmplitude");
+        skyMaterialFolder
+            .add(this.sky.material.uniforms.uDawnElevationAmplitude, "value")
+            .min(0)
+            .max(1)
+            .step(0.01)
+            .name("uDawnElevationAmplitude");
+        skyMaterialFolder
+            .addColor(this.sky.colors, "dawn")
+            .name("uColorDawn")
+            .onChange((hex) => {
+                this.sky.material.uniforms.uColorDawn.value.set(hex);
+            });
+        skyMaterialFolder
+            .add(this.sky.material.uniforms.uSunAmplitude, "value")
+            .min(0)
+            .max(3)
+            .step(0.01)
+            .name("uSunAmplitude");
+        skyMaterialFolder
+            .add(this.sky.material.uniforms.uSunMultiplier, "value")
+            .min(0)
+            .max(1)
+            .step(0.01)
+            .name("uSunMultiplier");
+        skyMaterialFolder
+            .addColor(this.sky.colors, "sun")
+            .name("uColorSun")
+            .onChange((hex) => {
+                this.sky.material.uniforms.uColorSun.value.set(hex);
+            });
+
+        // // Stars
+        // const starsFolder = this.debug.ui.getFolder("view/sky/stars");
+
+        // starsFolder
+        //     .add(this.stars, "count")
+        //     .min(100)
+        //     .max(50000)
+        //     .step(100)
+        //     .name("count")
+        //     .onChange(() => {
+        //         this.stars.update();
+        //     });
+        // starsFolder
+        //     .add(this.stars.material.uniforms.uSize, "value")
+        //     .min(0)
+        //     .max(1)
+        //     .step(0.0001)
+        //     .name("uSize");
+        // starsFolder
+        //     .add(this.stars.material.uniforms.uBrightness, "value")
+        //     .min(0)
+        //     .max(1)
+        //     .step(0.001)
+        //     .name("uBrightness");
+    }
+
+    update() {
+        const dayState = this.state.day;
+        const sunState = this.state.sun;
+        const moonState = this.state.moon;
+        const playerState = this.state.player;
+
+        // Group
+        this.group.position.set(
+            playerState.position.current[0],
+            playerState.position.current[1],
+            playerState.position.current[2],
+        );
+
+        // Sky
+        this.sky.material.uniforms.uTime.value += this.state.time.delta;
+        this.sky.material.uniforms.uSunPosition.value.set(
+            sunState.position.x,
+            sunState.position.y,
+            sunState.position.z,
+        );
+        this.sky.material.uniforms.uMoonPosition.value.set(
+            moonState.position.x,
+            moonState.position.y,
+            moonState.position.z,
+        );
+        this.sky.material.uniforms.uDayCycleProgress.value = dayState.progress;
+
+        // Update camera uniforms for raymarching
+        const mainCamera = this.view.camera.instance; // same as player state's camera
+        // This is the camera position in world space
+        mainCamera.getWorldPosition(_worldPosition);
+        this.sky.material.uniforms.uCameraPosition.value.copy(_worldPosition);
+
+        // // Stars
+        // this.stars.material.uniforms.uSunPosition.value.set(
+        //     sunState.position.x,
+        //     sunState.position.y,
+        //     sunState.position.z,
+        // );
+        // this.stars.material.uniforms.uHeightFragments.value =
+        //     this.viewport.height * this.viewport.clampedPixelRatio;
+
+        // Render the sky in the offscreen buffer. While an XR session
+        // presents, three substitutes its stereo ArrayCamera into every
+        // render() call — disable xr around this pass so the fog texture is
+        // rendered once with the mono camera, not per eye.
+        mainCamera.getWorldQuaternion(_worldQuaternion);
+        this.customRender.camera.quaternion.copy(_worldQuaternion);
+
+        const xrWasEnabled = this.renderer.instance.xr.enabled;
+        this.renderer.instance.xr.enabled = false;
+        this.renderer.instance.setRenderTarget(this.customRender.renderTarget);
+        this.renderer.instance.render(
+            this.customRender.scene,
+            this.customRender.camera,
+        );
+        this.renderer.instance.setRenderTarget(null);
+        this.renderer.instance.xr.enabled = xrWasEnabled;
+    }
+
+    resize() {
+        // setSize() actually reallocates the target — assigning .width/.height
+        // directly leaves the underlying texture at its old resolution.
+        this.customRender.renderTarget.setSize(
+            this.viewport.width * this.customRender.resolutionRatio,
+            this.viewport.height * this.customRender.resolutionRatio,
+        );
+    }
+}

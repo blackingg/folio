@@ -1,52 +1,35 @@
-"use client";
+import dynamic from "next/dynamic";
 import Link from "next/link";
-import { Home, Loader2 } from "lucide-react";
-import React, { Suspense } from "react";
-import BlurFade from "@/components/magicui/blur-fade";
-import BlurFadeText from "@/components/magicui/blur-fade-text";
-import { Button } from "@/components/ui/button";
-import Scene from "@/components/scene";
+import { ArrowLeft } from "lucide-react";
 
-export default function Experience() {
-  return (
-    <main className="flex flex-col items-center justify-center p-4 text-center space-y-8">
-      <div className="space-y-4 max-w-[600px]">
-        <BlurFade delay={0.1}>
-          <h1 className="text-3xl font-bold tracking-tighter sm:text-5xl xl:text-6xl/none">
-            Under Construction <span className="text-2xl">🚧</span>
-          </h1>
-        </BlurFade>
-
-        <BlurFadeText
-          className="mx-auto max-w-[600px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed"
-          delay={0.2}
-          text="I'm currently building a comprehensive 3D portfolio experience here. It's not quite ready yet, but you can have a little fun while waiting by clicking the shape below to change its form and color!"
-        />
+const InfiniteWorld = dynamic(
+  () => import("@/components/3d/InfiniteWorld"),
+  {
+    ssr: false,
+    // Match the WorldLoader's resting state so the overlay appears seamless
+    // while the component's own JS chunk is still downloading.
+    loading: () => (
+      <div className="fixed inset-0 z-50 bg-background">
+        <div className="absolute inset-x-0 top-1/2 h-px bg-foreground/15" />
       </div>
+    ),
+  }
+);
 
-      <BlurFade
-        delay={0.3}
-        className="w-full max-w-2xl"
+export default function ThreeDPage() {
+  return (
+    <div className="fixed inset-0 overflow-hidden bg-background">
+      {/* Back button */}
+      <Link
+        href="/"
+        className="fixed left-4 top-4 z-50 inline-flex items-center gap-2 rounded-full border border-border/50 bg-background/50 px-4 py-2 text-sm font-medium text-foreground/80 backdrop-blur-xl transition-all hover:bg-background/80 hover:text-foreground"
       >
-        <Suspense
-          fallback={
-            <div className="aspect-video w-full flex items-center justify-center rounded-xl border bg-background/50 shadow-xl">
-              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-            </div>
-          }
-        >
-          <Scene />
-        </Suspense>
-      </BlurFade>
+        <ArrowLeft className="h-4 w-4" />
+        Home
+      </Link>
 
-      <BlurFade delay={0.4}>
-        <Link href="/">
-          <Button className="gap-2">
-            <Home className="size-4" />
-            Return Home
-          </Button>
-        </Link>
-      </BlurFade>
-    </main>
+      {/* Infinite world engine */}
+      <InfiniteWorld className="h-full w-full" />
+    </div>
   );
 }
