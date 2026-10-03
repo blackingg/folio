@@ -123,7 +123,7 @@ export function WorldLoader({
       >
         <div className="absolute inset-x-0 bottom-0 flex items-end justify-between px-6 pb-5 sm:px-10">
           <h2 className="text-2xl font-bold tracking-tighter sm:text-4xl">
-            Generating Project TRUMAN
+            Project TRUMAN
           </h2>
           <motion.span className="pb-1 text-sm font-medium tabular-nums text-foreground/80 sm:text-base">
             {display}
