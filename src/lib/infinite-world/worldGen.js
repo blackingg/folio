@@ -115,7 +115,7 @@ export const EXPERIENCES = [
     // village is the nearest at ~159u away, so this stays clear of it).
     flattenRadius: 90,
     targetHeight: -25,
-    gltfPaths: ["/models/shipwreck.glb"],
+    gltfPaths: ["/models/restored-minecraft-shipwreck/source/Ship.glb"],
     loadingOrb: false, // submerged zone — the mist-dome marker assumes dry ground and would poke oddly out of the water; found by swimming, not signposted
   },
 ];

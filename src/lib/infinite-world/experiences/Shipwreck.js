@@ -13,9 +13,14 @@ const LOWER_HULL_COLOR = 0x23201d; // waterlogged, silted
  * everywhere, Underwater.js tints the screen below y=0) an actual
  * destination.
  *
- * `/models/shipwreck.glb` doesn't exist yet — load() falls back to a
- * procedural broken-hull proxy so the zone works without it. Swap the real
- * asset in later; nothing else here needs to change.
+ * load() tries the authored asset and falls back to a procedural
+ * broken-hull proxy if it's missing, so the zone works either way.
+ *
+ * The scene has no standard three.js lights — everything is shaded by
+ * custom sun-based materials (see worldGen.js / PROJECT_TRUMAN.md), so a
+ * loaded GLTF's default lit MeshStandardMaterial renders solid black
+ * untouched. convertToUnlit() below swaps it onto MeshBasicMaterial,
+ * keeping color/texture.
  */
 export default class Shipwreck extends Experience {
     constructor(config) {
@@ -27,10 +32,12 @@ export default class Shipwreck extends Experience {
         await super.load();
         if (this.wreck) return;
 
-        let model = null;
+        let model;
         try {
             const gltf = await AssetManager.getInstance().loadModel(this.config.gltfPaths[0]);
-            model = gltf.scene;
+            model = gltf.scene.clone(true);
+            this.convertToUnlit(model);
+            this.recenterOnFloor(model);
         } catch {
             model = this.createProceduralHull();
         }
@@ -49,6 +56,36 @@ export default class Shipwreck extends Experience {
 
         this.wreck = model;
         this.view.scene.add(this.wreck);
+    }
+
+    convertToUnlit(root) {
+        root.traverse((child) => {
+            if (!child.isMesh) return;
+            const toBasic = (src) => {
+                const mat = new THREE.MeshBasicMaterial();
+                if (src.color) mat.color.copy(src.color);
+                if (src.map) mat.map = src.map;
+                return mat;
+            };
+            child.material = Array.isArray(child.material)
+                ? child.material.map(toBasic)
+                : toBasic(child.material);
+        });
+    }
+
+    // Authored/exported models aren't guaranteed to be centred on their own
+    // pivot (this one, a raw Minecraft structure export, sits at local
+    // x/z 0..16 and y 0..16) — recentre horizontally and drop the base to
+    // local y=0 so position.set(x, seabedElevation, z) above actually lands
+    // the model on the seabed instead of offset beside/above it.
+    recenterOnFloor(root) {
+        root.updateMatrixWorld(true);
+        const box = new THREE.Box3().setFromObject(root);
+        const center = box.getCenter(new THREE.Vector3());
+
+        root.position.x -= center.x;
+        root.position.z -= center.z;
+        root.position.y -= box.min.y;
     }
 
     createProceduralHull() {
