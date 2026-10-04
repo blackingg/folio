@@ -28,8 +28,8 @@ export const TERRAIN = {
  * map, with a single gate due north (-Z).
  */
 export const BORDER = {
-    radius: 500,
-    wobble: [60, 35, 18],    // sinusoid amplitudes (coastline feel)
+    radius: 750,
+    wobble: [90, 52, 27],    // sinusoid amplitudes (coastline feel) — scaled with radius
     clearBand: 12,           // keep random trees off the wall line
     gateAngle: -Math.PI / 2, // north
     gateWidth: 12,           // opening through the wall, world units
