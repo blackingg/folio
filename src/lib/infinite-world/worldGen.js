@@ -42,8 +42,9 @@ export const RIVER = {
     warpFrequency: 0.004,   // domain-warp frequency sampled along each path — controls meander wavelength
     warpStrength: 60,       // world units a path point gets displaced by
     samplePointSpacing: 25, // distance between polyline vertices along a straight pond-to-pond edge, before warping
-    width: 14,              // half-width of the carved channel, world units
-    depth: 16,              // world units carved at a channel's centreline, tapering to 0 at `width`
+    width: 18,              // half-width of the carved channel, world units — wide enough to read as sailable, not a creek
+    depth: 20,              // world units carved at a channel's centreline, tapering to 0 at `width`
+    floorFraction: 0.35,    // fraction of `width` that stays at full depth (flat riverbed) before the banks start curving up
 }
 
 function distToSegment(px, pz, ax, az, bx, bz) {
@@ -52,6 +53,45 @@ function distToSegment(px, pz, ax, az, bx, bz) {
     let t = lenSq > 0 ? ((px - ax) * dx + (pz - az) * dz) / lenSq : 0
     t = Math.max(0, Math.min(1, t))
     return Math.hypot(px - (ax + t * dx), pz - (az + t * dz))
+}
+
+/**
+ * Distance from (x, z) to the nearest river segment, or Infinity if there's
+ * none nearby. Shared by getElevation()'s carve step and anything else that
+ * needs to know "is this point in/near a river" (tree placement, for one —
+ * see Workers/Terrain.js) without duplicating the grid-bucket lookup.
+ */
+export function getRiverDistance(x, z, riverNetwork) {
+    if (!riverNetwork || riverNetwork.grid.size === 0) return Infinity
+
+    const cx = Math.floor(x / riverNetwork.cellSize)
+    const cz = Math.floor(z / riverNetwork.cellSize)
+    const bucket = riverNetwork.grid.get(cx + ',' + cz)
+    if (!bucket) return Infinity
+
+    let minDist = Infinity
+    for (const s of bucket) {
+        const d = distToSegment(x, z, s.ax, s.az, s.bx, s.bz)
+        if (d < minDist) minDist = d
+    }
+    return minDist
+}
+
+/**
+ * Riverbed cross-section: flat floor at full depth out to `floorFraction`,
+ * then a cosine ease down to 0 at the bank. A straight linear taper (tried
+ * first) is a V in cross-section — a sharp point at the centreline and,
+ * worse, a hard kink in slope exactly where it meets undisturbed terrain,
+ * which reads as a mechanical trench rather than a river. The cosine ease
+ * has zero slope at both ends of the curved part, so the banks blend into
+ * the surrounding terrain with no seam, and the flat floor stops the
+ * channel coming to a point.
+ */
+function riverbedProfile(t) {
+    if (t <= RIVER.floorFraction) return 1
+    if (t >= 1) return 0
+    const u = (t - RIVER.floorFraction) / (1 - RIVER.floorFraction)
+    return 0.5 * (1 + Math.cos(u * Math.PI))
 }
 
 /**
@@ -282,15 +322,24 @@ export const EXPERIENCES = [
     emoji: "⚓",
     description:
       "A broken hull resting on the seabed of a drowned bay. Walk out until the water closes over your head.",
-    x: -42,
-    z: -214,
+    // Sited on the real largest natural basin, not the deepest single point
+    // (the old -42,-214) — that spot only looked biggest because forcing a
+    // flatten disc there made it so, which is circular: the pond-detection
+    // that builds the river network counts the shipwreck's own forced hole
+    // as a pond. Checked with the shipwreck's own flatten excluded from
+    // detection: this location is the actual largest natural pond (273
+    // flood-filled cells vs 161 runner-up), and two river edges converge
+    // here — a confluence, not a dead end. Reads as a real bay a ship
+    // could have sailed into, not an isolated crater.
+    x: -11,
+    z: -288,
     triggerRadius: 70,
     preloadRadius: 180,
     // A real carved basin, not just a pad under the hull — the natural dip
     // here only reached -12.6, too shallow to read as water a ship could
     // have actually sailed. 90u flatten radius clears a flat -25 floor out
     // to r≈70 (checked against the other EXPERIENCES zones' flatten radii —
-    // village is the nearest at ~159u away, so this stays clear of it).
+    // village is the nearest at ~208u away, so this stays clear of it).
     flattenRadius: 90,
     targetHeight: -25,
     gltfPaths: ["/models/restored-minecraft-shipwreck/source/Ship.glb"],
@@ -360,23 +409,9 @@ export function getElevation(x, y, noise2D, iterationsOffsets, params, experienc
 
     // Rivers — carved before the experience flatten pass so a zone's own
     // flattening always takes priority over a river that happens to cross it.
-    // The network's polylines are precomputed (see buildRiverNetwork) and
-    // bucketed into a grid, so this is a cheap lookup for the vast majority
-    // of points (no segments in range) rather than scanning every segment.
-    if (riverNetwork && riverNetwork.grid.size > 0) {
-        const cx = Math.floor(x / riverNetwork.cellSize)
-        const cz = Math.floor(y / riverNetwork.cellSize)
-        const bucket = riverNetwork.grid.get(cx + ',' + cz)
-
-        if (bucket) {
-            let minDist = Infinity
-            for (const s of bucket) {
-                const d = distToSegment(x, y, s.ax, s.az, s.bx, s.bz)
-                if (d < minDist) minDist = d
-            }
-            const carve = 1 - linearStep(0, RIVER.width, minDist)
-            elevation -= RIVER.depth * carve
-        }
+    const riverDist = getRiverDistance(x, y, riverNetwork)
+    if (riverDist < RIVER.width) {
+        elevation -= RIVER.depth * riverbedProfile(riverDist / RIVER.width)
     }
 
     // Terrain flattening for experiences

@@ -6,9 +6,10 @@ const UPPER_HULL_COLOR = 0x4a4038; // weathered timber, still catching what ligh
 const LOWER_HULL_COLOR = 0x23201d; // waterlogged, silted
 
 /**
- * The shipwreck bay — a broken hull on the seabed of the natural dip at
- * (-42, -214), sampled from the real terrain seed rather than picked by eye
- * (see docs/project-truman/PROJECT_TRUMAN.md). Gives the player's existing
+ * The shipwreck bay — a broken hull on the seabed of the largest natural
+ * basin in the world, at (-11, -288), sited by sampling the real terrain
+ * seed rather than picked by eye — two rivers converge here (see
+ * docs/project-truman/PROJECT_TRUMAN.md). Gives the player's existing
  * "walk the seabed" behaviour (Player.js snaps to terrain elevation
  * everywhere, Underwater.js tints the screen below y=0) an actual
  * destination.
