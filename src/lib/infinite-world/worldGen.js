@@ -98,6 +98,26 @@ export const EXPERIENCES = [
     treeRingRadius: 18, // circle of orange trees around the worship circle
     treeClearRadius: 45, // keep random trees off the plateau
   },
+  {
+    id: "shipwreck",
+    label: "Shipwreck Bay",
+    emoji: "⚓",
+    description:
+      "A broken hull resting on the seabed of a drowned bay. Walk out until the water closes over your head.",
+    x: -42,
+    z: -214,
+    triggerRadius: 70,
+    preloadRadius: 180,
+    // A real carved basin, not just a pad under the hull — the natural dip
+    // here only reached -12.6, too shallow to read as water a ship could
+    // have actually sailed. 90u flatten radius clears a flat -25 floor out
+    // to r≈70 (checked against the other EXPERIENCES zones' flatten radii —
+    // village is the nearest at ~159u away, so this stays clear of it).
+    flattenRadius: 90,
+    targetHeight: -25,
+    gltfPaths: ["/models/shipwreck.glb"],
+    loadingOrb: false, // submerged zone — the mist-dome marker assumes dry ground and would poke oddly out of the water; found by swimming, not signposted
+  },
 ];
 
 export function hashString(str) {

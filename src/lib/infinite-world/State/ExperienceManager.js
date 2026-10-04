@@ -5,12 +5,14 @@ import View from '../View/View.js';
 import Basketball from '../experiences/Basketball.js';
 import Village from '../experiences/Village.js';
 import GodsPalm from '../experiences/GodsPalm.js';
+import Shipwreck from '../experiences/Shipwreck.js';
 import { EXPERIENCES } from '../worldGen.js';
 
 const EXPERIENCE_CLASSES = {
     basketball_court: Basketball,
     village: Village,
     gods_palm: GodsPalm,
+    shipwreck: Shipwreck,
 };
 
 let instance = null;
