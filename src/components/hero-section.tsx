@@ -43,7 +43,7 @@ export function HeroSection({
       <div className="mx-auto w-full max-w-3xl space-y-8">
         <div className="flex flex-col-reverse items-center justify-between gap-[clamp(0.75rem,3svh,1.5rem)] sm:flex-row sm:items-start">
           <div className="flex w-full min-w-0 flex-1 flex-col space-y-3 text-left sm:space-y-4">
-            <h1 className="sr-only">{name} - Frontend Engineer Portfolio</h1>
+            <h1 className="sr-only">{name} - Software Engineer Portfolio</h1>
             <HeroGreeting
               firstName={name.split(" ")[0]}
               className="text-3xl font-bold tracking-tight sm:text-5xl sm:tracking-tighter xl:text-6xl/none"

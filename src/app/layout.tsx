@@ -16,7 +16,7 @@ const fontSans = FontSans({
 export const metadata: Metadata = {
   metadataBase: new URL(DATA.url),
   title: {
-    default: `${DATA.name} | Frontend Engineer`,
+    default: `${DATA.name} | Software Engineer`,
     template: `%s | ${DATA.name}`,
   },
   icons: {
@@ -33,7 +33,7 @@ export const metadata: Metadata = {
       },
     ],
   },
-  description: `Professional portfolio of ${DATA.name}, a Frontend Engineer specializing in React, TypeScript, and Three.js. Discover projects, experience, and insights on web development.`,
+  description: `Professional portfolio of ${DATA.name}, a Software Engineer specializing in React, TypeScript, Node.js, and Three.js. Discover projects, experience, and insights on web development.`,
   alternates: {
     canonical: "/",
     types: {
@@ -41,8 +41,8 @@ export const metadata: Metadata = {
     },
   },
   openGraph: {
-    title: `${DATA.name} | Frontend Engineer`,
-    description: `Professional portfolio of ${DATA.name}, a Frontend Engineer specializing in React, TypeScript, and Three.js.`,
+    title: `${DATA.name} | Software Engineer`,
+    description: `Professional portfolio of ${DATA.name}, a Software Engineer specializing in React, TypeScript, Node.js, and Three.js.`,
     url: DATA.url,
     siteName: `${DATA.name}`,
     locale: "en_US",
@@ -79,13 +79,15 @@ export const metadata: Metadata = {
     "Odetunde Mubarak",
     "Mubarak Odetunde",
     "whoisblxck",
+    "Software Engineer",
+    "Full Stack Developer",
     "Frontend Engineer",
     "Web3 Nigeria",
     "Portfolio",
     "Resume",
-    "Software Engineer",
     "React Developer",
     "Next.js Developer",
+    "Node.js Developer",
     "JavaScript Developer",
     "TypeScript Developer",
     "React-Native Developer",
@@ -131,7 +133,7 @@ export default function RootLayout({
                 "https://www.linkedin.com/in/mubarak-odetunde-258494236/",
                 "https://x.com/whoisBlxck/",
               ],
-              jobTitle: "Frontend Engineer",
+              jobTitle: "Software Engineer",
               description: DATA.description,
               email: `mailto:${DATA.contact.email}`,
               worksFor: {

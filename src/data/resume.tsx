@@ -8,14 +8,14 @@ export const DATA = {
   location: "Lagos, Nigeria",
   locationLink: "https://goo.gl/maps/8Q1KZJ8v1Zz",
   description:
-    "Frontend dev | React/React Native/Electron/Tauri | TypeScript/Three.js | Building interactive experiences across platforms",
+    "Software engineer | React/React Native/Electron/Tauri/Node.js | TypeScript/Three.js | Building interactive experiences across platforms",
   hero: [
-    "I'm a frontend dev, technically. Think of me as the guy you call when you want something people enjoy using.",
+    "I'm a software engineer, technically. Think of me as the guy you call when you want something people enjoy using.",
     "Websites. Apps. Digital products. Even entire 3D worlds.",
     "I make things functional. Then I make them fun to use.",
   ],
   summary: [
-    "I'm a frontend engineer, but I've never been particularly interested in just ticking off a tech stack. I care much more about how something actually feels to use — the motion, the interaction, the sound, the tiny details you might not consciously notice but always feel. If it doesn't feel good to use, I don't consider it finished.",
+    "I'm a software engineer, but I've never been particularly interested in just ticking off a tech stack. I care much more about how something actually feels to use — the motion, the interaction, the sound, the tiny details you might not consciously notice but always feel. If it doesn't feel good to use, I don't consider it finished.",
     "When I'm not building for clients, I'm usually building because I'm curious. I draw too, and I think that has a lot to do with how I approach the things I build. I like paying attention — to people, nature, architecture, conversations, little everyday details. A lot of my ideas start there.",
     "I like making things that are useful, things that are playful, and occasionally things that are a little weird. Usually, the best projects are somewhere in between.",
   ],
@@ -36,6 +36,7 @@ export const DATA = {
     "Redux Toolkit",
     "Zustand",
     "Vite",
+    "Node.js",
     "Supabase",
     "Web Audio API",
   ],
