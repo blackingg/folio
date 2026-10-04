@@ -4,6 +4,7 @@ import { snoise3D } from './glslSimplex.js'
 import {
     getElevation as computeElevation,
     createBorder,
+    getRiverNetwork,
     BORDER,
     EXPERIENCES,
     hashString,
@@ -12,6 +13,7 @@ import {
 
 let elevationRandom = null
 let activeBorder = null
+let activeRiverNetwork = null
 
 // Thin wrapper binding the shared canonical formula (worldGen.js) to this
 // worker's message-supplied params and seeded noise instance.
@@ -23,7 +25,8 @@ const getElevation = (x, y, lacunarity, persistence, iterations, baseFrequency, 
         iterationsOffsets,
         { lacunarity, persistence, iterations, baseFrequency, baseAmplitude, power, elevationOffset },
         experiences,
-        activeBorder
+        activeBorder,
+        activeRiverNetwork
     )
 
 onmessage = function(event)
@@ -50,6 +53,7 @@ onmessage = function(event)
     const grassRandom = new SimplexNoise(seed)
 
     activeBorder = createBorder(seed)
+    activeRiverNetwork = getRiverNetwork(seed) // memoized — only expensive on the first call per seed
 
     /**
      * Elevation
