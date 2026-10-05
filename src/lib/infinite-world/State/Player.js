@@ -17,7 +17,9 @@ export default class Player
         this.rotation = 0
         this.inputSpeed = 10
         this.inputBoostSpeed = 30
+        this.inputSwimSpeed = 8
         this.speed = 0
+        this.swimming = false
 
         this.position = {}
         this.position.current = vec3.fromValues(10, 0, 1)
@@ -143,14 +145,6 @@ export default class Player
             }
         }
 
-        // Experience Fake Collision
-        if (this.game.experienceManager && this.game.experienceManager.activeExperience) {
-            for (const box of this.game.experienceManager.activeExperience.boundingBoxes) {
-                // A simple placeholder AABB collision logic could go here if boundingBoxes were populated
-                // e.g. check if position.current is inside AABB and push out on shortest axis
-            }
-        }
-
         // Elevation must land before camera.update() reads position.current —
         // otherwise the camera orbits around last frame's height for a frame
         // every time elevation changes, which shows up as the camera lagging
@@ -158,8 +152,27 @@ export default class Player
         // rates, e.g. mobile).
         const chunks = this.state.chunks
         const elevation = chunks.getElevationForPosition(this.position.current[0], this.position.current[2])
+        const groundY = typeof elevation === 'number' ? elevation : 0
 
-        this.position.current[1] = typeof elevation === 'number' ? elevation : 0
+        if (groundY < 0) {
+            // Free vertical movement between seabed and surface via the
+            // otherwise-unbound jump/crouch keys; fresh entry starts at the surface.
+            let y = this.swimming ? this.position.current[1] : 0
+
+            if (this.controls.keys.down.jump) y += this.inputSwimSpeed * this.time.delta
+            if (this.controls.keys.down.crouch) y -= this.inputSwimSpeed * this.time.delta
+
+            this.position.current[1] = Math.min(0, Math.max(groundY, y))
+            this.swimming = true
+        } else {
+            this.position.current[1] = groundY
+            this.swimming = false
+        }
+
+        // Experience collision — e.g. Shipwreck.js#collide — runs after elevation/swim Y lands.
+        if (this.game.experienceManager && this.game.experienceManager.activeExperience) {
+            this.game.experienceManager.activeExperience.collide?.(this.position.current)
+        }
 
         vec3.sub(this.position.delta, this.position.current, this.position.previous)
         vec3.copy(this.position.previous, this.position.current)
