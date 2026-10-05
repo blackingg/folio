@@ -25,6 +25,7 @@ export default class Shipwreck extends Experience {
     constructor(config) {
         super(config);
         this.wreck = null;
+        this.isRealModel = false;
         this.collisionCells = new Set(collisionCells.map(([x, y, z]) => `${x},${y},${z}`));
     }
 
@@ -35,6 +36,7 @@ export default class Shipwreck extends Experience {
         let model;
         try {
             model = await AssetManager.getInstance().loadUnlitModel(this.config.gltfPaths[0]);
+            this.isRealModel = true;
         } catch {
             model = this.createProceduralHull();
         }
@@ -64,7 +66,10 @@ export default class Shipwreck extends Experience {
     // (built offline by build-footprint.mjs from the real model geometry).
     // Mutates positionVec3 in place, called from Player.js.
     collide(positionVec3) {
-        if (!this.wreck || this.collisionCells.size === 0) return;
+        // The cell data is voxelized from the real model — applying it to
+        // the much smaller procedural fallback would block the player on
+        // invisible walls sized for a hull that isn't the one rendered.
+        if (!this.wreck || !this.isRealModel || this.collisionCells.size === 0) return;
 
         const dx = positionVec3[0] - this.wreck.position.x;
         const dy = positionVec3[1] - this.wreck.position.y;
