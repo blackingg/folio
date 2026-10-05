@@ -4,6 +4,12 @@ import Game from '../Game.js';
 import View from './View.js';
 import State from '../State/State.js';
 
+// Was min(0.85 + depth*0.01, 1.0) — fully opaque (blind) by 15 units deep,
+// well inside the rivers/shipwreck basin's 16-25u range.
+const UNDERWATER_OPACITY_MIN = 0.35
+const UNDERWATER_OPACITY_MAX = 0.62
+const UNDERWATER_OPACITY_PER_DEPTH = 0.01
+
 export default class Underwater {
     constructor() {
         this.game = Game.getInstance();
@@ -20,7 +26,7 @@ export default class Underwater {
         this.material = new THREE.MeshBasicMaterial({
             color: '#0a3a66',
             transparent: true,
-            opacity: 0.75,
+            opacity: UNDERWATER_OPACITY_MIN,
             depthTest: false,
             depthWrite: false
         });
@@ -43,9 +49,12 @@ export default class Underwater {
         if (playerState.camera.position[1] < 0) {
             this.mesh.visible = true;
             
-            // Optional: increase opacity the deeper you go (up to a limit)
+            // Murkier the deeper you go, but never fully opaque — see note above.
             const depth = Math.abs(playerState.camera.position[1]);
-            this.material.opacity = Math.min(0.85 + (depth * 0.01), 1.0);
+            this.material.opacity = Math.min(
+                UNDERWATER_OPACITY_MIN + depth * UNDERWATER_OPACITY_PER_DEPTH,
+                UNDERWATER_OPACITY_MAX
+            );
         } else {
             this.mesh.visible = false;
         }

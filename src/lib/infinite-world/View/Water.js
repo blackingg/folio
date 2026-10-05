@@ -64,7 +64,8 @@ export default class Water
         this.scene = this.view.scene
 
         this.material = new WaterMaterial()
-        this.material.uniforms.uBaseColor.value = new Color('#1d3456')
+        // Was #1d3456 — too dark, read as near-black over a shadowed riverbed.
+        this.material.uniforms.uBaseColor.value = new Color('#2e6f9e')
         this.material.uniforms.uFresnelOffset.value = 0
         this.material.uniforms.uFresnelScale.value = 0.5
         this.material.uniforms.uFresnelPower.value = 2
