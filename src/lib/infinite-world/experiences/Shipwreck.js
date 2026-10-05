@@ -1,9 +1,11 @@
 import * as THREE from 'three';
 import Experience from './Experience.js';
 import AssetManager from '../State/AssetManager.js';
+import collisionCells from './shipwreckCollisionCells.js';
 
 const UPPER_HULL_COLOR = 0x4a4038; // weathered timber, still catching what light reaches this deep
 const LOWER_HULL_COLOR = 0x23201d; // waterlogged, silted
+const COLLISION_RADIUS = 0.8; // matches Player.js's tree collision radius
 
 /**
  * The shipwreck bay — a broken hull on the seabed of the largest natural
@@ -23,6 +25,7 @@ export default class Shipwreck extends Experience {
     constructor(config) {
         super(config);
         this.wreck = null;
+        this.collisionCells = new Set(collisionCells.map(([x, y, z]) => `${x},${y},${z}`));
     }
 
     async load() {
@@ -55,6 +58,60 @@ export default class Shipwreck extends Experience {
 
         this.wreck = model;
         this.view.scene.add(this.wreck);
+    }
+
+    // Exterior hull collision against the voxel grid in shipwreckCollisionCells.js
+    // (built offline by build-footprint.mjs from the real model geometry).
+    // Mutates positionVec3 in place, called from Player.js.
+    collide(positionVec3) {
+        if (!this.wreck || this.collisionCells.size === 0) return;
+
+        const dx = positionVec3[0] - this.wreck.position.x;
+        const dy = positionVec3[1] - this.wreck.position.y;
+        const dz = positionVec3[2] - this.wreck.position.z;
+
+        // World -> the model's local (unrotated, recentred) space.
+        const theta = this.wreck.rotation.y;
+        const cos = Math.cos(theta), sin = Math.sin(theta);
+        let lx = cos * dx - sin * dz;
+        let ly = dy;
+        let lz = sin * dx + cos * dz;
+
+        // Only the 3x3x3 neighbourhood can be within COLLISION_RADIUS (<1 cell).
+        const cx = Math.floor(lx), cy = Math.floor(ly), cz = Math.floor(lz);
+
+        for (let ix = -1; ix <= 1; ix++) {
+            for (let iy = -1; iy <= 1; iy++) {
+                for (let iz = -1; iz <= 1; iz++) {
+                    const ccx = cx + ix, ccy = cy + iy, ccz = cz + iz;
+                    if (!this.collisionCells.has(`${ccx},${ccy},${ccz}`)) continue;
+
+                    // Closest point on this unit-cube cell to the player.
+                    const closestX = Math.min(Math.max(lx, ccx), ccx + 1);
+                    const closestY = Math.min(Math.max(ly, ccy), ccy + 1);
+                    const closestZ = Math.min(Math.max(lz, ccz), ccz + 1);
+
+                    const ddx = lx - closestX, ddy = ly - closestY, ddz = lz - closestZ;
+                    const distSq = ddx * ddx + ddy * ddy + ddz * ddz;
+                    if (distSq >= COLLISION_RADIUS * COLLISION_RADIUS) continue;
+
+                    const dist = Math.sqrt(distSq);
+                    if (dist > 0.0001) {
+                        const push = COLLISION_RADIUS - dist;
+                        lx += (ddx / dist) * push;
+                        ly += (ddy / dist) * push;
+                        lz += (ddz / dist) * push;
+                    } else {
+                        ly += COLLISION_RADIUS; // dead centre on a boundary — nudge up
+                    }
+                }
+            }
+        }
+
+        // Local -> world.
+        positionVec3[0] = this.wreck.position.x + cos * lx + sin * lz;
+        positionVec3[1] = this.wreck.position.y + ly;
+        positionVec3[2] = this.wreck.position.z - sin * lx + cos * lz;
     }
 
     createProceduralHull() {

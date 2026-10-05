@@ -145,14 +145,6 @@ export default class Player
             }
         }
 
-        // Experience Fake Collision
-        if (this.game.experienceManager && this.game.experienceManager.activeExperience) {
-            for (const box of this.game.experienceManager.activeExperience.boundingBoxes) {
-                // A simple placeholder AABB collision logic could go here if boundingBoxes were populated
-                // e.g. check if position.current is inside AABB and push out on shortest axis
-            }
-        }
-
         // Elevation must land before camera.update() reads position.current —
         // otherwise the camera orbits around last frame's height for a frame
         // every time elevation changes, which shows up as the camera lagging
@@ -175,6 +167,11 @@ export default class Player
         } else {
             this.position.current[1] = groundY
             this.swimming = false
+        }
+
+        // Experience collision — e.g. Shipwreck.js#collide — runs after elevation/swim Y lands.
+        if (this.game.experienceManager && this.game.experienceManager.activeExperience) {
+            this.game.experienceManager.activeExperience.collide?.(this.position.current)
         }
 
         vec3.sub(this.position.delta, this.position.current, this.position.previous)
