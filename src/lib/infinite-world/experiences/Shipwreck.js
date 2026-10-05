@@ -41,11 +41,16 @@ export default class Shipwreck extends Experience {
             this.config.position.z
         );
 
-        model.position.set(
-            this.config.position.x,
-            typeof elevation === 'number' ? elevation : this.config.targetHeight,
-            this.config.position.z
-        );
+        // The authored asset's model.position.y already holds the recentre
+        // offset from loadUnlitModel() (its lowest point moved to local
+        // y=0) — add the seabed elevation to that instead of overwriting
+        // it, or the recentring is silently discarded and the model's true
+        // geometric bottom (not local 0) ends up however far below the
+        // seabed it naturally sits. The procedural hull starts at y=0, so
+        // += behaves the same as a plain assignment for it.
+        model.position.x = this.config.position.x;
+        model.position.y += typeof elevation === 'number' ? elevation : this.config.targetHeight;
+        model.position.z = this.config.position.z;
         model.rotation.y = Math.PI * 0.18;
 
         this.wreck = model;
