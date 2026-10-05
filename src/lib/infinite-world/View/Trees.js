@@ -13,6 +13,8 @@ import Game from '../Game.js';
 
 import { TREE_MODELS, TREE_SCALE } from './treeModels.js';
 
+import { toUnlitMaterial } from './Materials/unlitGLTF.js';
+
 
         // (index 0 = foliage, index 1 = trunk — mirrors TREE_MODELS[i].meshes order)
 
@@ -71,9 +73,7 @@ export default class Trees {
 
 
     createMaterial(baseMaterial) {
-        const material = new THREE.MeshBasicMaterial();
-        if (baseMaterial.color) material.color.copy(baseMaterial.color);
-        if (baseMaterial.map) material.map = baseMaterial.map;
+        const material = toUnlitMaterial(baseMaterial);
 
         material.onBeforeCompile = (shader) => {
             shader.uniforms.uSunPosition     = { value: new THREE.Vector3() };

@@ -4,6 +4,9 @@ import { snoise3D } from './glslSimplex.js'
 import {
     getElevation as computeElevation,
     createBorder,
+    getRiverNetwork,
+    getRiverDistance,
+    RIVER,
     BORDER,
     EXPERIENCES,
     hashString,
@@ -12,6 +15,7 @@ import {
 
 let elevationRandom = null
 let activeBorder = null
+let activeRiverNetwork = null
 
 // Thin wrapper binding the shared canonical formula (worldGen.js) to this
 // worker's message-supplied params and seeded noise instance.
@@ -23,7 +27,8 @@ const getElevation = (x, y, lacunarity, persistence, iterations, baseFrequency, 
         iterationsOffsets,
         { lacunarity, persistence, iterations, baseFrequency, baseAmplitude, power, elevationOffset },
         experiences,
-        activeBorder
+        activeBorder,
+        activeRiverNetwork
     )
 
 onmessage = function(event)
@@ -50,6 +55,7 @@ onmessage = function(event)
     const grassRandom = new SimplexNoise(seed)
 
     activeBorder = createBorder(seed)
+    activeRiverNetwork = getRiverNetwork(seed) // memoized — only expensive on the first call per seed
 
     /**
      * Elevation
@@ -448,6 +454,25 @@ onmessage = function(event)
         // Experience zones that keep random trees off their ground
         const treeClearZones = EXPERIENCES.filter((def) => def.treeClearRadius)
 
+        // Keep a bank's width of dry ground either side of a river — RIVER.width
+        // is where the carved channel actually ends, so trees right at that line
+        // would still look like they're growing out of the water's edge.
+        const TREE_RIVER_BANK = 4
+        const riverExclusionDist = RIVER.width + TREE_RIVER_BANK
+
+        // Chunks of different LOD sample the terrain mesh at different vertex
+        // spacing (size/subdivisions) but subdivisions is fixed, so a coarser
+        // (larger `size`) chunk has far fewer tree-placement trials per unit
+        // area than a fine one — the same per-vertex spawn probability then
+        // produces visibly sparser trees on coarser chunks, inconsistent with
+        // the same ground seen from closer in. Scale the probability up to
+        // compensate, calibrated against Chunks.js's minSize (64, the finest
+        // chunk size, stable across quality tiers) so density matches what
+        // the thresholds below were actually tuned to look like.
+        const vertexSpacing = size / subdivisions
+        const referenceSpacing = 64 / subdivisions
+        const densityAreaRatio = (vertexSpacing * vertexSpacing) / (referenceSpacing * referenceSpacing)
+
         for(let iZ = 0; iZ < segments; iZ++)
         {
             for(let iX = 0; iX < segments; iX++)
@@ -478,6 +503,11 @@ onmessage = function(event)
                     } else if (biome > -0.2) {
                         threshold = 0.85 // medium
                     }
+                    // Compensate for fewer trials/area on coarser chunks (see
+                    // densityAreaRatio above) — clamp at 0, since a coarse
+                    // chunk asking for more trees per vertex than 100% of
+                    // trials can't go any further than "spawn every time".
+                    threshold = Math.max(0, 1 - (1 - threshold) * densityAreaRatio)
 
                     let treeNoise = snoise3D(x * 0.5 + iterationsOffsets[0][0], z * 0.5 + iterationsOffsets[0][1], uSeed_t)
                     treeNoise = (treeNoise + 1.0) * 0.5 // Normalize to 0.0 - 1.0
@@ -528,6 +558,9 @@ onmessage = function(event)
                             }
                         }
                         if (inClearZone) continue
+
+                        // Keep trees off river channels and their banks
+                        if (activeRiverNetwork && getRiverDistance(finalX, finalZ, activeRiverNetwork) < riverExclusionDist) continue
 
                         // Inside the map, blue is reserved for the border wall
                         if (typeIndex >= 8 && typeIndex <= 15 && treeDist < wallRadius) {

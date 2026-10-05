@@ -16,24 +16,47 @@ const OPEN_EASE: [number, number, number, number] = [0.83, 0, 0.17, 1];
 const TYPE_INTERVAL_MS = 14;
 const LOG_HISTORY = 2;
 
-// Flavor log keyed to real progress — chunk counts map onto the 9 terrain
-// chunks the engine actually waits for.
-function logFor(v: number) {
+// Flavor lines with no real progress behind them — shuffled per page load
+const FLAVOR_POOL = [
+  "smoothing terrain normals",
+  "planting trees",
+  "growing distant billboards",
+  "scattering grass",
+  "filling the ocean",
+  "sinking a shipwreck into the bay",
+  "wizard summoning clouds",
+  "hanging the sun and moon",
+  "sprinkling stars",
+  "waking the player",
+];
+
+function shuffle<T>(items: T[]): T[] {
+  const result = [...items];
+  for (let i = result.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [result[i], result[j]] = [result[j], result[i]];
+  }
+  return result;
+}
+
+// Keyed to real progress where there's something real to key to — chunk
+// counts map onto the 9 terrain chunks the engine actually waits for.
+// Everything after that draws from the shuffled flavor order.
+function logFor(v: number, flavorOrder: string[]) {
   if (v < 3) return "booting world engine";
   if (v < 6) return "seeding simplex noise";
   if (v < 26) {
     const chunk = Math.min(9, Math.max(1, Math.ceil(((v - 6) / 20) * 9)));
     return `generating terrain chunk ${chunk}/9`;
   }
-  if (v < 34) return "smoothing terrain normals";
-  if (v < 42) return "planting trees";
-  if (v < 50) return "growing distant billboards";
-  if (v < 58) return "scattering grass";
-  if (v < 66) return "filling the ocean";
-  if (v < 74) return "wizard summoning clouds";
-  if (v < 82) return "hanging the sun and moon";
-  if (v < 90) return "sprinkling stars";
-  if (v < 99.5) return "waking the player";
+  if (v < 99.5) {
+    const span = 99.5 - 26;
+    const index = Math.min(
+      flavorOrder.length - 1,
+      Math.floor(((v - 26) / span) * flavorOrder.length),
+    );
+    return flavorOrder[index];
+  }
   return "entering world";
 }
 
@@ -45,6 +68,7 @@ export function WorldLoader({
   isLoaded: boolean;
 }) {
   const [phase, setPhase] = useState<Phase>("loading");
+  const [flavorOrder] = useState(() => shuffle(FLAVOR_POOL));
 
   // The engine reports progress in chunky jumps (9 chunks ≈ 11% steps);
   // spring towards it so the line and counter glide instead of snapping.
@@ -62,9 +86,9 @@ export function WorldLoader({
 
   // Track the newest log target, and open once the world is ready and the
   // counter has caught up to 100.
-  const logTargetRef = useRef(logFor(0));
+  const logTargetRef = useRef(logFor(0, flavorOrder));
   useMotionValueEvent(smooth, "change", (v) => {
-    logTargetRef.current = logFor(v);
+    logTargetRef.current = logFor(v, flavorOrder);
     if (isLoaded && v >= 99.5 && phase === "loading") {
       setTimeout(() => setPhase("opening"), OPEN_DELAY_MS);
     }

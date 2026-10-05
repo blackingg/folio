@@ -2,8 +2,8 @@
 
 import { EXPERIENCES } from "@/lib/infinite-world/worldGen.js";
 
-// Wide enough that the world border (500 ± 113 wobble) always fits with margin
-export const MAP_WORLD_RADIUS = 650;
+// Wide enough that the world border (750 ± 169 wobble) always fits with margin
+export const MAP_WORLD_RADIUS = 970;
 
 export interface ExperienceZone {
   id: string;

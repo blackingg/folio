@@ -1,4 +1,5 @@
 import seedrandom from 'seedrandom'
+import SimplexNoise from './Workers/SimplexNoise.js'
 
 /**
  * Single source of truth for world generation.
@@ -20,7 +21,224 @@ export const TERRAIN = {
     baseFrequency: 0.003,
     baseAmplitude: 40,
     power: 3,
-    elevationOffset: 1,
+    elevationOffset: 3, // raises the whole landscape — fewer/smaller scattered water pockets (was 1, ~16.6% of the enclosed map below sea level; this measures ~7.5%)
+}
+
+/**
+ * Rivers — winding channels that actually connect the natural ponds the
+ * base terrain formula produces, instead of an independent noise field
+ * that carves wherever it happens to cross zero (which doesn't join
+ * anything, and cuts an unrelated seam straight through ponds it has no
+ * relation to). buildRiverNetwork() below finds the real ponds, connects
+ * them with a minimum-spanning tree, and bends each connecting edge into a
+ * meandering polyline — then getElevation() just carves within `width` of
+ * the nearest polyline segment, which is cheap (no noise sampling) because
+ * all the expensive work (flood-fill, MST, warping) happened once upfront.
+ */
+export const RIVER = {
+    detectStep: 10,         // world units between pond-detection grid samples
+    minPondCells: 5,        // ignore flood-fill blobs smaller than this (noise speckle, not real ponds)
+    maxPonds: 22,           // cap how many of the largest ponds get connected
+    warpFrequency: 0.004,   // domain-warp frequency sampled along each path — controls meander wavelength
+    warpStrength: 60,       // world units a path point gets displaced by
+    samplePointSpacing: 25, // distance between polyline vertices along a straight pond-to-pond edge, before warping
+    width: 18,              // half-width of the carved channel, world units — wide enough to read as sailable, not a creek
+    depth: 20,              // world units carved at a channel's centreline, tapering to 0 at `width`
+    floorFraction: 0.35,    // fraction of `width` that stays at full depth (flat riverbed) before the banks start curving up
+}
+
+function distToSegment(px, pz, ax, az, bx, bz) {
+    const dx = bx - ax, dz = bz - az
+    const lenSq = dx * dx + dz * dz
+    let t = lenSq > 0 ? ((px - ax) * dx + (pz - az) * dz) / lenSq : 0
+    t = Math.max(0, Math.min(1, t))
+    return Math.hypot(px - (ax + t * dx), pz - (az + t * dz))
+}
+
+/**
+ * Distance from (x, z) to the nearest river segment, or Infinity if there's
+ * none nearby. Shared by getElevation()'s carve step and anything else that
+ * needs to know "is this point in/near a river" (tree placement, for one —
+ * see Workers/Terrain.js) without duplicating the grid-bucket lookup.
+ */
+export function getRiverDistance(x, z, riverNetwork) {
+    if (!riverNetwork || riverNetwork.grid.size === 0) return Infinity
+
+    const cx = Math.floor(x / riverNetwork.cellSize)
+    const cz = Math.floor(z / riverNetwork.cellSize)
+    const bucket = riverNetwork.grid.get(cx + ',' + cz)
+    if (!bucket) return Infinity
+
+    let minDist = Infinity
+    for (const s of bucket) {
+        const d = distToSegment(x, z, s.ax, s.az, s.bx, s.bz)
+        if (d < minDist) minDist = d
+    }
+    return minDist
+}
+
+/**
+ * Riverbed cross-section: flat floor at full depth out to `floorFraction`,
+ * then a cosine ease down to 0 at the bank. A straight linear taper (tried
+ * first) is a V in cross-section — a sharp point at the centreline and,
+ * worse, a hard kink in slope exactly where it meets undisturbed terrain,
+ * which reads as a mechanical trench rather than a river. The cosine ease
+ * has zero slope at both ends of the curved part, so the banks blend into
+ * the surrounding terrain with no seam, and the flat floor stops the
+ * channel coming to a point.
+ */
+function riverbedProfile(t) {
+    if (t <= RIVER.floorFraction) return 1
+    if (t >= 1) return 0
+    const u = (t - RIVER.floorFraction) / (1 - RIVER.floorFraction)
+    return 0.5 * (1 + Math.cos(u * Math.PI))
+}
+
+/**
+ * Finds the natural ponds the base terrain (no rivers) produces inside the
+ * border, connects them with a minimum-spanning tree, and bends each edge
+ * into a meandering polyline. Expensive (one grid sample + flood-fill over
+ * the whole map) — call once per seed and reuse; getRiverNetwork() below
+ * memoizes this.
+ */
+function buildRiverNetwork(seed) {
+    const noise = new SimplexNoise(seed)
+    const noise2D = (nx, ny) => noise.noise2D(nx, ny)
+    const offsets = computeIterationsOffsets(seed)
+    const border = createBorder(seed)
+    const flattenZones = EXPERIENCES.map((e) => ({
+        x: e.x, z: e.z, radius: e.flattenRadius, targetHeight: e.targetHeight
+    }))
+    const baseElevationAt = (x, z) =>
+        getElevation(x, z, noise2D, offsets, TERRAIN, flattenZones, border)
+
+    // Flood-fill underwater cells on a coarse grid into pond blobs.
+    const range = Math.ceil(BORDER.radius + BORDER.wobble.reduce((a, b) => a + b, 0))
+    const step = RIVER.detectStep
+    const cols = Math.floor((2 * range) / step) + 1
+    const toWorld = (ix, iz) => [-range + ix * step, -range + iz * step]
+
+    const underwater = new Uint8Array(cols * cols)
+    for (let iz = 0; iz < cols; iz++) {
+        for (let ix = 0; ix < cols; ix++) {
+            const [x, z] = toWorld(ix, iz)
+            if (Math.hypot(x, z) > border.radiusAt(Math.atan2(z, x))) continue
+            underwater[iz * cols + ix] = baseElevationAt(x, z) < 0 ? 1 : 0
+        }
+    }
+
+    const visited = new Uint8Array(cols * cols)
+    const ponds = []
+    for (let iz = 0; iz < cols; iz++) {
+        for (let ix = 0; ix < cols; ix++) {
+            const i = iz * cols + ix
+            if (!underwater[i] || visited[i]) continue
+
+            const stack = [[ix, iz]]
+            visited[i] = 1
+            let sumX = 0, sumZ = 0, count = 0
+            while (stack.length) {
+                const [cx, cz] = stack.pop()
+                const [wx, wz] = toWorld(cx, cz)
+                sumX += wx; sumZ += wz; count++
+                for (const [dx, dz] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+                    const nx = cx + dx, nz = cz + dz
+                    if (nx < 0 || nx >= cols || nz < 0 || nz >= cols) continue
+                    const ni = nz * cols + nx
+                    if (underwater[ni] && !visited[ni]) {
+                        visited[ni] = 1
+                        stack.push([nx, nz])
+                    }
+                }
+            }
+            ponds.push({ x: sumX / count, z: sumZ / count, count })
+        }
+    }
+
+    const significant = ponds
+        .filter((p) => p.count >= RIVER.minPondCells)
+        .sort((a, b) => b.count - a.count)
+        .slice(0, RIVER.maxPonds)
+
+    // Minimum spanning tree over pond centroids (Prim's — pond counts are small).
+    const pondDist = (a, b) => Math.hypot(a.x - b.x, a.z - b.z)
+    const edges = []
+    if (significant.length > 1) {
+        const inTree = new Set([0])
+        while (inTree.size < significant.length) {
+            let best = null
+            for (const i of inTree) {
+                for (let j = 0; j < significant.length; j++) {
+                    if (inTree.has(j)) continue
+                    const d = pondDist(significant[i], significant[j])
+                    if (!best || d < best.d) best = { i, j, d }
+                }
+            }
+            if (!best) break
+            inTree.add(best.j)
+            edges.push(best)
+        }
+    }
+
+    // Warp the PATH itself into a polyline (not the query point against a
+    // straight line) — warping a continuous sequence of path points keeps
+    // adjacent samples close together, so the channel stays connected.
+    // Warping the query point instead (tried first) regularly displaced it
+    // further than `width`, leaving gaps in the middle of the channel.
+    const random = seedrandom(seed + '_river')
+    const warpOffsets = [
+        (random() - 0.5) * 200000, (random() - 0.5) * 200000,
+        (random() - 0.5) * 200000, (random() - 0.5) * 200000,
+    ]
+    const warpPoint = (x, z) => [
+        x + noise2D(x * RIVER.warpFrequency + warpOffsets[0], z * RIVER.warpFrequency + warpOffsets[1]) * RIVER.warpStrength,
+        z + noise2D(x * RIVER.warpFrequency + warpOffsets[2], z * RIVER.warpFrequency + warpOffsets[3]) * RIVER.warpStrength,
+    ]
+
+    const segments = []
+    for (const e of edges) {
+        const a = significant[e.i], b = significant[e.j]
+        const n = Math.max(4, Math.ceil(e.d / RIVER.samplePointSpacing))
+        let prev = null
+        for (let i = 0; i <= n; i++) {
+            const t = i / n
+            const [wx, wz] = warpPoint(a.x + (b.x - a.x) * t, a.z + (b.z - a.z) * t)
+            if (prev) segments.push({ ax: prev[0], az: prev[1], bx: wx, bz: wz })
+            prev = [wx, wz]
+        }
+    }
+
+    // A straight per-vertex scan over every segment measured ~10x slower
+    // terrain generation (220 segments x thousands of vertices per chunk).
+    // Bucket segments into a uniform grid instead, so a query point whose
+    // cell holds no segments (almost everywhere — rivers are thin) rejects
+    // in one Map lookup instead of checking every segment in the network.
+    const cellSize = Math.max(50, RIVER.width * 4)
+    const grid = new Map()
+    for (const s of segments) {
+        const minCx = Math.floor((Math.min(s.ax, s.bx) - RIVER.width) / cellSize)
+        const maxCx = Math.floor((Math.max(s.ax, s.bx) + RIVER.width) / cellSize)
+        const minCz = Math.floor((Math.min(s.az, s.bz) - RIVER.width) / cellSize)
+        const maxCz = Math.floor((Math.max(s.az, s.bz) + RIVER.width) / cellSize)
+        for (let cx = minCx; cx <= maxCx; cx++) {
+            for (let cz = minCz; cz <= maxCz; cz++) {
+                const key = cx + ',' + cz
+                let bucket = grid.get(key)
+                if (!bucket) grid.set(key, bucket = [])
+                bucket.push(s)
+            }
+        }
+    }
+
+    return { segments, grid, cellSize }
+}
+
+const riverNetworkCache = new Map()
+
+/** Memoized per seed — buildRiverNetwork() is too expensive to call per-vertex. */
+export function getRiverNetwork(seed) {
+    if (!riverNetworkCache.has(seed)) riverNetworkCache.set(seed, buildRiverNetwork(seed))
+    return riverNetworkCache.get(seed)
 }
 
 /**
@@ -28,8 +246,8 @@ export const TERRAIN = {
  * map, with a single gate due north (-Z).
  */
 export const BORDER = {
-    radius: 500,
-    wobble: [60, 35, 18],    // sinusoid amplitudes (coastline feel)
+    radius: 750,
+    wobble: [90, 52, 27],    // sinusoid amplitudes (coastline feel) — scaled with radius
     clearBand: 12,           // keep random trees off the wall line
     gateAngle: -Math.PI / 2, // north
     gateWidth: 12,           // opening through the wall, world units
@@ -98,6 +316,35 @@ export const EXPERIENCES = [
     treeRingRadius: 18, // circle of orange trees around the worship circle
     treeClearRadius: 45, // keep random trees off the plateau
   },
+  {
+    id: "shipwreck",
+    label: "Shipwreck Bay",
+    emoji: "⚓",
+    description:
+      "A broken hull resting on the seabed of a drowned bay. Walk out until the water closes over your head.",
+    // Sited on the real largest natural basin, not the deepest single point
+    // (the old -42,-214) — that spot only looked biggest because forcing a
+    // flatten disc there made it so, which is circular: the pond-detection
+    // that builds the river network counts the shipwreck's own forced hole
+    // as a pond. Checked with the shipwreck's own flatten excluded from
+    // detection: this location is the actual largest natural pond (273
+    // flood-filled cells vs 161 runner-up), and two river edges converge
+    // here — a confluence, not a dead end. Reads as a real bay a ship
+    // could have sailed into, not an isolated crater.
+    x: -11,
+    z: -288,
+    triggerRadius: 70,
+    preloadRadius: 180,
+    // A real carved basin, not just a pad under the hull — the natural dip
+    // here only reached -12.6, too shallow to read as water a ship could
+    // have actually sailed. 90u flatten radius clears a flat -25 floor out
+    // to r≈70 (checked against the other EXPERIENCES zones' flatten radii —
+    // village is the nearest at ~208u away, so this stays clear of it).
+    flattenRadius: 90,
+    targetHeight: -25,
+    gltfPaths: ["/models/restored-minecraft-shipwreck/source/Ship.glb"],
+    loadingOrb: false, // submerged zone — the mist-dome marker assumes dry ground and would poke oddly out of the water; found by swimming, not signposted
+  },
 ];
 
 export function hashString(str) {
@@ -132,8 +379,10 @@ export function computeIterationsOffsets(seed) {
  * @param experiences  optional [{ x, z, radius, targetHeight }] flatten zones
  * @param border       optional result of createBorder(seed) — floors elevation
  *                     near the wall ring at BORDER.coastDryHeight
+ * @param riverNetwork  optional result of getRiverNetwork(seed) — carves
+ *                      channels connecting the terrain's natural ponds (see RIVER)
  */
-export function getElevation(x, y, noise2D, iterationsOffsets, params, experiences, border) {
+export function getElevation(x, y, noise2D, iterationsOffsets, params, experiences, border, riverNetwork) {
     let elevation = 0
     let frequency = params.baseFrequency
     let amplitude = 1
@@ -157,6 +406,13 @@ export function getElevation(x, y, noise2D, iterationsOffsets, params, experienc
     elevation = Math.pow(Math.abs(elevation), params.power) * Math.sign(elevation)
     elevation *= params.baseAmplitude
     elevation += params.elevationOffset
+
+    // Rivers — carved before the experience flatten pass so a zone's own
+    // flattening always takes priority over a river that happens to cross it.
+    const riverDist = getRiverDistance(x, y, riverNetwork)
+    if (riverDist < RIVER.width) {
+        elevation -= RIVER.depth * riverbedProfile(riverDist / RIVER.width)
+    }
 
     // Terrain flattening for experiences
     if (experiences && experiences.length > 0) {

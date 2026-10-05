@@ -5,6 +5,7 @@ import {
   EXPERIENCES,
   computeIterationsOffsets,
   createBorder,
+  getRiverNetwork,
   getElevation,
 } from "@/lib/infinite-world/worldGen.js";
 
@@ -12,6 +13,7 @@ import {
 // recomputes the deterministic world instead of sampling the live scene.
 const iterationsOffsets = computeIterationsOffsets(TERRAIN_SEED);
 const border = createBorder(TERRAIN_SEED);
+const riverNetwork = getRiverNetwork(TERRAIN_SEED);
 
 // @ts-expect-error — SimplexNoise seed parameter typed incorrectly in TS fallback
 const elevationNoise = new SimplexNoise(TERRAIN_SEED);
@@ -25,5 +27,5 @@ const flattens = EXPERIENCES.map((exp: any) => ({
 }));
 
 export function getTerrainElevation(x: number, z: number): number {
-  return getElevation(x, z, noise2D, iterationsOffsets, TERRAIN, flattens, border);
+  return getElevation(x, z, noise2D, iterationsOffsets, TERRAIN, flattens, border, riverNetwork);
 }

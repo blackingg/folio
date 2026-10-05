@@ -35,7 +35,9 @@ export default class Game {
     this.debug = new Debug();
     this.state = new State();
     this.view = new View();
-    
+
+    if (this.debug.active) window.__game = this;
+
     // Lazy-load modules that require both State and View singletons to exist
     import('./State/AssetManager.js').then(module => {
         this.assetManager = new module.default();
