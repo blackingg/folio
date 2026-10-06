@@ -16,8 +16,8 @@ const GAMEPAD: [string, string][] = [
   ["L-Stick", "Move"],
   ["R-Stick", "Rotate camera"],
   ["LB / RT", "Boost speed"],
-  ["A", "Swim up / Fly up"],
-  ["B", "Swim down / Fly down"],
+  ["A / Cross", "Swim up / Fly up"],
+  ["B / Circle", "Swim down / Fly down"],
 ];
 
 const TOUCH: [string, string][] = [

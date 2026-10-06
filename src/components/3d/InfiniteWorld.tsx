@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
+import { BoostLines } from "./hud/BoostLines";
 import { HudCluster } from "./hud/HudCluster";
 import { RotatePrompt } from "./hud/RotatePrompt";
 import { TouchControls } from "./hud/TouchControls";
@@ -205,6 +206,8 @@ export default function InfiniteWorld({ className }: InfiniteWorldProps) {
         progress={loadProgress}
         isLoaded={isLoaded}
       />
+
+      {isLoaded && <BoostLines gameRef={gameRef} />}
 
       {!menuTab && (
         <HudCluster
