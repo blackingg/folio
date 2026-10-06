@@ -77,7 +77,11 @@ State/View split, singleton-style modules (`getInstance()`):
 ### Quality / perf
 
 `quality.js`: tiers `low/medium/high` gate grass density, billboard density,
-chunk depth, pixel ratio cap, camera far plane, max-instances-per-tree.
+chunk depth, pixel ratio cap, camera far plane, max-instances-per-tree, and
+terrain `subdivisions`/`maxIterations` (the per-chunk vertex grid resolution
+and noise-octave count — the terrain worker's two heaviest knobs;
+`chunkMaxDepth` alone only trims the outer LOD rings, so the closest chunk
+used to cost the same regardless of tier until these were added).
 `detectTier()` special-cases Quest browser → `medium`. `VR_OVERLAY` applies
 extra reductions during an active XR session.
 
