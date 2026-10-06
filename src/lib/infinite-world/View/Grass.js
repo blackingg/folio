@@ -158,6 +158,14 @@ export default class Grass
         // Get terrain data
         const aChunkState = engineChunks.getDeepestChunkForPosition(playerPosition[0], playerPosition[2])
 
+        // Any slot whose chunk isn't ready yet (streaming lag, e.g. outrunning
+        // it while boosting across water) must have its UV pushed out of the
+        // shader's 0..1 gate — leaving a stale offset from wherever the grass
+        // patch used to be can coincidentally land in-range again after the
+        // player moves roughly a chunk-width, misapplying old (often dry-land)
+        // terrain height to the new spot and showing grass over water.
+        const INVALID_OFFSET = 1e6
+
         if(aChunkState && aChunkState.terrain && aChunkState.terrain.renderInstance.texture)
         {
             // Texture A
@@ -166,10 +174,10 @@ export default class Grass
                 aChunkState.x - aChunkState.size * 0.5,
                 aChunkState.z - aChunkState.size * 0.5
             )
-            
+
             const chunkPositionRatioX = (playerPosition[0] - aChunkState.x + aChunkState.size * 0.5) / aChunkState.size
             const chunkPositionRatioZ = (playerPosition[2] - aChunkState.z + aChunkState.size * 0.5) / aChunkState.size
-            
+
             // Texture B
             const bChunkSate = aChunkState.neighbours.get(chunkPositionRatioX < 0.5 ? 'w' : 'e')
 
@@ -181,7 +189,11 @@ export default class Grass
                     bChunkSate.z - bChunkSate.size * 0.5
                 )
             }
-            
+            else
+            {
+                this.material.uniforms.uTerrainBOffset.value.set(INVALID_OFFSET, INVALID_OFFSET)
+            }
+
             // Texture C
             const cChunkSate = aChunkState.neighbours.get(chunkPositionRatioZ < 0.5 ? 'n' : 's')
 
@@ -193,9 +205,13 @@ export default class Grass
                     cChunkSate.z - cChunkSate.size * 0.5
                 )
             }
-            
+            else
+            {
+                this.material.uniforms.uTerrainCOffset.value.set(INVALID_OFFSET, INVALID_OFFSET)
+            }
+
             // Texture D
-            const dChunkSate = bChunkSate.neighbours.get(chunkPositionRatioZ < 0.5 ? 'n' : 's')
+            const dChunkSate = bChunkSate?.neighbours.get(chunkPositionRatioZ < 0.5 ? 'n' : 's')
 
             if(dChunkSate && dChunkSate.terrain && dChunkSate.terrain.renderInstance.texture)
             {
@@ -205,6 +221,17 @@ export default class Grass
                     dChunkSate.z - dChunkSate.size * 0.5
                 )
             }
+            else
+            {
+                this.material.uniforms.uTerrainDOffset.value.set(INVALID_OFFSET, INVALID_OFFSET)
+            }
+        }
+        else
+        {
+            this.material.uniforms.uTerrainAOffset.value.set(INVALID_OFFSET, INVALID_OFFSET)
+            this.material.uniforms.uTerrainBOffset.value.set(INVALID_OFFSET, INVALID_OFFSET)
+            this.material.uniforms.uTerrainCOffset.value.set(INVALID_OFFSET, INVALID_OFFSET)
+            this.material.uniforms.uTerrainDOffset.value.set(INVALID_OFFSET, INVALID_OFFSET)
         }
     }
 }

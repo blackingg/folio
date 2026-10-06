@@ -1,6 +1,7 @@
 import { vec3, quat2, mat4 } from 'gl-matrix'
 
 import State from './State.js'
+import { isMobileDevice } from '../quality.js'
 
 export default class CameraThirdPerson
 {
@@ -18,7 +19,10 @@ export default class CameraThirdPerson
         this.position = vec3.create()
         this.quaternion = quat2.create()
         this.distance = 15
-        this.phi = Math.PI * 0.45
+        // On mobile the default angle read as too top-down (phones are
+        // usually held more level than a mouse-steered desktop view) —
+        // nudge phi a little further from straight-overhead there.
+        this.phi = isMobileDevice() ? Math.PI * 0.5 : Math.PI * 0.45
         this.theta = - Math.PI * 0.25
         this.aboveOffset = 2
         this.phiLimits = { min: 0.1, max: Math.PI - 0.1 }
