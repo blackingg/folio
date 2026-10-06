@@ -16,8 +16,8 @@ export default class Player
         this.controls = this.state.controls
 
         this.rotation = 0
-        this.inputSpeed = 10
-        this.inputBoostSpeed = 30
+        this.inputSpeed = 14
+        this.inputBoostSpeed = 42
         this.inputSwimSpeed = 8
         this.swimBuoyancy = -2
         this.swimVelocityY = 0
