@@ -99,6 +99,14 @@ export default function InfiniteWorld({ className }: InfiniteWorldProps) {
     setIsLoaded(true);
     const controls = gameRef.current?.state?.controls;
     if (controls) controls.inputEnabled = true;
+
+    try {
+      if (!localStorage.getItem("iw-seen-guide")) {
+        localStorage.setItem("iw-seen-guide", "1");
+        setMenuTab("guide");
+      }
+    } catch {
+    }
   }, []);
 
   // Boot game engine
