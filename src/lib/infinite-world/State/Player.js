@@ -152,21 +152,31 @@ export default class Player
         // rates, e.g. mobile).
         const chunks = this.state.chunks
         const elevation = chunks.getElevationForPosition(this.position.current[0], this.position.current[2])
-        const groundY = typeof elevation === 'number' ? elevation : 0
 
-        if (groundY < 0) {
-            // Free vertical movement between seabed and surface via the
-            // otherwise-unbound jump/crouch keys; fresh entry starts at the surface.
-            let y = this.swimming ? this.position.current[1] : 0
+        // elevation is `undefined`/`false` whenever the chunk under the player
+        // hasn't streamed its heightmap back from the worker yet (or no chunk
+        // covers this spot at all) — transient while moving, worse on mobile
+        // where generation lags further behind movement speed. Previously this
+        // fell back to sea level (0), snapping the player (and the camera,
+        // which reads position.current with no smoothing) down into the
+        // ground for a frame on every one of those gaps. Holding the last
+        // known height instead skips the Y update entirely until real data
+        // is back.
+        if (typeof elevation === 'number') {
+            const groundY = elevation
 
-            if (this.controls.keys.down.jump) y += this.inputSwimSpeed * this.time.delta
-            if (this.controls.keys.down.crouch) y -= this.inputSwimSpeed * this.time.delta
+            if (groundY < 0) {
+                let y = this.swimming ? this.position.current[1] : 0
 
-            this.position.current[1] = Math.min(0, Math.max(groundY, y))
-            this.swimming = true
-        } else {
-            this.position.current[1] = groundY
-            this.swimming = false
+                if (this.controls.keys.down.jump) y += this.inputSwimSpeed * this.time.delta
+                if (this.controls.keys.down.crouch) y -= this.inputSwimSpeed * this.time.delta
+
+                this.position.current[1] = Math.min(0, Math.max(groundY, y))
+                this.swimming = true
+            } else {
+                this.position.current[1] = groundY
+                this.swimming = false
+            }
         }
 
         // Experience collision — e.g. Shipwreck.js#collide — runs after elevation/swim Y lands.
