@@ -75,6 +75,11 @@ export function detectTier() {
     return 'high'
 }
 
+export function isMobileDevice() {
+    if (typeof navigator === 'undefined') return false
+    return /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent)
+}
+
 // Returns { tier, resolved, ...preset }: `tier` is what the user picked
 // ('auto' when no override), `resolved` is the preset actually in effect.
 export function resolveQuality() {
