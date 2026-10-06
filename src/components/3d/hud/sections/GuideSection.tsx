@@ -5,12 +5,16 @@ const CONTROLS = [
   { keys: ["Mouse"], label: "Look / Rotate camera" },
   { keys: ["Shift"], label: "Boost speed" },
   { keys: ["V"], label: "Toggle 3rd / Fly camera" },
+  { keys: ["Space"], label: "Swim up / Fly up" },
+  { keys: ["Ctrl", "C"], label: "Swim down / Fly down" },
 ];
 
 const GAMEPAD: [string, string][] = [
   ["L-Stick", "Move"],
   ["R-Stick", "Rotate camera"],
   ["LB / RT", "Boost speed"],
+  ["A", "Swim up / Fly up"],
+  ["B", "Swim down / Fly down"],
 ];
 
 const TOUCH: [string, string][] = [
