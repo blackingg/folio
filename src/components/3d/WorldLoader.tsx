@@ -63,9 +63,11 @@ function logFor(v: number, flavorOrder: string[]) {
 export function WorldLoader({
   progress,
   isLoaded,
+  onOpenComplete,
 }: {
   progress: number;
   isLoaded: boolean;
+  onOpenComplete?: () => void;
 }) {
   const [phase, setPhase] = useState<Phase>("loading");
   const [flavorOrder] = useState(() => shuffle(FLAVOR_POOL));
@@ -167,7 +169,10 @@ export function WorldLoader({
         animate={{ y: opening ? "100%" : "0%" }}
         transition={{ duration: 1.1, ease: OPEN_EASE }}
         onAnimationComplete={() => {
-          if (opening) setPhase("done");
+          if (opening) {
+            setPhase("done");
+            onOpenComplete?.();
+          }
         }}
         className="absolute inset-x-0 bottom-0 h-1/2 bg-background"
       >

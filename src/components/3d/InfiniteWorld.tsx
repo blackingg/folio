@@ -99,13 +99,19 @@ export default function InfiniteWorld({ className }: InfiniteWorldProps) {
     setIsLoaded(true);
     const controls = gameRef.current?.state?.controls;
     if (controls) controls.inputEnabled = true;
+  }, []);
 
+  // Fires once the loader's own curtain-open animation has finished — not
+  // the moment isLoaded flips true, which is still mid-animation and would
+  // pop the menu open underneath the closing curtain
+  const handleLoaderOpenComplete = useCallback(() => {
     try {
       if (!localStorage.getItem("iw-seen-guide")) {
         localStorage.setItem("iw-seen-guide", "1");
         setMenuTab("guide");
       }
     } catch {
+      // localStorage unavailable (private mode, etc.) — just skip the auto-open
     }
   }, []);
 
@@ -213,6 +219,7 @@ export default function InfiniteWorld({ className }: InfiniteWorldProps) {
       <WorldLoader
         progress={loadProgress}
         isLoaded={isLoaded}
+        onOpenComplete={handleLoaderOpenComplete}
       />
 
       {isLoaded && <BoostLines gameRef={gameRef} />}
