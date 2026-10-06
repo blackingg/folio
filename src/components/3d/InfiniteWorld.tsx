@@ -210,6 +210,7 @@ export default function InfiniteWorld({ className }: InfiniteWorldProps) {
         gameRef={gameRef}
         isLoaded={isLoaded}
         onOpenTab={setMenuTab}
+        isMobile={isMobile}
       />
 
       {/* Touch movement controls */}

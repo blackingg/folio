@@ -10,12 +10,15 @@ interface HudClusterProps {
   gameRef: React.RefObject<any>;
   isLoaded: boolean;
   onOpenTab: (tab: MenuTab) => void;
+  isMobile?: boolean;
 }
 
-export function HudCluster({ gameRef, isLoaded, onOpenTab }: HudClusterProps) {
+export function HudCluster({ gameRef, isLoaded, onOpenTab, isMobile }: HudClusterProps) {
+  const iconClassName = isMobile ? "size-4" : "size-5";
+
   return (
     <div
-      className={`fixed right-4 top-4 z-40 flex flex-col items-end gap-3 transition-all duration-700 ${
+      className={`fixed right-4 top-4 z-40 flex flex-col items-end gap-2 transition-all duration-700 ${
         isLoaded ? "translate-x-0 opacity-100" : "translate-x-4 opacity-0"
       }`}
     >
@@ -28,7 +31,7 @@ export function HudCluster({ gameRef, isLoaded, onOpenTab }: HudClusterProps) {
         <WorldMap
           gameRef={gameRef}
           isLoaded={isLoaded}
-          size={144}
+          size={isMobile ? 100 : 144}
           mode="minimap"
           interactive={false}
         />
@@ -36,17 +39,19 @@ export function HudCluster({ gameRef, isLoaded, onOpenTab }: HudClusterProps) {
 
       <HudButton
         id="hud-info-toggle"
-        icon={<BookOpen className="size-5" />}
+        icon={<BookOpen className={iconClassName} />}
         label="Guide"
         onClick={() => onOpenTab("guide")}
+        small={isMobile}
       />
       <HudButton
         id="hud-settings-toggle"
-        icon={<Settings className="size-5" />}
+        icon={<Settings className={iconClassName} />}
         label="Settings"
         onClick={() => onOpenTab("settings")}
+        small={isMobile}
       />
-      <VrButton gameRef={gameRef} isLoaded={isLoaded} />
+      <VrButton gameRef={gameRef} isLoaded={isLoaded} small={isMobile} />
     </div>
   );
 }

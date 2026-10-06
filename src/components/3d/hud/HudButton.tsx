@@ -5,15 +5,16 @@ interface HudButtonProps {
   icon: React.ReactNode;
   label: string;
   onClick: () => void;
+  small?: boolean;
 }
 
-export function HudButton({ id, icon, label, onClick }: HudButtonProps) {
+export function HudButton({ id, icon, label, onClick, small }: HudButtonProps) {
   return (
     <button
       id={id}
       onClick={onClick}
       title={label}
-      className="group relative flex size-14 items-center justify-center rounded-lg border border-border bg-card text-muted-foreground shadow-sm transition-colors hover:bg-secondary/50 hover:text-foreground"
+      className={`group relative flex items-center justify-center rounded-lg border border-border bg-card text-muted-foreground shadow-sm transition-colors hover:bg-secondary/50 hover:text-foreground ${small ? "size-11" : "size-14"}`}
     >
       {icon}
       <span className="pointer-events-none absolute right-full mr-3 whitespace-nowrap rounded-md border border-border bg-popover px-2.5 py-1.5 text-xs font-medium text-popover-foreground opacity-0 shadow-md transition-opacity group-hover:opacity-100">
