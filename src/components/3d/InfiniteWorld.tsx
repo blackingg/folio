@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import { HudCluster } from "./hud/HudCluster";
+import { RotatePrompt } from "./hud/RotatePrompt";
 import { TouchControls } from "./hud/TouchControls";
 import { WorldMenu, type MenuTab } from "./hud/WorldMenu";
 import { WorldLoader } from "./WorldLoader";
@@ -17,6 +18,7 @@ export default function InfiniteWorld({ className }: InfiniteWorldProps) {
   const [loadProgress, setLoadProgress] = useState(0);
   const [isLoaded, setIsLoaded] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [isPortrait, setIsPortrait] = useState(false);
   const [menuTab, setMenuTab] = useState<MenuTab | null>(null);
 
   // Detect mobile
@@ -31,6 +33,17 @@ export default function InfiniteWorld({ className }: InfiniteWorldProps) {
     checkMobile();
     window.addEventListener("resize", checkMobile);
     return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
+  // Detect portrait orientation — the world's controls and HUD only work in
+  // landscape, so mobile players get blocked by RotatePrompt until they turn
+  // the device.
+  useEffect(() => {
+    const mql = window.matchMedia("(orientation: portrait)");
+    const checkOrientation = () => setIsPortrait(mql.matches);
+    checkOrientation();
+    mql.addEventListener("change", checkOrientation);
+    return () => mql.removeEventListener("change", checkOrientation);
   }, []);
 
   // Prevent browser defaults (e.g. Space / arrow scroll) while playing
@@ -68,17 +81,19 @@ export default function InfiniteWorld({ className }: InfiniteWorldProps) {
     return () => window.removeEventListener("keydown", handler);
   }, []);
 
-  // Disable game input while the menu is open
+  // Disable game input while the menu is open, or while a mobile device is
+  // stuck in portrait behind the RotatePrompt
+  const blockInput = menuTab !== null || (isMobile && isPortrait);
   useEffect(() => {
     const controls = gameRef.current?.state?.controls;
     if (!controls) return;
-    controls.inputEnabled = menuTab === null;
-    if (menuTab) {
+    controls.inputEnabled = !blockInput;
+    if (blockInput) {
       for (const key of Object.keys(controls.keys.down)) {
         controls.keys.down[key] = false;
       }
     }
-  }, [menuTab, isLoaded]);
+  }, [blockInput, isLoaded]);
 
   const handleLoadProgress = useCallback(
     (progress: number) => setLoadProgress(progress),
@@ -199,7 +214,12 @@ export default function InfiniteWorld({ className }: InfiniteWorldProps) {
       />
 
       {/* Touch movement controls */}
-      {isMobile && isLoaded && !menuTab && <TouchControls gameRef={gameRef} />}
+      {isMobile && isLoaded && !menuTab && !isPortrait && (
+        <TouchControls gameRef={gameRef} />
+      )}
+
+      {/* Block portrait play — the world is landscape-only on mobile */}
+      {isMobile && isPortrait && <RotatePrompt />}
 
       {/* Pause menu */}
       {menuTab && (
