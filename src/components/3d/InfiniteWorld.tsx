@@ -182,6 +182,10 @@ export default function InfiniteWorld({ className }: InfiniteWorldProps) {
       style={{
         WebkitTapHighlightColor: "transparent",
         WebkitTouchCallout: "none",
+        WebkitUserSelect: "none",
+        MozUserSelect: "none",
+        msUserSelect: "none",
+        userSelect: "none",
       }}
     >
       {/* Panel animation keyframes */}
