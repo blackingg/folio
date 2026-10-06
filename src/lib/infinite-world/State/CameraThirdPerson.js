@@ -26,6 +26,15 @@ export default class CameraThirdPerson
         // Soft follow: how fast the orbit eases behind the moving player
         // (exponential damping rate — ~95% caught up after one second)
         this.followLambda = 3
+
+        // Resting vertical angle — where phi recenters to once you start
+        // running without actively dragging. Free-looking to a steep tilt
+        // (near top-down or near ground-level) then taking off running left
+        // the camera stuck at that tilt, which reads as "broken" once moving
+        // and throws off the full-screen speed-line overlay (calibrated for
+        // a normal chase angle, not an extreme one).
+        this.restPhi = this.phi
+        this.recenterLambda = 2
     }
 
     activate()
@@ -74,6 +83,9 @@ export default class CameraThirdPerson
                 // camera to swing ~180° — leave it planted instead.
                 if(Math.abs(diff) < Math.PI * 0.75)
                     this.theta += diff * (1 - Math.exp(- this.followLambda * this.time.delta))
+
+                // Recenter vertical tilt to the resting chase angle
+                this.phi += (this.restPhi - this.phi) * (1 - Math.exp(- this.recenterLambda * this.time.delta))
             }
         }
 

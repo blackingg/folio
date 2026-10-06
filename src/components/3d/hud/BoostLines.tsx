@@ -54,6 +54,11 @@ function generateWedges(count: number): Wedge[] {
 export function BoostLines({ gameRef }: { gameRef: React.RefObject<any> }) {
   const elRef = useRef<HTMLDivElement>(null);
   const wedges = useMemo(() => generateWedges(LINE_COUNT), []);
+  // Eased separately from the per-frame speed sample so a single stutter
+  // step (e.g. a tree/wall collision clipping one frame's movement) doesn't
+  // read as a flicker in the overlay.
+  const smoothedRef = useRef(0);
+  const SMOOTH_LAMBDA = 8;
 
   useEffect(() => {
     let frame: number;
@@ -75,7 +80,11 @@ export function BoostLines({ gameRef }: { gameRef: React.RefObject<any> }) {
         const actualSpeed = time.delta > 0 ? player.speed / time.delta : 0;
         const speedT = Math.min(1, actualSpeed / player.inputBoostSpeed);
 
-        el.style.opacity = String(fovT * speedT);
+        const target = fovT * speedT;
+        smoothedRef.current +=
+          (target - smoothedRef.current) *
+          (1 - Math.exp(-SMOOTH_LAMBDA * time.delta));
+        el.style.opacity = String(smoothedRef.current);
       }
 
       frame = requestAnimationFrame(tick);
