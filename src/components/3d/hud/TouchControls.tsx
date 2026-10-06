@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef } from "react";
-import { Zap } from "lucide-react";
+import { ChevronDown, ChevronUp, Zap } from "lucide-react";
 
 // Knob travel radius in px — matches the 9rem base (144px) minus knob size.
 const JOYSTICK_RADIUS = 48;
@@ -49,6 +49,12 @@ export function TouchControls({ gameRef }: { gameRef: React.RefObject<any> }) {
   const setBoost = (down: boolean) => {
     const keys = gameRef.current?.state?.controls?.keys;
     if (keys) keys.down.boost = down;
+  };
+
+  // Swim/fly up (jump) and down (crouch) — same keys Space/Ctrl+C drive.
+  const setSwimKey = (key: "jump" | "crouch", down: boolean) => {
+    const keys = gameRef.current?.state?.controls?.keys;
+    if (keys) keys.down[key] = down;
   };
 
   return (
@@ -100,6 +106,45 @@ export function TouchControls({ gameRef }: { gameRef: React.RefObject<any> }) {
       >
         <Zap className="h-6 w-6" />
       </button>
+
+      <div className="fixed bottom-24 right-24 z-20 flex flex-col gap-2 landscape:bottom-10 landscape:right-44">
+        <button
+          type="button"
+          aria-label="Swim up"
+          className="flex h-12 w-12 touch-none select-none items-center justify-center rounded-full border border-border/60 bg-secondary/30 text-foreground backdrop-blur-sm active:bg-secondary/70"
+          onPointerDown={(e) => {
+            e.stopPropagation();
+            setSwimKey("jump", true);
+          }}
+          onPointerUp={(e) => {
+            e.stopPropagation();
+            setSwimKey("jump", false);
+          }}
+          onPointerLeave={() => setSwimKey("jump", false)}
+          onPointerCancel={() => setSwimKey("jump", false)}
+          onContextMenu={(e) => e.preventDefault()}
+        >
+          <ChevronUp className="h-6 w-6" />
+        </button>
+        <button
+          type="button"
+          aria-label="Swim down"
+          className="flex h-12 w-12 touch-none select-none items-center justify-center rounded-full border border-border/60 bg-secondary/30 text-foreground backdrop-blur-sm active:bg-secondary/70"
+          onPointerDown={(e) => {
+            e.stopPropagation();
+            setSwimKey("crouch", true);
+          }}
+          onPointerUp={(e) => {
+            e.stopPropagation();
+            setSwimKey("crouch", false);
+          }}
+          onPointerLeave={() => setSwimKey("crouch", false)}
+          onPointerCancel={() => setSwimKey("crouch", false)}
+          onContextMenu={(e) => e.preventDefault()}
+        >
+          <ChevronDown className="h-6 w-6" />
+        </button>
+      </div>
     </>
   );
 }

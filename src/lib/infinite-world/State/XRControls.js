@@ -13,7 +13,8 @@ const STORAGE_KEY = 'iw-vr-turn'
 // Reads WebXR controller thumbsticks (xr-standard mapping) each frame while
 // presenting: left stick = head-relative locomotion through the shared
 // controls.move channel, right stick = snap (default) or smooth rig turning,
-// trigger/squeeze = boost. Modeled on GamepadControls.
+// trigger/squeeze = boost, A/X = swim/fly up, B/Y = swim/fly down. Modeled
+// on GamepadControls.
 export default class XRControls
 {
     constructor()
@@ -36,6 +37,8 @@ export default class XRControls
         this._headDirection = new Vector3()
         this._wasActive = false
         this._boostActive = false
+        this._jumpActive = false
+        this._crouchActive = false
     }
 
     setTurnMode(mode)
@@ -60,6 +63,16 @@ export default class XRControls
             this.controls.keys.down.boost = false
             this._boostActive = false
         }
+        if(this._jumpActive)
+        {
+            this.controls.keys.down.jump = false
+            this._jumpActive = false
+        }
+        if(this._crouchActive)
+        {
+            this.controls.keys.down.crouch = false
+            this._crouchActive = false
+        }
     }
 
     update()
@@ -83,6 +96,8 @@ export default class XRControls
         let moveY = 0
         let turnX = 0
         let boost = false
+        let jump = false
+        let crouch = false
 
         for(const source of session.inputSources)
         {
@@ -107,6 +122,12 @@ export default class XRControls
             // Trigger (0) or squeeze (1) on either hand boosts
             if(gamepad.buttons[0]?.pressed || gamepad.buttons[1]?.pressed)
                 boost = true
+
+            // Face buttons (A/X = 4, B/Y = 5 in xr-standard) swim/fly up & down
+            if(gamepad.buttons[4]?.pressed)
+                jump = true
+            if(gamepad.buttons[5]?.pressed)
+                crouch = true
         }
 
         // Locomotion — head-relative so walking follows where you look
@@ -149,6 +170,16 @@ export default class XRControls
         {
             this.controls.keys.down.boost = boost
             this._boostActive = boost
+        }
+        if(jump !== this._jumpActive)
+        {
+            this.controls.keys.down.jump = jump
+            this._jumpActive = jump
+        }
+        if(crouch !== this._crouchActive)
+        {
+            this.controls.keys.down.crouch = crouch
+            this._crouchActive = crouch
         }
     }
 

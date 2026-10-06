@@ -19,6 +19,8 @@ export default class Player
         this.inputSpeed = 10
         this.inputBoostSpeed = 30
         this.inputSwimSpeed = 8
+        this.swimBuoyancy = -2
+        this.swimVelocityY = 0
         this.speed = 0
         this.swimming = false
 
@@ -157,14 +159,33 @@ export default class Player
         const groundY = getPreciseElevation(this.position.current[0], this.position.current[2])
 
         if (groundY < 0) {
-            let y = this.swimming ? this.position.current[1] : 0
+            // Momentum-based, not snapped: gentle passive buoyancy sinks you
+            // on entry (no key needed to go under), jump/crouch apply thrust
+            // rather than teleport, velocity zeroes out at the seabed/surface
+            // bounds instead of just clamping position.
+            if (!this.swimming) {
+                this.swimVelocityY = 0
+                this.swimming = true
+            }
 
-            if (this.controls.keys.down.jump) y += this.inputSwimSpeed * this.time.delta
-            if (this.controls.keys.down.crouch) y -= this.inputSwimSpeed * this.time.delta
+            let accel = this.swimBuoyancy
+            if (this.controls.keys.down.jump) accel += this.inputSwimSpeed
+            if (this.controls.keys.down.crouch) accel -= this.inputSwimSpeed
 
-            this.position.current[1] = Math.min(0, Math.max(groundY, y))
-            this.swimming = true
+            this.swimVelocityY += accel * this.time.delta
+            this.swimVelocityY = Math.max(-this.inputSwimSpeed, Math.min(this.inputSwimSpeed, this.swimVelocityY))
+
+            this.position.current[1] += this.swimVelocityY * this.time.delta
+
+            if (this.position.current[1] >= 0) {
+                this.position.current[1] = 0
+                this.swimVelocityY = Math.min(this.swimVelocityY, 0)
+            } else if (this.position.current[1] <= groundY) {
+                this.position.current[1] = groundY
+                this.swimVelocityY = Math.max(this.swimVelocityY, 0)
+            }
         } else {
+            this.swimVelocityY = 0
             this.position.current[1] = groundY
             this.swimming = false
         }

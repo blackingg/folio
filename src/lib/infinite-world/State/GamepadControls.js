@@ -8,6 +8,8 @@ import State from './State.js';
  *   axes[2]  — Right stick X  (−1 left → +1 right)
  *   axes[3]  — Right stick Y  (−1 up   → +1 down)
  *
+ *   buttons[0]  — A / Cross
+ *   buttons[1]  — B / Circle
  *   buttons[4]  — LB / L1
  *   buttons[7]  — RT / R2  (analog, .value 0–1)
  */
@@ -27,6 +29,8 @@ export default class GamepadControls {
         this.preferredIndex = null;
         this.lookSensitivity = DEFAULT_LOOK_SPEED;
         this._boostFromPad = false;
+        this._jumpFromPad = false;
+        this._crouchFromPad = false;
 
         this._onConnected = (e) => {
             console.log(`[GamepadControls] Connected: "${e.gamepad.id}" (index ${e.gamepad.index})`);
@@ -137,6 +141,26 @@ export default class GamepadControls {
         } else if (this._boostFromPad) {
             keys.boost = false;
             this._boostFromPad = false;
+        }
+
+        // A/Cross = swim or fly up, B/Circle = swim or fly down — same keys
+        // jump/crouch drive on keyboard (Space / Ctrl+C)
+        const jumpPressed = gp.buttons[0] && gp.buttons[0].pressed;
+        if (jumpPressed) {
+            keys.jump = true;
+            this._jumpFromPad = true;
+        } else if (this._jumpFromPad) {
+            keys.jump = false;
+            this._jumpFromPad = false;
+        }
+
+        const crouchPressed = gp.buttons[1] && gp.buttons[1].pressed;
+        if (crouchPressed) {
+            keys.crouch = true;
+            this._crouchFromPad = true;
+        } else if (this._crouchFromPad) {
+            keys.crouch = false;
+            this._crouchFromPad = false;
         }
 
         const rx = applyDeadzone(gp.axes[2] ?? 0);

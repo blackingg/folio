@@ -1,37 +1,39 @@
 "use client";
 
+import { ArrowUpRight } from "lucide-react";
+import { DATA } from "@/data/resume";
+
 const CONTROLS = [
   { keys: ["W", "A", "S", "D"], label: "Move" },
   { keys: ["Mouse"], label: "Look / Rotate camera" },
   { keys: ["Shift"], label: "Boost speed" },
   { keys: ["V"], label: "Toggle 3rd / Fly camera" },
+  { keys: ["Space"], label: "Swim up / Fly up" },
+  { keys: ["Ctrl", "C"], label: "Swim down / Fly down" },
 ];
 
 const GAMEPAD: [string, string][] = [
   ["L-Stick", "Move"],
   ["R-Stick", "Rotate camera"],
   ["LB / RT", "Boost speed"],
+  ["A", "Swim up / Fly up"],
+  ["B", "Swim down / Fly down"],
 ];
 
 const TOUCH: [string, string][] = [
   ["Joystick", "Move"],
   ["Drag", "Rotate camera"],
   ["⚡ Button", "Boost speed"],
+  ["⬆ Button", "Swim up / Fly up"],
+  ["⬇ Button", "Swim down / Fly down"],
 ];
 
 const VR: [string, string][] = [
   ["L-Stick", "Move where you look"],
   ["R-Stick", "Snap turn 45°"],
   ["Trigger / Grip", "Boost speed"],
-];
-
-const TECH: [string, string][] = [
-  ["Engine", "Three.js (vanilla)"],
-  ["Architecture", "Singleton OO"],
-  ["Terrain", "Procedural FBM noise"],
-  ["LOD", "Quadtree chunk system"],
-  ["Trees", "InstancedMesh + GLTF"],
-  ["Lighting", "Custom sky shader"],
+  ["A / X", "Swim up / Fly up"],
+  ["B / Y", "Swim down / Fly down"],
 ];
 
 function SectionHeading({ children }: { children: React.ReactNode }) {
@@ -128,15 +130,26 @@ export function GuideSection() {
       </div>
 
       <section>
-        <SectionHeading>Under the hood</SectionHeading>
-        <div className="grid grid-cols-2 gap-x-4 gap-y-3 rounded-lg border border-border bg-secondary/50 p-4 md:grid-cols-3">
-          {TECH.map(([key, val]) => (
-            <div key={key}>
-              <p className="text-xs text-muted-foreground">{key}</p>
-              <p className="text-sm text-foreground">{val}</p>
-            </div>
-          ))}
-        </div>
+        <SectionHeading>About the Creator</SectionHeading>
+        <a
+          href={DATA.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="group flex items-center gap-3 rounded-lg border border-border bg-secondary/50 p-4 transition-colors hover:bg-secondary"
+        >
+          <img
+            src={DATA.avatarUrl}
+            alt={DATA.name}
+            className="h-12 w-12 flex-shrink-0 rounded-full object-cover"
+          />
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-medium text-foreground">{DATA.name}</p>
+            <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">
+              {DATA.description}
+            </p>
+          </div>
+          <ArrowUpRight className="size-4 flex-shrink-0 text-muted-foreground transition-colors group-hover:text-foreground" />
+        </a>
       </section>
     </div>
   );
