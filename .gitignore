@@ -38,3 +38,6 @@ structure.txt
 # medium account export (backfill source, not for the repo)
 medium-export-*.zip
 /.medium-export/
+
+# local-only planning/research docs, not for the repo
+/docs/project-truman/
