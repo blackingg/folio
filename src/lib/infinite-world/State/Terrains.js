@@ -20,11 +20,15 @@ export default class Terrains
         this.state = State.getInstance()
         this.debug = Debug.getInstance()
 
+        // subdivisions/maxIterations are the terrain worker's two biggest CPU
+        // knobs (see quality.js) — tier-scaled so weaker devices generate
+        // coarser, cheaper chunks instead of falling behind the same
+        // subdivisions²-cost grid every tier used to share.
         this.seed = this.game.seed + 'b'
-        this.subdivisions = TERRAIN.subdivisions
+        this.subdivisions = this.game.quality?.subdivisions ?? TERRAIN.subdivisions
         this.lacunarity = TERRAIN.lacunarity
         this.persistence = TERRAIN.persistence
-        this.maxIterations = TERRAIN.maxIterations
+        this.maxIterations = this.game.quality?.maxIterations ?? TERRAIN.maxIterations
         this.baseFrequency = TERRAIN.baseFrequency
         this.baseAmplitude = TERRAIN.baseAmplitude
         this.power = TERRAIN.power

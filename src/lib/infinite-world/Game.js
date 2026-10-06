@@ -23,8 +23,8 @@ export default class Game {
     this.seed = WORLD_SEED;
     this.destroyed = false;
 
-    // Resolved before State/View construct — Viewport, Chunks, Grass,
-    // TreeBillboards, Trees, Camera and Sky read this at construction.
+    // Resolved before State/View construct — Viewport, Chunks, Terrains,
+    // Grass, TreeBillboards, Trees, Camera and Sky read this at construction.
     this.quality = resolveQuality();
 
     // Callbacks for React

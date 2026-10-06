@@ -13,7 +13,9 @@ export const QUALITY_PRESETS = {
         pixelRatioCap: 1,
         skyResolutionRatio: 0.15,
         cameraFar: 3000,
-        maxInstancesPerTree: 12000
+        maxInstancesPerTree: 12000,
+        subdivisions: 24,
+        maxIterations: 4
     },
     medium: {
         grassDetails: 120,
@@ -22,7 +24,9 @@ export const QUALITY_PRESETS = {
         pixelRatioCap: 1.5,
         skyResolutionRatio: 0.2,
         cameraFar: 4000,
-        maxInstancesPerTree: 16000
+        maxInstancesPerTree: 16000,
+        subdivisions: 32,
+        maxIterations: 5
     },
     high: {
         grassDetails: 200,
@@ -31,7 +35,9 @@ export const QUALITY_PRESETS = {
         pixelRatioCap: 2,
         skyResolutionRatio: 0.2,
         cameraFar: 5000,
-        maxInstancesPerTree: 20000
+        maxInstancesPerTree: 20000,
+        subdivisions: 40,
+        maxIterations: 6
     }
 }
 
