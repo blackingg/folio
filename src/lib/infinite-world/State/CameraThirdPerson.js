@@ -1,6 +1,7 @@
 import { vec3, quat2, mat4 } from 'gl-matrix'
 
 import State from './State.js'
+import { isMobileDevice } from '../quality.js'
 
 export default class CameraThirdPerson
 {
@@ -18,7 +19,10 @@ export default class CameraThirdPerson
         this.position = vec3.create()
         this.quaternion = quat2.create()
         this.distance = 15
-        this.phi = Math.PI * 0.45
+        // On mobile the default angle read as too top-down (phones are
+        // usually held more level than a mouse-steered desktop view) —
+        // nudge phi a little further from straight-overhead there.
+        this.phi = isMobileDevice() ? Math.PI * 0.5 : Math.PI * 0.45
         this.theta = - Math.PI * 0.25
         this.aboveOffset = 2
         this.phiLimits = { min: 0.1, max: Math.PI - 0.1 }
@@ -26,6 +30,15 @@ export default class CameraThirdPerson
         // Soft follow: how fast the orbit eases behind the moving player
         // (exponential damping rate — ~95% caught up after one second)
         this.followLambda = 3
+
+        // Resting vertical angle — where phi recenters to once you start
+        // running without actively dragging. Free-looking to a steep tilt
+        // (near top-down or near ground-level) then taking off running left
+        // the camera stuck at that tilt, which reads as "broken" once moving
+        // and throws off the full-screen speed-line overlay (calibrated for
+        // a normal chase angle, not an extreme one).
+        this.restPhi = this.phi
+        this.recenterLambda = 2
     }
 
     activate()
@@ -74,6 +87,9 @@ export default class CameraThirdPerson
                 // camera to swing ~180° — leave it planted instead.
                 if(Math.abs(diff) < Math.PI * 0.75)
                     this.theta += diff * (1 - Math.exp(- this.followLambda * this.time.delta))
+
+                // Recenter vertical tilt to the resting chase angle
+                this.phi += (this.restPhi - this.phi) * (1 - Math.exp(- this.recenterLambda * this.time.delta))
             }
         }
 

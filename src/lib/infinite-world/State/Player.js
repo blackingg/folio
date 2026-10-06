@@ -191,8 +191,10 @@ export default class Player
         }
 
         // Experience collision — e.g. Shipwreck.js#collide — runs after elevation/swim Y lands.
+        // previous is passed so a fast-moving frame can be swept for tunnelling
+        // instead of only checking the final landing point.
         if (this.game.experienceManager && this.game.experienceManager.activeExperience) {
-            this.game.experienceManager.activeExperience.collide?.(this.position.current)
+            this.game.experienceManager.activeExperience.collide?.(this.position.current, this.position.previous)
         }
 
         vec3.sub(this.position.delta, this.position.current, this.position.previous)

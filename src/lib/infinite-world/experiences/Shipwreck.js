@@ -62,28 +62,13 @@ export default class Shipwreck extends Experience {
         this.view.scene.add(this.wreck);
     }
 
-    // Exterior hull collision against the voxel grid in shipwreckCollisionCells.js
-    // (built offline by build-footprint.mjs from the real model geometry).
-    // Mutates positionVec3 in place, called from Player.js.
-    collide(positionVec3) {
-        // The cell data is voxelized from the real model — applying it to
-        // the much smaller procedural fallback would block the player on
-        // invisible walls sized for a hull that isn't the one rendered.
-        if (!this.wreck || !this.isRealModel || this.collisionCells.size === 0) return;
-
-        const dx = positionVec3[0] - this.wreck.position.x;
-        const dy = positionVec3[1] - this.wreck.position.y;
-        const dz = positionVec3[2] - this.wreck.position.z;
-
-        // World -> the model's local (unrotated, recentred) space.
-        const theta = this.wreck.rotation.y;
-        const cos = Math.cos(theta), sin = Math.sin(theta);
-        let lx = cos * dx - sin * dz;
-        let ly = dy;
-        let lz = sin * dx + cos * dz;
-
+    // Push a single local-space point out of any voxel cell it's embedded in.
+    // Returns [x, y, z, moved] — moved is true iff a push was applied, used
+    // by collide() below to detect where along a swept path a wall was hit.
+    resolvePoint(lx, ly, lz) {
         // Only the 3x3x3 neighbourhood can be within COLLISION_RADIUS (<1 cell).
         const cx = Math.floor(lx), cy = Math.floor(ly), cz = Math.floor(lz);
+        let moved = false;
 
         for (let ix = -1; ix <= 1; ix++) {
             for (let iy = -1; iy <= 1; iy++) {
@@ -100,6 +85,7 @@ export default class Shipwreck extends Experience {
                     const distSq = ddx * ddx + ddy * ddy + ddz * ddz;
                     if (distSq >= COLLISION_RADIUS * COLLISION_RADIUS) continue;
 
+                    moved = true;
                     const dist = Math.sqrt(distSq);
                     if (dist > 0.0001) {
                         const push = COLLISION_RADIUS - dist;
@@ -111,6 +97,63 @@ export default class Shipwreck extends Experience {
                     }
                 }
             }
+        }
+
+        return [lx, ly, lz, moved];
+    }
+
+    // Exterior hull collision against the voxel grid in shipwreckCollisionCells.js
+    // (built offline by build-footprint.mjs from the real model geometry).
+    // Mutates positionVec3 in place, called from Player.js.
+    //
+    // previousPositionVec3 (last frame's already-resolved position) lets a
+    // fast-moving frame (boosting — Player.js's inputBoostSpeed is well over
+    // a cell/frame at low framerate) sweep for tunnelling: checking only the
+    // final landing point missed walls the player's path crossed but didn't
+    // stop inside of.
+    collide(positionVec3, previousPositionVec3) {
+        // The cell data is voxelized from the real model — applying it to
+        // the much smaller procedural fallback would block the player on
+        // invisible walls sized for a hull that isn't the one rendered.
+        if (!this.wreck || !this.isRealModel || this.collisionCells.size === 0) return;
+
+        // World -> the model's local (unrotated, recentred) space.
+        const theta = this.wreck.rotation.y;
+        const cos = Math.cos(theta), sin = Math.sin(theta);
+
+        const dx = positionVec3[0] - this.wreck.position.x;
+        const dy = positionVec3[1] - this.wreck.position.y;
+        const dz = positionVec3[2] - this.wreck.position.z;
+        let lx = cos * dx - sin * dz;
+        let ly = dy;
+        let lz = sin * dx + cos * dz;
+
+        const pdx = previousPositionVec3?.[0] - this.wreck.position.x;
+        const pdz = previousPositionVec3?.[2] - this.wreck.position.z;
+        const plx = previousPositionVec3 ? cos * pdx - sin * pdz : lx;
+        const ply = previousPositionVec3 ? previousPositionVec3[1] - this.wreck.position.y : ly;
+        const plz = previousPositionVec3 ? sin * pdx + cos * pdz : lz;
+
+        const STEP = COLLISION_RADIUS * 0.5;
+        const segLength = Math.hypot(lx - plx, ly - ply, lz - plz);
+
+        if (segLength > STEP) {
+            const steps = Math.min(16, Math.ceil(segLength / STEP));
+
+            for (let s = 1; s <= steps; s++) {
+                const t = s / steps;
+                const sx = plx + (lx - plx) * t;
+                const sy = ply + (ly - ply) * t;
+                const sz = plz + (lz - plz) * t;
+                const [rx, ry, rz, moved] = this.resolvePoint(sx, sy, sz);
+
+                if (moved) {
+                    lx = rx; ly = ry; lz = rz;
+                    break; // hit a wall along the path — stop advancing further this frame
+                }
+            }
+        } else {
+            [lx, ly, lz] = this.resolvePoint(lx, ly, lz);
         }
 
         // Local -> world.
