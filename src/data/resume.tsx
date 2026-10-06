@@ -72,7 +72,7 @@ export const DATA = {
       },
       Resume: {
         name: "Resume",
-        url: "https://flowcv.com/resume/1u1qd2vnw7",
+        url: "https://docs.google.com/document/d/1zGQy6jQlukUwlSDhgQyTqwTdmrY_-QXWm2VD-sRA1xw/edit?usp=sharing",
         icon: Icons.resume,
 
         navbar: false,
