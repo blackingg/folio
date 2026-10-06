@@ -153,15 +153,7 @@ export default class Player
         const chunks = this.state.chunks
         const elevation = chunks.getElevationForPosition(this.position.current[0], this.position.current[2])
 
-        // elevation is `undefined`/`false` whenever the chunk under the player
-        // hasn't streamed its heightmap back from the worker yet (or no chunk
-        // covers this spot at all) — transient while moving, worse on mobile
-        // where generation lags further behind movement speed. Previously this
-        // fell back to sea level (0), snapping the player (and the camera,
-        // which reads position.current with no smoothing) down into the
-        // ground for a frame on every one of those gaps. Holding the last
-        // known height instead skips the Y update entirely until real data
-        // is back.
+        // Not-ready terrain returns undefined, missing chunks false — hold the last height instead of snapping to 0
         if (typeof elevation === 'number') {
             const groundY = elevation
 
