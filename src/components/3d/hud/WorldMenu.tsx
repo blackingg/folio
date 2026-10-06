@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { BookOpen, Map as MapIcon, Moon, Settings, Sun, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { HudButton } from "./HudButton";
 import { WorldMap } from "./map/WorldMap";
 import { GATE_ANGLE, borderRadiusAt } from "./map/border";
 import { GuideSection } from "./sections/GuideSection";
@@ -145,10 +146,33 @@ export function WorldMenu({
         onClick={onClose}
       />
 
-      <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-end gap-3 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:gap-4 sm:pb-6">
+      {/* Desktop dock — takes over HudCluster's top-right slot while paused */}
+      <div
+        className="pointer-events-auto absolute right-4 top-4 z-10 hidden flex-col items-end gap-3 md:flex"
+        style={{ animation: "slideUp 250ms cubic-bezier(0.34,1.56,0.64,1)" }}
+      >
+        {NAV.map((item) => (
+          <HudButton
+            key={item.id}
+            id={`world-menu-${item.id}`}
+            icon={<item.icon className="size-5" />}
+            label={`${item.label} · ${item.hint}`}
+            onClick={() => (item.id === tab ? onClose() : onTabChange(item.id))}
+            active={item.id === tab}
+          />
+        ))}
+        <HudButton
+          id="world-menu-resume"
+          icon={<X className="size-5" />}
+          label="Resume · Esc"
+          onClick={onClose}
+        />
+      </div>
+
+      <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-end gap-3 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:gap-4 sm:pb-6 md:justify-center md:pb-4">
         {/* Flyout panel */}
         <div
-          className="pointer-events-auto flex max-h-[min(65dvh,560px)] w-full max-w-2xl min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-border bg-card/90 shadow-2xl backdrop-blur-xl"
+          className="pointer-events-auto flex max-h-[min(65dvh,560px)] w-full max-w-2xl min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-border bg-card/90 shadow-2xl backdrop-blur-xl md:max-h-[min(80dvh,640px)] md:max-w-3xl"
           style={{ animation: "slideUp 250ms cubic-bezier(0.34,1.56,0.64,1)" }}
         >
           <header className="flex items-start justify-between px-4 pb-3 pt-4 sm:px-6 sm:pt-5">
@@ -229,8 +253,9 @@ export function WorldMenu({
           </footer>
         </div>
 
+        {/* Mobile dock — bottom-center, thumb reach. Desktop gets the top-right dock above instead. */}
         <div
-          className="pointer-events-auto flex items-center gap-2 rounded-2xl border border-border bg-card/90 p-2 shadow-2xl backdrop-blur-xl sm:gap-2.5 sm:p-2.5"
+          className="pointer-events-auto flex items-center gap-2 rounded-2xl border border-border bg-card/90 p-2 shadow-2xl backdrop-blur-xl sm:gap-2.5 sm:p-2.5 md:hidden"
           style={{ animation: "slideUp 300ms cubic-bezier(0.34,1.56,0.64,1) 40ms both" }}
         >
           {NAV.map((item) => {

@@ -206,12 +206,14 @@ export default function InfiniteWorld({ className }: InfiniteWorldProps) {
         isLoaded={isLoaded}
       />
 
-      <HudCluster
-        gameRef={gameRef}
-        isLoaded={isLoaded}
-        onOpenTab={setMenuTab}
-        isMobile={isMobile}
-      />
+      {!menuTab && (
+        <HudCluster
+          gameRef={gameRef}
+          isLoaded={isLoaded}
+          onOpenTab={setMenuTab}
+          isMobile={isMobile}
+        />
+      )}
 
       {/* Touch movement controls */}
       {isMobile && isLoaded && !menuTab && !isPortrait && (
