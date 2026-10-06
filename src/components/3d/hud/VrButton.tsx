@@ -10,9 +10,11 @@ import { HudButton } from "./HudButton";
 export function VrButton({
   gameRef,
   isLoaded,
+  small,
 }: {
   gameRef: React.RefObject<any>;
   isLoaded: boolean;
+  small?: boolean;
 }) {
   const [supported, setSupported] = useState(false);
   const [presenting, setPresenting] = useState(false);
@@ -38,7 +40,7 @@ export function VrButton({
   return (
     <HudButton
       id="hud-vr-toggle"
-      icon={<Glasses className="size-5" />}
+      icon={<Glasses className={small ? "size-4" : "size-5"} />}
       label={presenting ? "Exit VR" : "Enter VR"}
       onClick={() => {
         const game = gameRef.current;
@@ -46,6 +48,7 @@ export function VrButton({
         if (presenting) game.exitVR();
         else game.enterVR();
       }}
+      small={small}
     />
   );
 }

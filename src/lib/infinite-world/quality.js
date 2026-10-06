@@ -7,7 +7,7 @@ export const QUALITY_TIERS = ['auto', 'low', 'medium', 'high']
 
 export const QUALITY_PRESETS = {
     low: {
-        grassDetails: 80,
+        grassDetails: 140,
         billboardDetails: 70,
         chunkMaxDepth: 3,
         pixelRatioCap: 1,
@@ -18,7 +18,7 @@ export const QUALITY_PRESETS = {
         maxIterations: 4
     },
     medium: {
-        grassDetails: 120,
+        grassDetails: 180,
         billboardDetails: 100,
         chunkMaxDepth: 4,
         pixelRatioCap: 1.5,

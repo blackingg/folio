@@ -19,8 +19,13 @@ export default class Camera
 
     setInstance()
     {
+        // Options
+        this.baseFov = 45
+        this.boostFov = 58
+        this.fovLambda = 6
+
         // Set up
-        this.instance = new PerspectiveCamera(45, this.viewport.width / this.viewport.height, 0.1, Game.getInstance()?.quality?.cameraFar ?? 5000)
+        this.instance = new PerspectiveCamera(this.baseFov, this.viewport.width / this.viewport.height, 0.1, Game.getInstance()?.quality?.cameraFar ?? 5000)
         this.instance.rotation.reorder('YXZ')
 
         // XR rig — locomotion and snap turns move the rig while the headset
@@ -63,6 +68,13 @@ export default class Camera
 
         this.rig.position.set(0, 0, 0)
         this.rig.rotation.y = 0
+
+        const targetFov = this.state.controls.keys.down.boost ? this.boostFov : this.baseFov
+        if(Math.abs(this.instance.fov - targetFov) > 0.01)
+        {
+            this.instance.fov += (targetFov - this.instance.fov) * (1 - Math.exp(- this.fovLambda * this.state.time.delta))
+            this.instance.updateProjectionMatrix()
+        }
 
         // Apply coordinates from view
         this.instance.position.set(playerSate.camera.position[0], playerSate.camera.position[1], playerSate.camera.position[2])

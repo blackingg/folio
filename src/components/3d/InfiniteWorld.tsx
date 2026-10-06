@@ -35,9 +35,6 @@ export default function InfiniteWorld({ className }: InfiniteWorldProps) {
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
-  // Detect portrait orientation — the world's controls and HUD only work in
-  // landscape, so mobile players get blocked by RotatePrompt until they turn
-  // the device.
   useEffect(() => {
     const mql = window.matchMedia("(orientation: portrait)");
     const checkOrientation = () => setIsPortrait(mql.matches);
@@ -81,8 +78,6 @@ export default function InfiniteWorld({ className }: InfiniteWorldProps) {
     return () => window.removeEventListener("keydown", handler);
   }, []);
 
-  // Disable game input while the menu is open, or while a mobile device is
-  // stuck in portrait behind the RotatePrompt
   const blockInput = menuTab !== null || (isMobile && isPortrait);
   useEffect(() => {
     const controls = gameRef.current?.state?.controls;
@@ -211,11 +206,14 @@ export default function InfiniteWorld({ className }: InfiniteWorldProps) {
         isLoaded={isLoaded}
       />
 
-      <HudCluster
-        gameRef={gameRef}
-        isLoaded={isLoaded}
-        onOpenTab={setMenuTab}
-      />
+      {!menuTab && (
+        <HudCluster
+          gameRef={gameRef}
+          isLoaded={isLoaded}
+          onOpenTab={setMenuTab}
+          isMobile={isMobile}
+        />
+      )}
 
       {/* Touch movement controls */}
       {isMobile && isLoaded && !menuTab && !isPortrait && (
