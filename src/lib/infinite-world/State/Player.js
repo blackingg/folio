@@ -181,12 +181,12 @@ export default class Player
 
         this.speed = vec3.len(this.position.delta)
 
-        // Update view
-        this.camera.update()
-
         // Check Experiences trigger zones
         if (this.game.experienceManager) {
             this.game.experienceManager.checkZones(this.position.current);
         }
+
+        // Update view
+        this.camera.update()
     }
 }
