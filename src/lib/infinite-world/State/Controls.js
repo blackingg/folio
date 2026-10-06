@@ -146,6 +146,8 @@ export default class Controls
 
         this._onPointerDown = (event) =>
         {
+            if (!this.inputEnabled) return
+
             if(event.pointerType === 'touch')
             {
                 if(this.touchLookId === null && this.game.domElement.contains(event.target))
@@ -161,6 +163,8 @@ export default class Controls
         }
         this._onPointerMove = (event) =>
         {
+            if (!this.inputEnabled) return
+
             if(event.pointerType === 'touch')
             {
                 if(event.pointerId !== this.touchLookId) return
