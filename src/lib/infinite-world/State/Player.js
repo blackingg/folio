@@ -4,6 +4,7 @@ import Game from '../Game.js'
 import State from './State.js'
 import Camera from './Camera.js'
 import { BORDER, TERRAIN_SEED, createBorder, wallCollisionHalfWidth } from '../worldGen.js'
+import { getPreciseElevation } from './TerrainElevation.js'
 
 export default class Player
 {
@@ -149,26 +150,23 @@ export default class Player
         // otherwise the camera orbits around last frame's height for a frame
         // every time elevation changes, which shows up as the camera lagging
         // behind the player vertically (most visible on slopes / low frame
-        // rates, e.g. mobile).
-        const chunks = this.state.chunks
-        const elevation = chunks.getElevationForPosition(this.position.current[0], this.position.current[2])
+        // rates, e.g. mobile). Sampled from the analytic formula directly
+        // (not the render mesh) so it's exact regardless of quality tier —
+        // interpolating a quality-tier-coarsened mesh here let narrow water
+        // features get smoothed over and disappear on low/medium tier.
+        const groundY = getPreciseElevation(this.position.current[0], this.position.current[2])
 
-        // Not-ready terrain returns undefined, missing chunks false — hold the last height instead of snapping to 0
-        if (typeof elevation === 'number') {
-            const groundY = elevation
+        if (groundY < 0) {
+            let y = this.swimming ? this.position.current[1] : 0
 
-            if (groundY < 0) {
-                let y = this.swimming ? this.position.current[1] : 0
+            if (this.controls.keys.down.jump) y += this.inputSwimSpeed * this.time.delta
+            if (this.controls.keys.down.crouch) y -= this.inputSwimSpeed * this.time.delta
 
-                if (this.controls.keys.down.jump) y += this.inputSwimSpeed * this.time.delta
-                if (this.controls.keys.down.crouch) y -= this.inputSwimSpeed * this.time.delta
-
-                this.position.current[1] = Math.min(0, Math.max(groundY, y))
-                this.swimming = true
-            } else {
-                this.position.current[1] = groundY
-                this.swimming = false
-            }
+            this.position.current[1] = Math.min(0, Math.max(groundY, y))
+            this.swimming = true
+        } else {
+            this.position.current[1] = groundY
+            this.swimming = false
         }
 
         // Experience collision — e.g. Shipwreck.js#collide — runs after elevation/swim Y lands.
