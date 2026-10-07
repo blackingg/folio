@@ -74,19 +74,32 @@ export default class CameraThirdPerson
             // being dragged, ease theta around behind the movement direction
             // so the character ends up facing away from the camera.
             const keys = this.controls.keys.down
-            const moving = keys.forward || keys.backward || keys.strafeLeft || keys.strafeRight || this.controls.move?.active
+            const keyMoving = keys.forward || keys.backward || keys.strafeLeft || keys.strafeRight
+            const moving = keyMoving || this.controls.move?.active
 
             if(moving)
             {
-                const diff = Math.atan2(
-                    Math.sin(this.player.rotation - this.theta),
-                    Math.cos(this.player.rotation - this.theta)
-                )
+                // Analog input (touch joystick / gamepad) re-derives
+                // player.rotation from *this* theta every frame (see
+                // Player.js), so chasing it here feeds back into itself:
+                // holding the stick at any fixed non-forward angle (e.g.
+                // straight sideways) produces a constant angular error that
+                // never shrinks, which spins theta at a constant rate
+                // forever instead of settling — reads as the camera (and
+                // character) endlessly rotating in a circle. Only the
+                // keyboard's discrete directions are safe to auto-follow.
+                if(keyMoving)
+                {
+                    const diff = Math.atan2(
+                        Math.sin(this.player.rotation - this.theta),
+                        Math.cos(this.player.rotation - this.theta)
+                    )
 
-                // Backward-ish movement (S, back-diagonals) would ask the
-                // camera to swing ~180° — leave it planted instead.
-                if(Math.abs(diff) < Math.PI * 0.75)
-                    this.theta += diff * (1 - Math.exp(- this.followLambda * this.time.delta))
+                    // Backward-ish movement (S, back-diagonals) would ask the
+                    // camera to swing ~180° — leave it planted instead.
+                    if(Math.abs(diff) < Math.PI * 0.75)
+                        this.theta += diff * (1 - Math.exp(- this.followLambda * this.time.delta))
+                }
 
                 // Recenter vertical tilt to the resting chase angle
                 this.phi += (this.restPhi - this.phi) * (1 - Math.exp(- this.recenterLambda * this.time.delta))
