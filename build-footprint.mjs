@@ -109,9 +109,23 @@ for (const tri of allTris) {
     const x0 = Math.floor(Math.min(...xs) / CELL), x1 = Math.ceil(Math.max(...xs) / CELL)
     const y0 = Math.floor(Math.min(...ys) / CELL), y1 = Math.ceil(Math.max(...ys) / CELL)
     const z0 = Math.floor(Math.min(...zs) / CELL), z1 = Math.ceil(Math.max(...zs) / CELL)
-    for (let cx = x0; cx < x1; cx++)
-        for (let cy = y0; cy < y1; cy++)
-            for (let cz = z0; cz < z1; cz++)
+
+    // A triangle flat on any one axis (near-universal here — this is a
+    // low-poly Minecraft export, so faces sit exactly on integer grid
+    // boundaries) gives ceil(max) === floor(min) on that axis, collapsing
+    // the loop below to zero iterations and silently dropping the whole
+    // triangle from the grid. Measured on the real asset: 52.8% of all
+    // triangles (5612/10628) were lost this way, hollowing out huge
+    // swaths of the hull — most dramatically the entire flat keel/bottom,
+    // which sits right on y=0 after recentreOnFloor. Every triangle must
+    // claim at least its own 1x1x1 cell.
+    const x1c = Math.max(x1, x0 + 1)
+    const y1c = Math.max(y1, y0 + 1)
+    const z1c = Math.max(z1, z0 + 1)
+
+    for (let cx = x0; cx < x1c; cx++)
+        for (let cy = y0; cy < y1c; cy++)
+            for (let cz = z0; cz < z1c; cz++)
                 occupied.add(`${cx},${cy},${cz}`)
 }
 
